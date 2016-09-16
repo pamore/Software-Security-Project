@@ -14,7 +14,7 @@ garrettgutierrezasu- second push
 sudo apt-get install build-essential checkinstall
 sudo apt-get install libreadline-gplv2-dev libncursesw5-dev libssl-dev libsqlite3-dev tk-dev libgdbm-dev libc6-dev libbz2-dev
 
-2. Download Python 
+2. Download Python
 cd /usr/src
 wget https://www.python.org/ftp/python/2.7.12/Python-2.7.12.tgz
 
@@ -30,8 +30,8 @@ sudo make altinstall
 python2.7 -V
 
 # Install PIP
-sudo apt-get install python-pip python-dev build-essential 
-sudo pip install --upgrade pip 
+sudo apt-get install python-pip python-dev build-essential
+sudo pip install --upgrade pip
 sudo pip install --upgrade virtualenv
 
 # Install MySQL
@@ -63,7 +63,7 @@ pip install MySQL-python
 1. Go to directory where you want you project to live
 cd <path>/<destination_folder>
 
-..* Ex: cd home/GitHub
+  * Ex: cd home/GitHub
 
 2. Clone the repository
 git clone https://github.com/jgutbub/CSE_545
@@ -76,21 +76,21 @@ django-admin startproject group3_sbs
 python manage.py startapp login
 
 3. Install new application
-..1. Open group3_sbs/group3_sbs/settings.py
-..2. Go to variable INSTALLED_APPS
-..3. Add 'login', at end of list before ]
+  1. Open group3_sbs/group3_sbs/settings.py
+  2. Go to variable INSTALLED_APPS
+  3. Add 'login', at end of list before ]
 
 4. Setup database connection
-..1. Create database in MySQL
-....1. Login using username and password
-..... mysql -u <USERNAME> -P
-..... Enter password when prompted
-....2. CREATE DATABASE group3_sbs;
-....3. quit;
-..2. Open group3_sbs/group3_sbs/settings.py
-..3. Go to variable DATABASES
-..4. Change it to look like the following:
-DATABASES = {
+  1. Create database in MySQL
+    1. Login using username and password
+      mysql -u <USERNAME> -P
+      Enter password when prompted
+    2. CREATE DATABASE group3_sbs;
+    3. quit;
+  2. Open group3_sbs/group3_sbs/settings.py
+  3. Go to variable DATABASES
+  4. Change it to look like the following:
+  DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'group3_sbs',
@@ -99,61 +99,61 @@ DATABASES = {
         'HOST': 'localhost',
         'PORT': 3306'',
     }
-}
+  }
 
 5. Configure cookie settings
-..1. Open group3_sbs/group3_sbs/settings.py
-..2. Add the following to the bottom of the file:
-... SESSION_COOKIE_AGE = 600
-... SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-... SESSION_SAVE_EVERY_REQUEST = True
+  1. Open group3_sbs/group3_sbs/settings.py
+  2. Add the following to the bottom of the file:
+   SESSION_COOKIE_AGE = 600
+   SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+   SESSION_SAVE_EVERY_REQUEST = True
 
 6. Create templates for holding HTML files. Django looks for a folder called templates in your app and uses the additional appname folder to prevent confusion from different HTML files.
-..1. cd group3_sbs/login
-..2. mkdir -p templates/login
-....* Add html files to group3_sbs/login/templates/login
-....* For this example, I added signin.html
+  1. cd group3_sbs/login
+  2. mkdir -p templates/login
+    * Add html files to group3_sbs/login/templates/login
+    * For this example, I added signin.html
 
 7. Create static for holding static files (e.g. .css, images, .js).
-..1. cd group3_sbs/login
-..2. mkdir -p static/login
-....* Add css files here
-..3. mkdir -p static/login/images
-....* Add images here
-..4. mkdir -p static/login/js
-....* Add js files here
+  1. cd group3_sbs/login
+  2. mkdir -p static/login
+    * Add css files here
+  3. mkdir -p static/login/images
+    * Add images here
+  4. mkdir -p static/login/js
+    * Add js files here
 
 8. Render views views
-..1. Open group3_sbs/login/views.py
-....* A function can be used to create a view
-..2. Import necessary libraries
-... from django.http import HttpResponse, Http404, HttpResponseRedirect
-... from django.template import loader
-... from django.shortcuts import render
-... from django.urls import reverse
-... from django.contrib.auth.models import User
-... from django.contrib.auth import authenticate, login, logout
-... from django.contrib.auth.decorators import login_required, user_passes_test
-..3. Create default view
-... def index(request):
-...   if request.user.is_authenticated:
-...     return HttpResponse('You are already logged in')
-...   else:
-...     return render(request, 'login/signin.html)
+  1. Open group3_sbs/login/views.py
+    * A function can be used to create a view
+  2. Import necessary libraries
+    from django.http import HttpResponse, Http404, HttpResponseRedirect
+    from django.template import loader
+    from django.shortcuts import render
+    from django.urls import reverse
+    from django.contrib.auth.models import User
+    from django.contrib.auth import authenticate, login, logout
+    from django.contrib.auth.decorators import login_required, user_passes_test
+  3. Create default view
+  def index(request):
+    if request.user.is_authenticated:
+      return HttpResponse('You are already logged in')
+    else:
+      return render(request, 'login/signin.html)
 
 9. Route views to a URI
-..1. Open group3_sbs/login/urls.py
-....* All routing for this applicatin is done here
-..2. Give the urls a namespace
-... Add app_name='login' one line above variable url_patterns
-..3. Make URL for index by making URL pattens look like this:
-... urlpatterns = [
-...     url(r'^$', views.index, name='signin'),
-... ]
+  1. Open group3_sbs/login/urls.py
+    * All routing for this applicatin is done here
+  2. Give the urls a namespace
+    Add app_name='login' one line above variable url_patterns
+  3. Make URL for index by making URL pattens look like this:
+    urlpatterns = [
+      url(r'^$', views.index, name='signin'),
+    ]
 
 10. Run the server
-..1. cd group3_sbs
-..2. python manage.py runserver 8000
+  1. cd group3_sbs
+  2. python manage.py runserver 8000
 
 11. Open localhost:8000/login in your web browser
 
