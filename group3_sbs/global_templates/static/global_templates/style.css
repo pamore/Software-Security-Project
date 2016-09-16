@@ -1,0 +1,8 @@
+.body-background {
+  background-image: url("images/bg.jpg");
+  color: white;
+}
+
+li a {
+  color: blue;
+}

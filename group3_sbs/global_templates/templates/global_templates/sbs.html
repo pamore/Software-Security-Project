@@ -1,0 +1,33 @@
+{% load static %}
+<html>
+<title>CSE545 Group 3 Secure Banking System</title>
+<head>
+<!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></script>
+  <!-- Latest compiled JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <!-- Global CSS -->
+  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}" /
+  {% block stylesheets %}{% endblock %}
+</head>
+<body class="body-background">
+    <div class="container-fluid">
+    <nav class="navbar navbar-top navbar-default">
+        <a class="navbar-brand" href="{% url 'login:signin' %}">CSE545 Group 3 Secure Banking System</a>
+        <ul class="nav navbar-nav">
+          {% block navigation %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login:signin' %}">Sign-in</a>
+          </li>
+          {% endblock %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'login:signout' %}">Sign-out</a>
+          </li>
+        </ul>
+    </nav>
+    </div>
+    <div class="container">
+      {% block content %}{% endblock %}
+    </div>
+  </body>
+</html>

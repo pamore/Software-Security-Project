@@ -61,7 +61,7 @@
 
 # How to clone repository
 1. Go to directory where you want you project to live
-cd <path>/<destination_folder>
+  * cd <path>/<destination_folder>
   * Ex: cd home/GitHub
 
 2. Clone the repository
@@ -70,6 +70,7 @@ cd <path>/<destination_folder>
 # How I set up the project
 1. Create django project
   * django-admin startproject group3_sbs
+  * cd group3_sbs
 
 2. Create the login application within project
   * python manage.py startapp login
@@ -141,16 +142,29 @@ cd <path>/<destination_folder>
         * return render(request, 'login/signin.html)
 
 9. Route views to a URI
-  1. Open group3_sbs/login/urls.py
-    * All routing for this applicatin is done here
-  2. Give the urls a namespace
+  1. Open group3_sbs/group3_sbs/urls.py
+    * All routing for this project is done here
+    * Add url(r'^login/', include('login.urls')), in the urlpatterns variable
+  2. Open group3_sbs/login/urls.py
+  3. Give the urls a namespace
     * Add app_name='login' one line above variable url_patterns
-  3. Make URL for index by making URL pattens look like this:
+  4. Make URL for index by making URL pattens look like this:
     * urlpatterns = [
       url(r'^$', views.index, name='signin'),
     ]
 
-10. Run the server
+10. Create user
+  1. python manage.py shell
+    * from django.contrib.auth.models import User
+    * user = User.objects.create_user(username="<USERNAME>", email="<EMAIL>", password="<PASSWORD>")
+    * user.save()
+    * exit()
+
+11. Make database tables
+  1. python manage.py makemigrations
+  2. python manage.py migrate
+
+12. Run the server
   1. cd group3_sbs
   2. python manage.py runserver 8000
 
