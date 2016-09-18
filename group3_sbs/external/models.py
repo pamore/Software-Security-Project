@@ -36,11 +36,10 @@ class CreditCard(BankAccount):
     days_late = models.IntegerField(validators=[MinValueValidator(0)])
 
 class ExternalEmployee(UserProfile):
-    DEFAULT=1
     # ForeignKey Relationships
-    checking_account = models.OneToOneField(CheckingAccount, on_delete=models.CASCADE, default=DEFAULT)
-    credit_card = models.OneToOneField(CreditCard, on_delete=models.CASCADE, default=DEFAULT)
-    savings_account = models.OneToOneField(SavingsAccount, on_delete=models.CASCADE, default=DEFAULT)
+    checking_account = models.OneToOneField(CheckingAccount, on_delete=models.CASCADE, blank=True, null=True)
+    credit_card = models.OneToOneField(CreditCard, on_delete=models.CASCADE, blank=True, null=True)
+    savings_account = models.OneToOneField(SavingsAccount, on_delete=models.CASCADE, blank=True, null=True)
 
     # Inner class to define meta attributes about class
     class Meta:

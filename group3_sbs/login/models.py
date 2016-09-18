@@ -5,9 +5,8 @@ from django.db import models
 
 # Create your models here.
 class UserProfile(models.Model):
-    DEFAULT=1
     # ForeignKey Relationships
-    user = models.OneToOneField(User, on_delete=models.CASCADE, default=DEFAULT)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
 
     # Attributes
     first_name = models.CharField(validators=[MinLengthValidator(2)], max_length=100)
