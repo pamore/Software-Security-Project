@@ -38,3 +38,19 @@ def signout(request):
 @login_required
 def loggedin(request):
     return render(request, 'login/test.html')
+
+# Add numbers
+def add(request):
+    return render(request, 'login/add.html')
+
+def addNumbers(request):
+    try:
+        number1 = int(request.POST['number1'])
+        number2 = int(request.POST['number2'])
+        if isinstance(number1, int) and isinstance(number2, int):
+            result = number1 + number2
+            return render(request, 'login/add.html', {'add1': number1, 'add2': number2, 'result': result,})
+        else:
+            return render(request, 'login/add.html', {'error_message': "Error occurred with numbers",})
+    except Exception as badPassword:
+        return render(request, 'login/add.html', {'error_message': badPassword[0],})

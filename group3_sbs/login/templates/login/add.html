@@ -1,0 +1,32 @@
+{% extends "global_templates/sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="{% static 'login/style.css' %}" />
+{% endblock %}
+
+{% block navigation %}
+<li class="nav-item">
+  <a class="nav-link" href="{% url 'login:signin' %}">Sign-in</a>
+</li>
+<li class="nav-item active">
+  <a class="nav-link" href="{% url 'login:add' %}">Sign-in<span class="sr-only">(current)</span></a>
+</li>
+{% endblock %}
+
+{% block content %}
+<h1>Add Two Numbers</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+{% if result %}<h2><strong>The result: {{ add1 }} + {{ add2 }} = {{ result }}</strong></h2>{% endif %}
+
+<form action="{% url 'login:addNumbers' %}" method="post">
+{% csrf_token %}
+<label for="firstnumber">First Number</label>
+<input type="number" class="form-control" name="number1" value="0" required />
+<label for="secondnumber">Second Number</label>
+<input type="number" class="form-control" name="number2" value="0" required />
+<input type="submit" class="btn btn-default" value="Add Numbers" />
+</form>
+
+{% endblock %}
