@@ -59,6 +59,9 @@
   * sudo apt-get install python-dev libmysqlclient-dev
   * pip install MySQL-python
 
+# Install Django
+* pip install django
+
 # How to clone repository
 1. Go to directory where you want you project to live
   * cd <path>/<destination_folder>
