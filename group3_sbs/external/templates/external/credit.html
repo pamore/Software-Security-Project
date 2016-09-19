@@ -1,0 +1,87 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Credit your {{account_type}} Account</h1>
+  </div>
+</div>
+
+{% if checking_account %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{checking_account.id}}</td>
+      <td>{{checking_account.routing_number}}</td>
+      <td>${{checking_account.current_balance}}</td>
+      <td>${{checking_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<form action="{% url 'external:credit_checking_validate' %}" method="post">
+{% csrf_token %}
+<label for="credit_amount">Please enter an amount to credit to your checking account</label>
+<input type="number" class="form-control" name="credit_amount" value="0.00" min="0.00" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+
+{% endif %}
+
+{% if savings_account %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{savings_account.id}}</td>
+      <td>{{savings_account.routing_number}}</td>
+      <td>${{savings_account.current_balance}}</td>
+      <td>${{savings_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<form action="{% url 'external:credit_savings_validate' %}" method="post">
+{% csrf_token %}
+<label for="credit_amount">Please enter an amount to credit to credit to your checking account</label>
+<input type="number" class="form-control" name="credit_amount" value="0.00" min="0.00" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+
+{% endif %}
+
+{% endblock %}

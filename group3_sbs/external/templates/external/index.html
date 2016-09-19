@@ -1,0 +1,42 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Welcome {{first_name}} {{last_name}}</h1>
+    <h2> This is the {{user_type}} page</h2>
+  </div>
+</div>
+<div class="row">
+{% if checkingaccount %}
+  <div class="col-md-4">
+    <a class="btn btn-info" href="{% url 'external:checking_account' %}">Access Your Checking Account</a>
+  </div>
+{% endif %}
+
+{% if savingsaccount %}
+  <div class="col-md-4">
+    <a class="btn btn-info" href="{% url 'external:savings_account' %}">Access Your Savings Account</a>
+  </div>
+{% endif %}
+
+{% if creditcard %}
+  <div class="col-md-4">
+    <a class="btn btn-info" href="{% url 'external:credit_card' %}">Access Your Credit Card</a>
+  </div>
+
+{% endif %}
+</div>
+
+{% endblock %}

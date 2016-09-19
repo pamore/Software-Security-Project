@@ -1,0 +1,55 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Checking Account Page</h1>
+  </div>
+</div>
+
+{% if checking_account %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{checking_account.id}}</td>
+      <td>{{checking_account.routing_number}}</td>
+      <td>${{checking_account.current_balance}}</td>
+      <td>${{checking_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<div class="row">
+  <div class="col-md-6">
+    <a class="btn btn-primary" href="{% url 'external:debit_checking' %}">Debit your checking account</a>
+  </div>
+  <div class="col-md-6">
+    <a class="btn btn-primary" href="{% url 'external:credit_checking' %}">Credit your checking account</a>
+  </div>
+</div>
+{% endif %}
+
+{% endblock %}

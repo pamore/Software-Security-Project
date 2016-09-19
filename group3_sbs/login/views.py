@@ -37,10 +37,4 @@ def signout(request):
 # Logged in page
 @login_required
 def loggedin(request):
-    user = request.user
-    if hasattr(user, 'individualcustomer'):
-        return render(request, 'login/test.html', {'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name, 'email': user.individualcustomer.email, 'street_address': user.individualcustomer.street_address, 'city': user.individualcustomer.city, 'state': user.individualcustomer.state, 'zipcode': user.individualcustomer.zipcode})
-    elif hasattr(user, 'merchantorganization'):
-        return render(request, 'login/test.html', {'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'email': user.merchantorganization.email, 'street_address': user.merchantorganization.street_address, 'city': user.merchantorganization.city, 'state': user.merchantorganization.state, 'zipcode': user.merchantorganization.zipcode})
-    else:
-        return render(request, 'login/test.html')
+    return HttpResponseRedirect(reverse('external:index'))

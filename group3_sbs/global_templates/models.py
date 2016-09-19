@@ -11,11 +11,12 @@ class Transaction(models.Model):
     time_created = models.DateTimeField(auto_now_add=True)
     type_of_transaction = models.CharField(max_length=200)
     time_resolved = models.DateTimeField(auto_now_add=True)
+    description = models.TextField()
 
     # ForeignKey Relationships
     initiator = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_initiator')
     participants = models.ManyToManyField(User, related_name='%(class)s_participants')
-    resolver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_resolver')
+    resolver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='%(class)s_resolver', blank=True, null=True)
 
     # Inner class to define meta attributes about class
     class Meta:
