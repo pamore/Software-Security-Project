@@ -10,7 +10,7 @@ class Transaction(models.Model):
     status = models.CharField(max_length=200)
     time_created = models.DateTimeField(auto_now_add=True)
     type_of_transaction = models.CharField(max_length=200)
-    time_resolved = models.DateTimeField(auto_now_add=True)
+    time_resolved = models.DateTimeField(blank=True, null=True)
     description = models.TextField()
 
     # ForeignKey Relationships

@@ -37,4 +37,13 @@ def signout(request):
 # Logged in page
 @login_required
 def loggedin(request):
-    return HttpResponseRedirect(reverse('external:index'))
+    user = request.user
+    if (hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator')) and (hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization')):
+        user.delete()
+        return HttpResponseRedirect(reverse('login:signin'))
+    elif hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
+        return HttpResponseRedirect(reverse('internal:index'))
+    elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
+        return HttpResponseRedirect(reverse('external:index'))
+    else:
+        return HttpResponseRedirect(reverse('login:signout'))

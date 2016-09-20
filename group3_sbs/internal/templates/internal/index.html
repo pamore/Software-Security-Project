@@ -1,19 +1,35 @@
-{% extends "global_templates/sbs.html" %}
+{% extends "global_templates/internal_sbs.html" %}
 
 {% load static %}
 
 {% block stylesheets %}
-<link rel="stylesheet" type="text/css" href="{% static 'login/style.css' %}" />
+<!-- Add stylesheets or javascript here !-->
 {% endblock %}
 
 
 {% block navigation %}
+<!-- Navigation here !-->
 {% endblock %}
+
 {% block content %}
-<h1>Welcome {{first_name}} {{last_name}}</h1>
-<p>Email: {{email}}</p>
-<p>Street: {{street_address}}</p>
-<p>City: {{city}}</p>
-<p>State: {{state}}</p>
-<p>Zipcode: {{zipcode}}</p>
+<div class="row">
+  <div class="col-md-12">
+    <h1>Welcome {{first_name}} {{last_name}}</h1>
+    <h2> This is the {{user_type}} page</h2>
+  </div>
+</div>
+
+<br />
+
+<div class="row">
+  <div class="col-md-6">
+    <a class="btn btn-info" href="{% url 'internal:noncritical_transactions' %}">Access Noncritical Transactions</a>
+  </div>
+  <div class="col-md-6">
+    {% if user_type == "System Manager" %}
+    <a class="btn btn-info" href="{% url 'internal:critical_transactions' %}">Access Critical Transactions</a>
+    {% endif %}
+  </div>
+
+</div>
 {% endblock %}

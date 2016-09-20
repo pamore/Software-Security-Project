@@ -1,0 +1,395 @@
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) INSERT INTO `auth_user` (`password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`) VALUES ('pbkdf2_sha256$30000$62E9ZYSFOGGc$jlk+2IIJQwyFnaSgRVXs6uATTSS1B8fQv+pv2OWR1NE=', NULL, 0, 'paul', '', '', '', 0, 1, '2016-09-20 00:21:55.843121'); args=[u'pbkdf2_sha256$30000$62E9ZYSFOGGc$jlk+2IIJQwyFnaSgRVXs6uATTSS1B8fQv+pv2OWR1NE=', None, False, u'paul', u'', u'', u'', False, True, u'2016-09-20 00:21:55.843121']
+(0.001) UPDATE `auth_user` SET `password` = 'pbkdf2_sha256$30000$62E9ZYSFOGGc$jlk+2IIJQwyFnaSgRVXs6uATTSS1B8fQv+pv2OWR1NE=', `last_login` = NULL, `is_superuser` = 0, `username` = 'paul', `first_name` = '', `last_name` = '', `email` = '', `is_staff` = 0, `is_active` = 1, `date_joined` = '2016-09-20 00:21:55.843121' WHERE `auth_user`.`id` = 3; args=(u'pbkdf2_sha256$30000$62E9ZYSFOGGc$jlk+2IIJQwyFnaSgRVXs6uATTSS1B8fQv+pv2OWR1NE=', False, u'paul', u'', u'', u'', False, True, u'2016-09-20 00:21:55.843121', 3)
+(0.001) INSERT INTO `auth_user` (`password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`) VALUES ('pbkdf2_sha256$30000$5miEF0G7aW6x$lk/koVsHseLIdZVwvl5uR2FAdsMAXlhtuqGy5vNNVjY=', NULL, 0, 'george', '', '', '', 0, 1, '2016-09-20 00:21:56.111070'); args=[u'pbkdf2_sha256$30000$5miEF0G7aW6x$lk/koVsHseLIdZVwvl5uR2FAdsMAXlhtuqGy5vNNVjY=', None, False, u'george', u'', u'', u'', False, True, u'2016-09-20 00:21:56.111070']
+(0.032) UPDATE `auth_user` SET `password` = 'pbkdf2_sha256$30000$5miEF0G7aW6x$lk/koVsHseLIdZVwvl5uR2FAdsMAXlhtuqGy5vNNVjY=', `last_login` = NULL, `is_superuser` = 0, `username` = 'george', `first_name` = '', `last_name` = '', `email` = '', `is_staff` = 0, `is_active` = 1, `date_joined` = '2016-09-20 00:21:56.111070' WHERE `auth_user`.`id` = 4; args=(u'pbkdf2_sha256$30000$5miEF0G7aW6x$lk/koVsHseLIdZVwvl5uR2FAdsMAXlhtuqGy5vNNVjY=', False, u'george', u'', u'', u'', False, True, u'2016-09-20 00:21:56.111070', 4)
+(0.000) INSERT INTO `auth_user` (`password`, `last_login`, `is_superuser`, `username`, `first_name`, `last_name`, `email`, `is_staff`, `is_active`, `date_joined`) VALUES ('pbkdf2_sha256$30000$oC2gB80eYZ6p$qy8HvdOgTReKnlOraPZvLVbHrRCC6RiQDPIPRme5N7A=', NULL, 0, 'ringo', '', '', '', 0, 1, '2016-09-20 00:21:56.378194'); args=[u'pbkdf2_sha256$30000$oC2gB80eYZ6p$qy8HvdOgTReKnlOraPZvLVbHrRCC6RiQDPIPRme5N7A=', None, False, u'ringo', u'', u'', u'', False, True, u'2016-09-20 00:21:56.378194']
+(0.001) UPDATE `auth_user` SET `password` = 'pbkdf2_sha256$30000$oC2gB80eYZ6p$qy8HvdOgTReKnlOraPZvLVbHrRCC6RiQDPIPRme5N7A=', `last_login` = NULL, `is_superuser` = 0, `username` = 'ringo', `first_name` = '', `last_name` = '', `email` = '', `is_staff` = 0, `is_active` = 1, `date_joined` = '2016-09-20 00:21:56.378194' WHERE `auth_user`.`id` = 5; args=(u'pbkdf2_sha256$30000$oC2gB80eYZ6p$qy8HvdOgTReKnlOraPZvLVbHrRCC6RiQDPIPRme5N7A=', False, u'ringo', u'', u'', u'', False, True, u'2016-09-20 00:21:56.378194', 5)
+(0.001) INSERT INTO `internal_regularemployee` (`user_id`, `first_name`, `last_name`, `email`, `street_address`, `city`, `state`, `zipcode`, `session_key`) VALUES (3, 'Paul', 'McCartney', 'paulmccartney@beatles.com', 'Heart of the Country', 'Liverpool', 'UK', 12345, 'None'); args=[3, 'Paul', 'McCartney', 'paulmccartney@beatles.com', 'Heart of the Country', 'Liverpool', 'UK', 12345, 'None']
+(0.001) UPDATE `internal_regularemployee` SET `user_id` = 3, `first_name` = 'Paul', `last_name` = 'McCartney', `email` = 'paulmccartney@beatles.com', `street_address` = 'Heart of the Country', `city` = 'Liverpool', `state` = 'UK', `zipcode` = 12345, `session_key` = 'None' WHERE `internal_regularemployee`.`id` = 1; args=(3, 'Paul', 'McCartney', 'paulmccartney@beatles.com', 'Heart of the Country', 'Liverpool', 'UK', 12345, 'None', 1)
+(0.001) INSERT INTO `internal_systemmanager` (`user_id`, `first_name`, `last_name`, `email`, `street_address`, `city`, `state`, `zipcode`, `session_key`) VALUES (4, 'Ringo', 'Starr', 'ringostarr@beatles.com', 'Liverpool8 Factory', 'Liverpool', 'UK', 12345, 'None'); args=[4, 'Ringo', 'Starr', 'ringostarr@beatles.com', 'Liverpool8 Factory', 'Liverpool', 'UK', 12345, 'None']
+(0.000) UPDATE `internal_systemmanager` SET `user_id` = 4, `first_name` = 'Ringo', `last_name` = 'Starr', `email` = 'ringostarr@beatles.com', `street_address` = 'Liverpool8 Factory', `city` = 'Liverpool', `state` = 'UK', `zipcode` = 12345, `session_key` = 'None' WHERE `internal_systemmanager`.`id` = 1; args=(4, 'Ringo', 'Starr', 'ringostarr@beatles.com', 'Liverpool8 Factory', 'Liverpool', 'UK', 12345, 'None', 1)
+(0.000) INSERT INTO `internal_administrator` (`user_id`, `first_name`, `last_name`, `email`, `street_address`, `city`, `state`, `zipcode`, `session_key`) VALUES (5, 'George', 'Harrison', 'georgeharrison@beatles.com', 'Dark Horse Way', 'Liverpool', 'UK', 12345, 'None'); args=[5, 'George', 'Harrison', 'georgeharrison@beatles.com', 'Dark Horse Way', 'Liverpool', 'UK', 12345, 'None']
+(0.001) UPDATE `internal_administrator` SET `user_id` = 5, `first_name` = 'George', `last_name` = 'Harrison', `email` = 'georgeharrison@beatles.com', `street_address` = 'Dark Horse Way', `city` = 'Liverpool', `state` = 'UK', `zipcode` = 12345, `session_key` = 'None' WHERE `internal_administrator`.`id` = 1; args=(5, 'George', 'Harrison', 'georgeharrison@beatles.com', 'Dark Horse Way', 'Liverpool', 'UK', 12345, 'None', 1)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`username` = 'paul'; args=(u'paul',)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`username` = 'george'; args=(u'george',)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`username` = 'ringo'; args=(u'ringo',)
+(0.001) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+(0.001) SELECT `internal_systemmanager`.`id`, `internal_systemmanager`.`user_id`, `internal_systemmanager`.`first_name`, `internal_systemmanager`.`last_name`, `internal_systemmanager`.`email`, `internal_systemmanager`.`street_address`, `internal_systemmanager`.`city`, `internal_systemmanager`.`state`, `internal_systemmanager`.`zipcode`, `internal_systemmanager`.`session_key` FROM `internal_systemmanager` WHERE `internal_systemmanager`.`user_id` = 3; args=(3,)
+(0.001) SELECT `internal_systemmanager`.`id`, `internal_systemmanager`.`user_id`, `internal_systemmanager`.`first_name`, `internal_systemmanager`.`last_name`, `internal_systemmanager`.`email`, `internal_systemmanager`.`street_address`, `internal_systemmanager`.`city`, `internal_systemmanager`.`state`, `internal_systemmanager`.`zipcode`, `internal_systemmanager`.`session_key` FROM `internal_systemmanager` WHERE `internal_systemmanager`.`user_id` = 4; args=(4,)
+(0.001) SELECT `internal_administrator`.`id`, `internal_administrator`.`user_id`, `internal_administrator`.`first_name`, `internal_administrator`.`last_name`, `internal_administrator`.`email`, `internal_administrator`.`street_address`, `internal_administrator`.`city`, `internal_administrator`.`state`, `internal_administrator`.`zipcode`, `internal_administrator`.`session_key` FROM `internal_administrator` WHERE `internal_administrator`.`user_id` = 5; args=(5,)
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = 'w5ymcyh3lww8tj5o4q1nn25h81jwlgf5' AND `django_session`.`expire_date` > '2016-09-20 00:30:29.374254'); args=('w5ymcyh3lww8tj5o4q1nn25h81jwlgf5', u'2016-09-20 00:30:29.374254')
+"GET /login/signout/ HTTP/1.1" 302 0
+Exception while resolving variable 'error_message' in template 'login/signin.html'.
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 907, in _resolve_lookup
+    (bit, current))  # missing attribute
+VariableDoesNotExist: Failed lookup for key [error_message] in u'[{\'False\': False, \'None\': None, \'True\': True}, {u\'csrf_token\': <SimpleLazyObject: <function _get_val at 0x7f8796b23050>>, \'user\': <SimpleLazyObject: <django.contrib.auth.models.AnonymousUser object at 0x7f8796b84390>>, \'perms\': <django.contrib.auth.context_processors.PermWrapper object at 0x7f8796b215d0>, \'DEFAULT_MESSAGE_LEVELS\': {\'DEBUG\': 10, \'INFO\': 20, \'WARNING\': 30, \'SUCCESS\': 25, \'ERROR\': 40}, \'messages\': <django.contrib.messages.storage.fallback.FallbackStorage object at 0x7f8796b84210>, u\'request\': <WSGIRequest: GET \'/login/\'>}, {}, {\'block\': <Block Node: content. Contents: [<TextNode: u\'\\n<h1>Login</h1>\\n\'>, <IfNode>, <TextNode: u\'\\n\\n<form action="\'>, <django.template.defaulttags.URLNode object at 0x7f8796b10bd0>, <TextNode: u\'" method="post">\\n\'>, <django.template.defaulttags.CsrfTokenNode object at 0x7f8796b10c50>, <TextNode: u\'\\n<label for="username">Us\'>]>}]'
+"GET /login/ HTTP/1.1" 200 1631
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`username` = 'paul'; args=(u'paul',)
+(0.000) SELECT (1) AS `a` FROM `django_session` WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' LIMIT 1; args=(u'9oeq12w1jur7c96mqfymqqc203723mx9',)
+(0.000) INSERT INTO `django_session` (`session_key`, `session_data`, `expire_date`) VALUES ('9oeq12w1jur7c96mqfymqqc203723mx9', 'MmIwMjYyZjY2OTU5NjVhMmZkYjc0MzQwNDE1MjdhM2QwZGQ4MWY1ODp7fQ==', '2016-09-20 00:40:39.307420'); args=(u'9oeq12w1jur7c96mqfymqqc203723mx9', u'MmIwMjYyZjY2OTU5NjVhMmZkYjc0MzQwNDE1MjdhM2QwZGQ4MWY1ODp7fQ==', u'2016-09-20 00:40:39.307420')
+(0.001) UPDATE `auth_user` SET `last_login` = '2016-09-20 00:30:39.490314' WHERE `auth_user`.`id` = 3; args=(u'2016-09-20 00:30:39.490314', 3)
+(0.001) UPDATE `django_session` SET `session_data` = 'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', `expire_date` = '2016-09-20 00:40:39.623658' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', u'2016-09-20 00:40:39.623658', u'9oeq12w1jur7c96mqfymqqc203723mx9')
+"POST /login/validate/ HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:30:39.703959'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:30:39.703959')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.020) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+(0.000) SELECT `external_individualcustomer`.`id`, `external_individualcustomer`.`user_id`, `external_individualcustomer`.`first_name`, `external_individualcustomer`.`last_name`, `external_individualcustomer`.`email`, `external_individualcustomer`.`street_address`, `external_individualcustomer`.`city`, `external_individualcustomer`.`state`, `external_individualcustomer`.`zipcode`, `external_individualcustomer`.`session_key`, `external_individualcustomer`.`checking_account_id`, `external_individualcustomer`.`credit_card_id`, `external_individualcustomer`.`savings_account_id`, `external_individualcustomer`.`ssn` FROM `external_individualcustomer` WHERE `external_individualcustomer`.`user_id` = 3; args=(3,)
+(0.000) SELECT `external_merchantorganization`.`id`, `external_merchantorganization`.`user_id`, `external_merchantorganization`.`first_name`, `external_merchantorganization`.`last_name`, `external_merchantorganization`.`email`, `external_merchantorganization`.`street_address`, `external_merchantorganization`.`city`, `external_merchantorganization`.`state`, `external_merchantorganization`.`zipcode`, `external_merchantorganization`.`session_key`, `external_merchantorganization`.`checking_account_id`, `external_merchantorganization`.`credit_card_id`, `external_merchantorganization`.`savings_account_id`, `external_merchantorganization`.`business_code` FROM `external_merchantorganization` WHERE `external_merchantorganization`.`user_id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', `expire_date` = '2016-09-20 00:40:39.733943' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', u'2016-09-20 00:40:39.733943', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /login/loggedin/ HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:30:39.780082'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:30:39.780082')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.001) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+Internal Server Error: /internal/
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/exception.py", line 39, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/base.py", line 187, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/base.py", line 185, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/home/garrett/Documents/GitHub/CSE_545/group3_sbs/internal/views.py", line 14, in index
+    return render(request, 'internal/index.html', {'user_type': "Regular Employee", 'first_name': user.regularemployee.first_name, 'last_name': user.regularemployee.last_name})
+  File "/usr/local/lib/python2.7/dist-packages/django/shortcuts.py", line 30, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader.py", line 68, in render_to_string
+    return template.render(context, request)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/backends/django.py", line 66, in render
+    return self.template.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 208, in render
+    return self._render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 199, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader_tags.py", line 174, in render
+    return compiled_parent._render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 199, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader_tags.py", line 70, in render
+    result = block.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/defaulttags.py", line 439, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/usr/local/lib/python2.7/dist-packages/django/urls/base.py", line 91, in reverse
+    return force_text(iri_to_uri(resolver._reverse_with_prefix(view, prefix, *args, **kwargs)))
+  File "/usr/local/lib/python2.7/dist-packages/django/urls/resolvers.py", line 392, in _reverse_with_prefix
+    (lookup_view_s, args, kwargs, len(patterns), patterns)
+NoReverseMatch: Reverse for 'noncritical_transactions' with arguments '()' and keyword arguments '{}' not found. 0 pattern(s) tried: []
+"GET /internal/ HTTP/1.1" 500 161496
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:10.424887'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:10.424887')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+Internal Server Error: /internal/
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/exception.py", line 39, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/base.py", line 187, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/base.py", line 185, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/django/contrib/auth/decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "/home/garrett/Documents/GitHub/CSE_545/group3_sbs/internal/views.py", line 17, in index
+    return render(request, 'internal/index.html', {'user_type': "Regular Employee", 'first_name': user.regularemployee.first_name, 'last_name': user.regularemployee.last_name})
+  File "/usr/local/lib/python2.7/dist-packages/django/shortcuts.py", line 30, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader.py", line 68, in render_to_string
+    return template.render(context, request)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/backends/django.py", line 66, in render
+    return self.template.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 208, in render
+    return self._render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 199, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader_tags.py", line 174, in render
+    return compiled_parent._render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 199, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader_tags.py", line 70, in render
+    result = block.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/defaulttags.py", line 439, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/usr/local/lib/python2.7/dist-packages/django/urls/base.py", line 91, in reverse
+    return force_text(iri_to_uri(resolver._reverse_with_prefix(view, prefix, *args, **kwargs)))
+  File "/usr/local/lib/python2.7/dist-packages/django/urls/resolvers.py", line 392, in _reverse_with_prefix
+    (lookup_view_s, args, kwargs, len(patterns), patterns)
+NoReverseMatch: Reverse for 'noncritical_transactions' with arguments '()' and keyword arguments '{}' not found. 0 pattern(s) tried: []
+"GET /internal/ HTTP/1.1" 500 166367
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:11.604818'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:11.604818')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', `expire_date` = '2016-09-20 00:47:11.611657' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', u'2016-09-20 00:47:11.611657', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /login/ HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:15.938946'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:15.938946')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', `expire_date` = '2016-09-20 00:47:15.946824' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', u'2016-09-20 00:47:15.946824', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /login HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:16.016824'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:16.016824')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+(0.000) SELECT `external_individualcustomer`.`id`, `external_individualcustomer`.`user_id`, `external_individualcustomer`.`first_name`, `external_individualcustomer`.`last_name`, `external_individualcustomer`.`email`, `external_individualcustomer`.`street_address`, `external_individualcustomer`.`city`, `external_individualcustomer`.`state`, `external_individualcustomer`.`zipcode`, `external_individualcustomer`.`session_key`, `external_individualcustomer`.`checking_account_id`, `external_individualcustomer`.`credit_card_id`, `external_individualcustomer`.`savings_account_id`, `external_individualcustomer`.`ssn` FROM `external_individualcustomer` WHERE `external_individualcustomer`.`user_id` = 3; args=(3,)
+(0.000) SELECT `external_merchantorganization`.`id`, `external_merchantorganization`.`user_id`, `external_merchantorganization`.`first_name`, `external_merchantorganization`.`last_name`, `external_merchantorganization`.`email`, `external_merchantorganization`.`street_address`, `external_merchantorganization`.`city`, `external_merchantorganization`.`state`, `external_merchantorganization`.`zipcode`, `external_merchantorganization`.`session_key`, `external_merchantorganization`.`checking_account_id`, `external_merchantorganization`.`credit_card_id`, `external_merchantorganization`.`savings_account_id`, `external_merchantorganization`.`business_code` FROM `external_merchantorganization` WHERE `external_merchantorganization`.`user_id` = 3; args=(3,)
+(0.001) UPDATE `django_session` SET `session_data` = 'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', `expire_date` = '2016-09-20 00:47:16.034383' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', u'2016-09-20 00:47:16.034383', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /login/loggedin/ HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:16.238413'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:16.238413')
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', `expire_date` = '2016-09-20 00:47:16.248830' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', u'2016-09-20 00:47:16.248830', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /login HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:16.324557'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:16.324557')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+(0.000) SELECT `external_individualcustomer`.`id`, `external_individualcustomer`.`user_id`, `external_individualcustomer`.`first_name`, `external_individualcustomer`.`last_name`, `external_individualcustomer`.`email`, `external_individualcustomer`.`street_address`, `external_individualcustomer`.`city`, `external_individualcustomer`.`state`, `external_individualcustomer`.`zipcode`, `external_individualcustomer`.`session_key`, `external_individualcustomer`.`checking_account_id`, `external_individualcustomer`.`credit_card_id`, `external_individualcustomer`.`savings_account_id`, `external_individualcustomer`.`ssn` FROM `external_individualcustomer` WHERE `external_individualcustomer`.`user_id` = 3; args=(3,)
+(0.000) SELECT `external_merchantorganization`.`id`, `external_merchantorganization`.`user_id`, `external_merchantorganization`.`first_name`, `external_merchantorganization`.`last_name`, `external_merchantorganization`.`email`, `external_merchantorganization`.`street_address`, `external_merchantorganization`.`city`, `external_merchantorganization`.`state`, `external_merchantorganization`.`zipcode`, `external_merchantorganization`.`session_key`, `external_merchantorganization`.`checking_account_id`, `external_merchantorganization`.`credit_card_id`, `external_merchantorganization`.`savings_account_id`, `external_merchantorganization`.`business_code` FROM `external_merchantorganization` WHERE `external_merchantorganization`.`user_id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', `expire_date` = '2016-09-20 00:47:16.336540' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', u'2016-09-20 00:47:16.336540', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /login/loggedin/ HTTP/1.1" 302 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:16.442569'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:16.442569')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+Internal Server Error: /internal/
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/exception.py", line 39, in inner
+    response = get_response(request)
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/base.py", line 187, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File "/usr/local/lib/python2.7/dist-packages/django/core/handlers/base.py", line 185, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "/usr/local/lib/python2.7/dist-packages/django/contrib/auth/decorators.py", line 23, in _wrapped_view
+    return view_func(request, *args, **kwargs)
+  File "/home/garrett/Documents/GitHub/CSE_545/group3_sbs/internal/views.py", line 17, in index
+    return render(request, 'internal/index.html', {'user_type': "Regular Employee", 'first_name': user.regularemployee.first_name, 'last_name': user.regularemployee.last_name})
+  File "/usr/local/lib/python2.7/dist-packages/django/shortcuts.py", line 30, in render
+    content = loader.render_to_string(template_name, context, request, using=using)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader.py", line 68, in render_to_string
+    return template.render(context, request)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/backends/django.py", line 66, in render
+    return self.template.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 208, in render
+    return self._render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 199, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader_tags.py", line 174, in render
+    return compiled_parent._render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 199, in _render
+    return self.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/loader_tags.py", line 70, in render
+    result = block.nodelist.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 994, in render
+    bit = node.render_annotated(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 961, in render_annotated
+    return self.render(context)
+  File "/usr/local/lib/python2.7/dist-packages/django/template/defaulttags.py", line 439, in render
+    url = reverse(view_name, args=args, kwargs=kwargs, current_app=current_app)
+  File "/usr/local/lib/python2.7/dist-packages/django/urls/base.py", line 91, in reverse
+    return force_text(iri_to_uri(resolver._reverse_with_prefix(view, prefix, *args, **kwargs)))
+  File "/usr/local/lib/python2.7/dist-packages/django/urls/resolvers.py", line 392, in _reverse_with_prefix
+    (lookup_view_s, args, kwargs, len(patterns), patterns)
+NoReverseMatch: Reverse for 'noncritical_transactions' with arguments '()' and keyword arguments '{}' not found. 0 pattern(s) tried: []
+"GET /internal/ HTTP/1.1" 500 166084
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:37:59.704936'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:37:59.704936')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', `expire_date` = '2016-09-20 00:47:59.730591' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', u'2016-09-20 00:47:59.730591', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /internal/ HTTP/1.1" 200 1621
+"GET /static/global_templates/style.css HTTP/1.1" 304 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:38:04.150115'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:38:04.150115')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+Exception while resolving variable 'first_name' in template 'internal/noncritical_transactions.html'.
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 907, in _resolve_lookup
+    (bit, current))  # missing attribute
+VariableDoesNotExist: Failed lookup for key [first_name] in u'[{\'False\': False, \'None\': None, \'True\': True}, {u\'csrf_token\': <SimpleLazyObject: <function _get_val at 0x7f0100163f50>>, \'user\': <SimpleLazyObject: <User: paul>>, \'perms\': <django.contrib.auth.context_processors.PermWrapper object at 0x7f01001c2950>, \'DEFAULT_MESSAGE_LEVELS\': {\'DEBUG\': 10, \'INFO\': 20, \'WARNING\': 30, \'SUCCESS\': 25, \'ERROR\': 40}, \'messages\': <django.contrib.messages.storage.fallback.FallbackStorage object at 0x7f01001c28d0>, u\'request\': <WSGIRequest: GET \'/internal/transaction/noncritical/\'>}, {}, {\'block\': <Block Node: content. Contents: [<TextNode: u\'\\n<div class="row">\\n  <tab\'>, <Variable Node: first_name>, <TextNode: u\'</td>\\n        <td>\'>, <Variable Node: last_name>, <TextNode: u\'</td>\\n      </tr>\\n    </t\'>, <django.template.defaulttags.URLNode object at 0x7f01001ce890>, <TextNode: u\'">Access Noncritical Tran\'>, <IfNode>, <TextNode: u\'\\n  </div>\\n\\n</div>\\n\'>]>}]'
+Exception while resolving variable 'last_name' in template 'internal/noncritical_transactions.html'.
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 907, in _resolve_lookup
+    (bit, current))  # missing attribute
+VariableDoesNotExist: Failed lookup for key [last_name] in u'[{\'False\': False, \'None\': None, \'True\': True}, {u\'csrf_token\': <SimpleLazyObject: <function _get_val at 0x7f0100163f50>>, \'user\': <SimpleLazyObject: <User: paul>>, \'perms\': <django.contrib.auth.context_processors.PermWrapper object at 0x7f01001c2950>, \'DEFAULT_MESSAGE_LEVELS\': {\'DEBUG\': 10, \'INFO\': 20, \'WARNING\': 30, \'SUCCESS\': 25, \'ERROR\': 40}, \'messages\': <django.contrib.messages.storage.fallback.FallbackStorage object at 0x7f01001c28d0>, u\'request\': <WSGIRequest: GET \'/internal/transaction/noncritical/\'>}, {}, {\'block\': <Block Node: content. Contents: [<TextNode: u\'\\n<div class="row">\\n  <tab\'>, <Variable Node: first_name>, <TextNode: u\'</td>\\n        <td>\'>, <Variable Node: last_name>, <TextNode: u\'</td>\\n      </tr>\\n    </t\'>, <django.template.defaulttags.URLNode object at 0x7f01001ce890>, <TextNode: u\'">Access Noncritical Tran\'>, <IfNode>, <TextNode: u\'\\n  </div>\\n\\n</div>\\n\'>]>}]'
+Exception while resolving variable 'user_type' in template 'internal/noncritical_transactions.html'.
+Traceback (most recent call last):
+  File "/usr/local/lib/python2.7/dist-packages/django/template/base.py", line 907, in _resolve_lookup
+    (bit, current))  # missing attribute
+VariableDoesNotExist: Failed lookup for key [user_type] in u'[{\'False\': False, \'None\': None, \'True\': True}, {u\'csrf_token\': <SimpleLazyObject: <function _get_val at 0x7f0100163f50>>, \'user\': <SimpleLazyObject: <User: paul>>, \'perms\': <django.contrib.auth.context_processors.PermWrapper object at 0x7f01001c2950>, \'DEFAULT_MESSAGE_LEVELS\': {\'DEBUG\': 10, \'INFO\': 20, \'WARNING\': 30, \'SUCCESS\': 25, \'ERROR\': 40}, \'messages\': <django.contrib.messages.storage.fallback.FallbackStorage object at 0x7f01001c28d0>, u\'request\': <WSGIRequest: GET \'/internal/transaction/noncritical/\'>}, {}, {\'block\': <Block Node: content. Contents: [<TextNode: u\'\\n<div class="row">\\n  <tab\'>, <Variable Node: first_name>, <TextNode: u\'</td>\\n        <td>\'>, <Variable Node: last_name>, <TextNode: u\'</td>\\n      </tr>\\n    </t\'>, <django.template.defaulttags.URLNode object at 0x7f01001ce890>, <TextNode: u\'">Access Noncritical Tran\'>, <IfNode>, <TextNode: u\'\\n  </div>\\n\\n</div>\\n\'>]>}]'
+(0.000) UPDATE `django_session` SET `session_data` = 'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', `expire_date` = '2016-09-20 00:48:04.166199' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', u'2016-09-20 00:48:04.166199', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /internal/transaction/noncritical/ HTTP/1.1" 200 1608
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:40:59.160277'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:40:59.160277')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.000) SELECT `internal_regularemployee`.`id`, `internal_regularemployee`.`user_id`, `internal_regularemployee`.`first_name`, `internal_regularemployee`.`last_name`, `internal_regularemployee`.`email`, `internal_regularemployee`.`street_address`, `internal_regularemployee`.`city`, `internal_regularemployee`.`state`, `internal_regularemployee`.`zipcode`, `internal_regularemployee`.`session_key` FROM `internal_regularemployee` WHERE `internal_regularemployee`.`user_id` = 3; args=(3,)
+(0.000) UPDATE `django_session` SET `session_data` = 'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', `expire_date` = '2016-09-20 00:50:59.173626' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'YWFmZjM2ZTc5ODY5MTA0YmQ4ZTIyMDM1ZDUyMGFkMDMyNjZlYTk2NTp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2lkIjoiMyIsIl9hdXRoX3VzZXJfYmFja2VuZCI6ImRqYW5nby5jb250cmliLmF1dGguYmFja2VuZHMuTW9kZWxCYWNrZW5kIn0=', u'2016-09-20 00:50:59.173626', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /internal/ HTTP/1.1" 200 1480
+"GET /static/global_templates/style.css HTTP/1.1" 304 0
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.000) SELECT `django_session`.`session_key`, `django_session`.`session_data`, `django_session`.`expire_date` FROM `django_session` WHERE (`django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9' AND `django_session`.`expire_date` > '2016-09-20 00:41:01.721511'); args=('9oeq12w1jur7c96mqfymqqc203723mx9', u'2016-09-20 00:41:01.721511')
+(0.000) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.001) UPDATE `django_session` SET `session_data` = 'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', `expire_date` = '2016-09-20 00:51:01.732234' WHERE `django_session`.`session_key` = '9oeq12w1jur7c96mqfymqqc203723mx9'; args=(u'OGVmNDg2MzA3ZmJmZDRiMGNjNTc3ZmNmNGQxN2NhZWEwYzQ4ZDJmNjp7Il9hdXRoX3VzZXJfaGFzaCI6IjkyZDM4YjgyMjYyOWRiMWE3ZGI3OTI3NDA3NzUxMGU1NTM5Zjg5ZTAiLCJfYXV0aF91c2VyX2JhY2tlbmQiOiJkamFuZ28uY29udHJpYi5hdXRoLmJhY2tlbmRzLk1vZGVsQmFja2VuZCIsIl9hdXRoX3VzZXJfaWQiOiIzIn0=', u'2016-09-20 00:51:01.732234', '9oeq12w1jur7c96mqfymqqc203723mx9')
+"GET /internal/transaction/noncritical/ HTTP/1.1" 200 1258
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SHOW FULL TABLES; args=None
+(0.000) SELECT `django_migrations`.`app`, `django_migrations`.`name` FROM `django_migrations`; args=()
+(0.000) SELECT @@SQL_AUTO_IS_NULL; args=None
+(0.000) SELECT VERSION(); args=None
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 1; args=(1,)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 2; args=(2,)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 1; args=(1,)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 2; args=(2,)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 3; args=(3,)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 4; args=(4,)
+(0.001) SELECT `auth_user`.`id`, `auth_user`.`password`, `auth_user`.`last_login`, `auth_user`.`is_superuser`, `auth_user`.`username`, `auth_user`.`first_name`, `auth_user`.`last_name`, `auth_user`.`email`, `auth_user`.`is_staff`, `auth_user`.`is_active`, `auth_user`.`date_joined` FROM `auth_user` WHERE `auth_user`.`id` = 5; args=(5,)
+(0.001) SELECT `external_individualcustomer`.`id`, `external_individualcustomer`.`user_id`, `external_individualcustomer`.`first_name`, `external_individualcustomer`.`last_name`, `external_individualcustomer`.`email`, `external_individualcustomer`.`street_address`, `external_individualcustomer`.`city`, `external_individualcustomer`.`state`, `external_individualcustomer`.`zipcode`, `external_individualcustomer`.`session_key`, `external_individualcustomer`.`checking_account_id`, `external_individualcustomer`.`credit_card_id`, `external_individualcustomer`.`savings_account_id`, `external_individualcustomer`.`ssn` FROM `external_individualcustomer` WHERE `external_individualcustomer`.`user_id` = 1; args=(1,)
+(0.001) SELECT `external_checkingaccount`.`id`, `external_checkingaccount`.`interest_rate`, `external_checkingaccount`.`routing_number`, `external_checkingaccount`.`current_balance`, `external_checkingaccount`.`active_balance` FROM `external_checkingaccount` WHERE `external_checkingaccount`.`id` = 1; args=(1,)
+(0.001) INSERT INTO `external_externalnoncriticaltransaction` (`status`, `time_created`, `type_of_transaction`, `time_resolved`, `description`, `initiator_id`, `resolver_id`) VALUES ('unresolved', '2016-09-20 01:10:29.542480', 'debit', '9999-12-31 23:59:59.999999', 'test', 1, 3); args=['unresolved', u'2016-09-20 01:10:29.542480', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 3]
+(0.001) UPDATE `external_externalnoncriticaltransaction` SET `status` = 'unresolved', `time_created` = '2016-09-20 01:10:29.542480', `type_of_transaction` = 'debit', `time_resolved` = '9999-12-31 23:59:59.999999', `description` = 'test', `initiator_id` = 1, `resolver_id` = 3 WHERE `external_externalnoncriticaltransaction`.`id` = 1; args=('unresolved', u'2016-09-20 01:10:29.542480', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 3, 1)
+(0.001) INSERT INTO `external_externalnoncriticaltransaction` (`status`, `time_created`, `type_of_transaction`, `time_resolved`, `description`, `initiator_id`, `resolver_id`) VALUES ('unresolved', '2016-09-20 01:12:34.964782', 'debit', '9999-12-31 23:59:59.999999', 'test', 1, 3); args=['unresolved', u'2016-09-20 01:12:34.964782', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 3]
+(0.025) INSERT INTO `external_externalcriticaltransaction` (`status`, `time_created`, `type_of_transaction`, `time_resolved`, `description`, `initiator_id`, `resolver_id`) VALUES ('unresolved', '2016-09-20 01:12:35.065094', 'debit', '9999-12-31 23:59:59.999999', 'test', 1, 4); args=['unresolved', u'2016-09-20 01:12:35.065094', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 4]
+(0.001) INSERT INTO `external_externalcriticaltransaction` (`status`, `time_created`, `type_of_transaction`, `time_resolved`, `description`, `initiator_id`, `resolver_id`) VALUES ('unresolved', '2016-09-20 01:12:58.243529', 'debit', '9999-12-31 23:59:59.999999', 'test', 1, 4); args=['unresolved', u'2016-09-20 01:12:58.243529', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 4]
+(0.001) UPDATE `external_externalnoncriticaltransaction` SET `status` = 'unresolved', `time_created` = '2016-09-20 01:12:34.964782', `type_of_transaction` = 'debit', `time_resolved` = '9999-12-31 23:59:59.999999', `description` = 'test', `initiator_id` = 1, `resolver_id` = 3 WHERE `external_externalnoncriticaltransaction`.`id` = 2; args=('unresolved', u'2016-09-20 01:12:34.964782', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 3, 2)
+(0.001) UPDATE `external_externalcriticaltransaction` SET `status` = 'unresolved', `time_created` = '2016-09-20 01:12:35.065094', `type_of_transaction` = 'debit', `time_resolved` = '9999-12-31 23:59:59.999999', `description` = 'test', `initiator_id` = 1, `resolver_id` = 4 WHERE `external_externalcriticaltransaction`.`id` = 1; args=('unresolved', u'2016-09-20 01:12:35.065094', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 4, 1)
+(0.001) UPDATE `external_externalcriticaltransaction` SET `status` = 'unresolved', `time_created` = '2016-09-20 01:12:58.243529', `type_of_transaction` = 'debit', `time_resolved` = '9999-12-31 23:59:59.999999', `description` = 'test', `initiator_id` = 1, `resolver_id` = 4 WHERE `external_externalcriticaltransaction`.`id` = 2; args=('unresolved', u'2016-09-20 01:12:58.243529', 'debit', u'9999-12-31 23:59:59.999999', 'test', 1, 4, 2)
+(0.001) SELECT `external_externalnoncriticaltransaction`.`id`, `external_externalnoncriticaltransaction`.`status`, `external_externalnoncriticaltransaction`.`time_created`, `external_externalnoncriticaltransaction`.`type_of_transaction`, `external_externalnoncriticaltransaction`.`time_resolved`, `external_externalnoncriticaltransaction`.`description`, `external_externalnoncriticaltransaction`.`initiator_id`, `external_externalnoncriticaltransaction`.`resolver_id` FROM `external_externalnoncriticaltransaction` LIMIT 21; args=()
+(0.001) SELECT `external_externalnoncriticaltransaction`.`id`, `external_externalnoncriticaltransaction`.`status`, `external_externalnoncriticaltransaction`.`time_created`, `external_externalnoncriticaltransaction`.`type_of_transaction`, `external_externalnoncriticaltransaction`.`time_resolved`, `external_externalnoncriticaltransaction`.`description`, `external_externalnoncriticaltransaction`.`initiator_id`, `external_externalnoncriticaltransaction`.`resolver_id` FROM `external_externalnoncriticaltransaction` LIMIT 1 OFFSET 1; args=()
+(0.001) SELECT `external_externalnoncriticaltransaction`.`id`, `external_externalnoncriticaltransaction`.`status`, `external_externalnoncriticaltransaction`.`time_created`, `external_externalnoncriticaltransaction`.`type_of_transaction`, `external_externalnoncriticaltransaction`.`time_resolved`, `external_externalnoncriticaltransaction`.`description`, `external_externalnoncriticaltransaction`.`initiator_id`, `external_externalnoncriticaltransaction`.`resolver_id` FROM `external_externalnoncriticaltransaction` LIMIT 1; args=()
+(0.001) SELECT `external_externalnoncriticaltransaction`.`id`, `external_externalnoncriticaltransaction`.`status`, `external_externalnoncriticaltransaction`.`time_created`, `external_externalnoncriticaltransaction`.`type_of_transaction`, `external_externalnoncriticaltransaction`.`time_resolved`, `external_externalnoncriticaltransaction`.`description`, `external_externalnoncriticaltransaction`.`initiator_id`, `external_externalnoncriticaltransaction`.`resolver_id` FROM `external_externalnoncriticaltransaction`; args=()

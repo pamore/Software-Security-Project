@@ -1,9 +1,18 @@
+from datetime import datetime, timedelta
 from django.contrib.auth.models import User
-from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
-user1 = User.objects.create_user(username="john", password="iamironman")
+from global_templates.transaction_descriptions import debit_description, credit_description
+from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization, ExternalNoncriticalTransaction, ExternalCriticalTransaction
+from internal.models import RegularEmployee, SystemManager, Administrator
+user1 = User.objects.create_user(username="john", password="cucukachoo")
 user1.save()
 user2 = User.objects.create_user(username="garrett", password="youaretheman")
 user2.save()
+user3 = User.objects.create_user(username="paul", password="iamthewalrus")
+user3.save()
+user4 = User.objects.create_user(username="george", password="mysweetlord")
+user4.save()
+user5 = User.objects.create_user(username="ringo", password="dontpassmeby")
+user5.save()
 
 checkingaccount1 = CheckingAccount.objects.create(interest_rate=0.03, routing_number=1, current_balance=0.00, active_balance=0.00)
 checkingaccount1.save()
@@ -23,5 +32,27 @@ creditcard2.save()
 merchantorganization = MerchantOrganization.objects.create(first_name="Garrett", last_name="Garrett", email="gdgutier@asu.edu", street_address="I don't care", city="Tempe", state="AZ", zipcode=85122, session_key="None", checking_account_id=checkingaccount2.id, savings_account_id=savingsaccount2.id, credit_card_id=creditcard2.id, user_id=user2.id)
 merchantorganization.save()
 
+regularemployee = RegularEmployee.objects.create(first_name="Paul", last_name="McCartney", email="paulmccartney@beatles.com", street_address="Heart of the Country", city="Liverpool", state="UK", zipcode=12345, session_key="None", user_id=user3.id)
+regularemployee.save()
+
+systemmanager = SystemManager.objects.create(first_name="Ringo", last_name="Starr", email="ringostarr@beatles.com", street_address="Liverpool8 Factory", city="Liverpool", state="UK", zipcode=12345, session_key="None", user_id=user4.id)
+systemmanager.save()
+
+administrator = Administrator.objects.create(first_name="George", last_name="Harrison", email="georgeharrison@beatles.com", street_address="Dark Horse Way", city="Liverpool", state="UK", zipcode=12345, session_key="None", user_id=user5.id)
+administrator.save()
+
 user1 = User.objects.get(username=user1.username)
 user2 = User.objects.get(username=user2.username)
+user3 = User.objects.get(username=user3.username)
+user4 = User.objects.get(username=user4.username)
+user5 = User.objects.get(username=user5.username)
+
+transaction1 = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test", initiator_id=user1.id, resolver_id=user3.id)
+transaction2 = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test", initiator_id=user1.id, resolver_id=user3.id)
+transaction3 = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test", initiator_id=user1.id, resolver_id=user4.id)
+transaction4 = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test",initiator_id=user1.id, resolver_id=user4.id)
+
+transaction1.save()
+transaction2.save()
+transaction3.save()
+transaction4.save()
