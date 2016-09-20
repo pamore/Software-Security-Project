@@ -13,10 +13,10 @@
 <body class="body-background">
     <div class="container-fluid">
     <nav class="navbar navbar-top navbar-default">
-        <a class="navbar-brand" href="{% url 'internal:index' %}">CSE545 Group 3 Secure Banking System</a>
+        <a class="navbar-brand" href="{% url 'external:index' %}">CSE545 Group 3 Secure Banking System</a>
         <ul class="nav navbar-nav">
           <li class="nav-item">
-            <a class="nav-link" href="{% url 'internal:index' %}">Home</a>
+            <a class="nav-link" href="{% url 'external:index' %}">Home</a>
           </li>
           {% block navigation %}
           {% endblock %}

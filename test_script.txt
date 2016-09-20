@@ -1,17 +1,18 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from django.contrib.auth.models import User
-from global_templates.transaction_descriptions import debit_description, credit_description
+from global_templates.transaction_descriptions import debit_description, credit_description,transfer_description, payment_description
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from internal.models import RegularEmployee, SystemManager, Administrator
+
 user1 = User.objects.create_user(username="john", password="cucukachoo")
 user1.save()
 user2 = User.objects.create_user(username="garrett", password="youaretheman")
 user2.save()
 user3 = User.objects.create_user(username="paul", password="iamthewalrus")
 user3.save()
-user4 = User.objects.create_user(username="george", password="mysweetlord")
+user4 = User.objects.create_user(username="ringo", password="dontpassmeby")
 user4.save()
-user5 = User.objects.create_user(username="ringo", password="dontpassmeby")
+user5 = User.objects.create_user(username="george", password="mysweetlord")
 user5.save()
 
 checkingaccount1 = CheckingAccount.objects.create(interest_rate=0.03, routing_number=1, current_balance=0.00, active_balance=0.00)
@@ -47,10 +48,15 @@ user3 = User.objects.get(username=user3.username)
 user4 = User.objects.get(username=user4.username)
 user5 = User.objects.get(username=user5.username)
 
-transaction1 = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test", initiator_id=user1.id, resolver_id=user3.id)
-transaction2 = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test", initiator_id=user1.id, resolver_id=user3.id)
-transaction3 = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test", initiator_id=user1.id, resolver_id=user4.id)
-transaction4 = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", time_resolved=datetime.max, description="test",initiator_id=user1.id, resolver_id=user4.id)
+debit_string = debit_description(userType="Individual Customer",userID=user1.id,accountType="Checking",accountID=user1.individualcustomer.checking_account.id,routingID=user1.individualcustomer.checking_account.routing_number,amount=100.00)
+credit_string = credit_description(userType="Individual Customer",userID=user1.id,accountType="Checking",accountID=user1.individualcustomer.checking_account.id,routingID=user1.individualcustomer.checking_account.routing_number,amount=100.00)
+transfer_string = transfer_description(senderType="Individual Customer",senderID=user1.id,senderAccountType="Checking",senderAccountID=user1.individualcustomer.checking_account.id,senderRoutingID=user1.individualcustomer.checking_account.routing_number,receiverType="Savings",receiverID=user2.id,receiverAccountType="Savings",receiverAccountID=user2.merchantorganization.savings_account.id,receiverRoutingID=user2.merchantorganization.savings_account.routing_number,amount=100.00)
+payment_string = payment_description(senderType="Hello",senderID=1,senderAccountType="Apple",senderAccountID=1,senderRoutingID=1,receiverType="Hello",receiverID=1,receiverAccountType="Apple",receiverAccountID=1,receiverRoutingID=1,amount=100.00)
+
+transaction1 = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="debit", description=debit_string, initiator_id=user1.id)
+transaction2 = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="credit", description=credit_string, initiator_id=user1.id)
+transaction3 = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="transfer", description=transfer_string, initiator_id=user1.id)
+transaction4 = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction="payment", description=payment_string,initiator_id=user1.id)
 
 transaction1.save()
 transaction2.save()
