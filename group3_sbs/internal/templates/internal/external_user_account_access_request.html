@@ -1,0 +1,21 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add stylesheets or javascript here !-->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Navigation here !-->
+{% endblock %}
+
+{% block content %}
+<form action="{% url 'internal:validate_external_account_access_request' %}" method="post">
+{% csrf_token %}
+<label for="external_user_id">Enter external user ID for the profile for which you want access</label>
+<input type="number" class="form-control" name="external_user_id" min="1" value="1" step="1" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+{% endblock %}

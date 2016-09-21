@@ -1,37 +1,33 @@
 from datetime import datetime
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth.models import User
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required, user_passes_test
-from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_internal_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
-from global_templates.constants import *
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
+from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
+from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_CREDIT
+from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
 
 # Create your views here.
 
 # External User Home Page
 @login_required
+@user_passes_test(is_external_user)
 def index(request):
     user = request.user
-    if is_individual_customer(user):
-        if has_no_account(user):
-            return render(request, 'external/error.html')
-        else:
-            return render(request, 'external/index.html', {'user_type': "Individual Customer", 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name, 'checkingaccount': user.individualcustomer.checking_account, 'savingsaccount': user.individualcustomer.savings_account, 'creditcard': user.individualcustomer.credit_card})
-    elif is_merchant_organization(user):
-        if has_no_account(user):
-            return render(request, 'external/error.html')
-        else:
-            return render(request, 'external/index.html', {'user_type': "Merchant / Organization", 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
+    if is_individual_customer(user) and not has_no_account(user):
+        return render(request, 'external/index.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name, 'checkingaccount': user.individualcustomer.checking_account, 'savingsaccount': user.individualcustomer.savings_account, 'creditcard': user.individualcustomer.credit_card})
+    elif is_merchant_organization(user) and not has_no_account(user):
+        return render(request, 'external/index.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
     else:
         return render(request, 'external/error.html')
 
 # Checking Account Page
 @login_required
+@user_passes_test(is_external_user)
 def checking_account(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
@@ -43,6 +39,7 @@ def checking_account(request):
 
 # Savings Account Page
 @login_required
+@user_passes_test(is_external_user)
 def savings_account(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
@@ -54,6 +51,7 @@ def savings_account(request):
 
 # Credit Card Page
 @login_required
+@user_passes_test(is_external_user)
 def credit_card(request):
     user = request.user
     if is_individual_customer(user) and has_credit_card(user):
@@ -65,6 +63,7 @@ def credit_card(request):
 
 # Credit Checking Page
 @login_required
+@user_passes_test(is_external_user)
 def credit_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
@@ -76,6 +75,7 @@ def credit_checking(request):
 
 # Debit Checking Page
 @login_required
+@user_passes_test(is_external_user)
 def debit_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
@@ -87,6 +87,7 @@ def debit_checking(request):
 
 # Credit Savings Page
 @login_required
+@user_passes_test(is_external_user)
 def credit_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
@@ -98,6 +99,7 @@ def credit_savings(request):
 
 # Debit Savings Page
 @login_required
+@user_passes_test(is_external_user)
 def debit_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
@@ -109,6 +111,7 @@ def debit_savings(request):
 
 # Validate Credit Checking Transaction
 @login_required
+@user_passes_test(is_external_user)
 def credit_checking_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_CREDIT
@@ -125,6 +128,7 @@ def credit_checking_validate(request):
 
 # Validate Debit Checking Transaction
 @login_required
+@user_passes_test(is_external_user)
 def debit_checking_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_DEBIT
@@ -142,6 +146,7 @@ def debit_checking_validate(request):
 
 # Validate Credit Savings Transaction
 @login_required
+@user_passes_test(is_external_user)
 def credit_savings_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_CREDIT
@@ -159,6 +164,7 @@ def credit_savings_validate(request):
 
 # Validate Debit Savings Transaction
 @login_required
+@user_passes_test(is_external_user)
 def debit_savings_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_DEBIT
