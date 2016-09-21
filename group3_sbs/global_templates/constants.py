@@ -1,3 +1,29 @@
+ADMINISTRATOR = "Administrator"
+ADMINISTRATOR_ATTRIBUTE = "administrator"
+
+CREDIT_CARD = "Credit Card"
+CREDIT_CARD_ATTRIBUTE = "checking_account"
+
+CHECKING_ACCOUNT = "Checking Account"
+CHECKING_ACCOUNT_ATTRIBUTE = "checking_account"
+
+INDIVIDUAL_CUSTOMER = "Individual Customer"
+INDIVIDUAL_CUSTOMER_ATTRIBUTE = "individualcustomer"
+
 MAX_BALANCE = 9999999.99
+
+MERCHANT_ORGANIZATION = "Merchant / Organization"
+MERCHANT_ORGANIZATION_ATTRIBUTE = "merchantorganization"
+
 MIN_BALANCE = 0.00
+
 NONCRITICAL_TRANSACTION_LIMIT = 10000.00
+
+REGULAR_EMPLOYEE = "Regular Employee"
+REGULAR_EMPLOYEE_ATTRIBUTE = "regularemployee"
+
+SAVINGS_ACCOUNT = "Savings Account"
+SAVINGS_ACCOUNT_ATTRIBUTE = "savings_account"
+
+SYSTEM_MANAGER = "System Manager"
+SYSTEM_MANAGER_ATTRIBUTE = "systemmanager"

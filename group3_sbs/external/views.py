@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
 from global_templates.constants import MAX_BALANCE, MIN_BALANCE, NONCRITICAL_TRANSACTION_LIMIT
-from global_templates.common_functions import validate_amount
+from global_templates.common_functions import is_administrator, is_external_user, is_internal_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 
 # Create your views here.
@@ -17,13 +17,13 @@ from external.models import SavingsAccount, CheckingAccount, CreditCard, Externa
 @login_required
 def index(request):
     user = request.user
-    if hasattr(user, 'individualcustomer'):
-        if (not hasattr(user.individualcustomer, 'checking_account')) and (not hasattr(user.individualcustomer, 'savings_account')) and (not hasattr(user.individualcustomer, 'credit_card')):
+    if is_individual_customer(user):
+        if has_no_account(user):
             return render(request, 'external/error.html')
         else:
             return render(request, 'external/index.html', {'user_type': "Individual Customer", 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name, 'checkingaccount': user.individualcustomer.checking_account, 'savingsaccount': user.individualcustomer.savings_account, 'creditcard': user.individualcustomer.credit_card})
-    elif hasattr(user, 'merchantorganization'):
-        if (not hasattr(user.merchantorganization, 'checking_account')) and (not hasattr(user.merchantorganization, 'savings_account')) and (not hasattr(user.merchantorganization, 'credit_card')):
+    elif is_merchant_organization(user):
+        if has_no_account(user):
             return render(request, 'external/error.html')
         else:
             return render(request, 'external/index.html', {'user_type': "Merchant / Organization", 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
@@ -34,9 +34,9 @@ def index(request):
 @login_required
 def checking_account(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'checking_account'):
+    if is_individual_customer(user) and has_checking_account(user):
         return render(request, 'external/checking_account.html', {'checking_account': user.individualcustomer.checking_account})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'checking_account'):
+    elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/checking_account.html', {'checking_account': user.merchantorganization.checking_account})
     else:
         return render(request, 'external/error.html')
@@ -45,9 +45,9 @@ def checking_account(request):
 @login_required
 def savings_account(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'savings_account'):
+    if is_individual_customer(user) and has_savings_account(user):
         return render(request, 'external/savings_account.html', {'savings_account': user.individualcustomer.savings_account})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'savings_account'):
+    elif is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/savings_account.html', {'savings_account': user.merchantorganization.savings_account})
     else:
         return render(request, 'external/error.html')
@@ -56,9 +56,9 @@ def savings_account(request):
 @login_required
 def credit_card(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'credit_card'):
+    if is_individual_customer(user) and has_credit_card(user):
         return render(request, 'external/credit_card.html', {'credt_card': user.individualcustomer.credit_card})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'credit_card'):
+    elif is_merchant_organization(user) and has_credit_card(user):
         return render(request, 'external/credit_card.html', {'credt_card': user.merchantorganization.credit_card})
     else:
         return render(request, 'external/error.html')
@@ -67,9 +67,9 @@ def credit_card(request):
 @login_required
 def credit_checking(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'checking_account'):
+    if is_individual_customer(user) and has_checking_account(user):
         return render(request, 'external/credit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'checking_account'):
+    elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/credit.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return render(request, 'external/error.html')
@@ -78,9 +78,9 @@ def credit_checking(request):
 @login_required
 def debit_checking(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'checking_account'):
+    if is_individual_customer(user) and has_checking_account(user):
         return render(request, 'external/debit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'checking_account'):
+    elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/debit.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return render(request, 'external/error.html')
@@ -89,9 +89,9 @@ def debit_checking(request):
 @login_required
 def credit_savings(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'savings_account'):
+    if is_individual_customer(user) and has_savings_account(user):
         return render(request, 'external/credit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'savings_account'):
+    elif is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/credit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return render(request, 'external/error.html')
@@ -100,9 +100,9 @@ def credit_savings(request):
 @login_required
 def debit_savings(request):
     user = request.user
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'savings_account'):
+    if is_individual_customer(user) and has_savings_account(user):
         return render(request, 'external/debit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'savings_account'):
+    elif  is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/debit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return render(request, 'external/error.html')
