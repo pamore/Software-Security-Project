@@ -1,0 +1,27 @@
+{% extends "global_templates/sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="{% static 'reset/style.css' %}" />
+{% endblock %}
+
+
+{% block navigation %}
+<li class="nav-item active">
+  <a class="nav-link" href="{% url 'login:signin' %}">Sign-in<span class="sr-only">(current)</span></a>
+</li>
+{% endblock %}
+{% block content %}
+<h1>Password Reset</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'reset:resetUser' %}" method="post">
+{% csrf_token %}
+<label for="username">Username</label>
+<input type="text" class="form-control" name="username" value="" required />
+<label for="email">Email</label>
+<input type="email" class="form-control" name="email" value="" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+{% endblock %}
