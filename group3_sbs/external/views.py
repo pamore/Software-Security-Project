@@ -7,8 +7,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
-from global_templates.constants import MAX_BALANCE, MIN_BALANCE, NONCRITICAL_TRANSACTION_LIMIT
-from global_templates.common_functions import is_administrator, is_external_user, is_internal_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
+from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_internal_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
+from global_templates.constants import *
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 
 # Create your views here.
@@ -111,190 +111,64 @@ def debit_savings(request):
 @login_required
 def credit_checking_validate(request):
     user = request.user
-    type_of_transaction = "credit"
-    accountType = "Checking"
-    amount = float(request.POST['credit_amount'])
-    if not validate_amount(amount):
-        return render(request, 'external/error.html')
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'checking_account'):
-        userType = "Individual Customer"
-        new_balance = float(user.individualcustomer.checking_account.active_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.individualcustomer.checking_account.active_balance = new_balance
-            user.individualcustomer.checking_account.save()
-
-            # Create Transaction
-            credit_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'checking_account'):
-        userType = "Merchant / Organization"
-        new_balance = float(user.merchantorganization.checking_account.active_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.merchantorganization.checking_account.active_balance = new_balance
-            user.merchantorganization.checking_account.save()
-
-            # Create Transaction
-            credit_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+    type_of_transaction = TRANSACTION_TYPE_CREDIT
+    account_type = ACCOUNT_TYPE_CHECKING
+    error_redirect = 'external/error.html'
+    success_redirect = 'external/credit.html'
+    if is_individual_customer(user) and has_checking_account(user):
+        success_payload = {'checking_account': user.individualcustomer.checking_account, 'account_type': account_type}
+    elif is_merchant_organization(user) and has_checking_account(user):
+        success_payload = {'checking_account': user.merchantorganization.checking_account, 'account_type': account_type}
     else:
-        return render(request, 'external/error.html')
+        return render(request, error_redirect)
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Debit Checking Transaction
 @login_required
 def debit_checking_validate(request):
     user = request.user
-    type_of_transaction = "debit"
-    accountType = "Checking"
-    amount = float(request.POST['debit_amount'])
-    if not validate_amount(amount):
-        return render(request, 'external/error.html')
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'checking_account'):
-        userType = "Individual Customer"
-        new_balance = float(user.individualcustomer.checking_account.active_balance) - amount
-        if new_balance >= MIN_BALANCE:
-            user.individualcustomer.checking_account.active_balance = new_balance
-            user.individualcustomer.checking_account.save()
-
-            # Create Transaction
-            debit_string = debit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'checking_account'):
-        userType = "Merchant / Organization"
-        new_balance = float(user.merchantorganization.checking_account.active_balance) - amount
-        if new_balance >= MIN_BALANCE:
-            user.merchantorganization.checking_account.active_balance = new_balance
-            user.merchantorganization.checking_account.save()
-
-            # Create Transaction
-            debit_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+    type_of_transaction = TRANSACTION_TYPE_DEBIT
+    account_type = ACCOUNT_TYPE_CHECKING
+    error_redirect = 'external/error.html'
+    success_redirect = 'external/debit.html'
+    if is_individual_customer(user) and has_checking_account(user):
+        success_payload = {'checking_account': user.individualcustomer.checking_account, 'account_type': account_type}
+    elif is_merchant_organization(user) and has_checking_account(user):
+        success_payload = {'checking_account': user.merchantorganization.checking_account, 'account_type': account_type}
     else:
-        return render(request, 'external/error.html')
+        return render(request, error_redirect)
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+
 
 # Validate Credit Savings Transaction
 @login_required
 def credit_savings_validate(request):
     user = request.user
-    type_of_transaction = "credit"
-    accountType = "Savings"
-    amount = float(request.POST['credit_amount'])
-    if not validate_amount(amount):
-        return render(request, 'external/error.html')
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'savings_account'):
-        userType = "Individual Customer"
-        new_balance = float(user.individualcustomer.savings_account.active_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.individualcustomer.savings_account.active_balance = new_balance
-            user.individualcustomer.savings_account.save()
-
-            # Create Transaction
-            credit_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'savings_account'):
-        userType = "Merchant / Organization"
-        new_balance = float(user.merchantorganization.savings_account.active_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.merchantorganization.savings_account.active_balance = new_balance
-            user.merchantorganization.savings_account.save()
-
-            # Create Transaction
-            credit_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=credit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+    type_of_transaction = TRANSACTION_TYPE_CREDIT
+    account_type = ACCOUNT_TYPE_SAVINGS
+    error_redirect = 'external/error.html'
+    success_redirect = 'external/credit.html'
+    if is_individual_customer(user) and has_savings_account(user):
+        success_payload = {'savings_account': user.individualcustomer.savings_account, 'account_type': account_type}
+    elif is_merchant_organization(user) and has_savings_account(user):
+        success_payload = {'savings_account': user.merchantorganization.savings_account, 'account_type': account_type}
     else:
-        return render(request, 'external/error.html')
+        return render(request, error_redirect)
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+
 
 # Validate Debit Savings Transaction
 @login_required
 def debit_savings_validate(request):
     user = request.user
-    type_of_transaction = "debit"
-    accountType = "Savings"
-    amount = float(request.POST['debit_amount'])
-    if not validate_amount(amount):
-        return render(request, 'external/error.html')
-    if hasattr(user, 'individualcustomer') and hasattr(user.individualcustomer, 'savings_account'):
-        userType = "Individual Customer"
-        new_balance = float(user.individualcustomer.savings_account.active_balance) - amount
-        if new_balance >= MIN_BALANCE:
-            user.individualcustomer.savings_account.active_balance = new_balance
-            user.individualcustomer.savings_account.save()
-
-            # Create Transaction
-            debit_string = debit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
-    elif hasattr(user, 'merchantorganization') and hasattr(user.merchantorganization, 'savings_account'):
-        userType = "Merchant / Organization"
-        new_balance = float(user.merchantorganization.savings_account.active_balance) - amount
-        if new_balance >= MIN_BALANCE:
-            user.merchantorganization.savings_account.active_balance = new_balance
-            user.merchantorganization.savings_account.save()
-
-            # Create Transaction
-            debit_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount)
-            if amount > NONCRITICAL_TRANSACTION_LIMIT:
-                transaction = ExternalCriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            else:
-                transaction = ExternalNoncriticalTransaction.objects.create(status="unresolved", time_created=datetime.now(), type_of_transaction=type_of_transaction, description=debit_string, initiator_id=user.id)
-            transaction.participants.add(user)
-            transaction.save()
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return render(request, 'external/credit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+    type_of_transaction = TRANSACTION_TYPE_DEBIT
+    account_type = ACCOUNT_TYPE_SAVINGS
+    error_redirect = 'external/error.html'
+    success_redirect = 'external/debit.html'
+    if is_individual_customer(user) and has_savings_account(user):
+        success_payload = {'savings_account': user.individualcustomer.savings_account, 'account_type': account_type}
+    elif is_merchant_organization(user) and has_savings_account(user):
+        success_payload = {'savings_account': user.merchantorganization.savings_account, 'account_type': account_type}
     else:
-        return render(request, 'external/error.html')
+        return render(request, error_redirect)
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)

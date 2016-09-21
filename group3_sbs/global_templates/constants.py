@@ -1,3 +1,6 @@
+ACCOUNT_TYPE_CHECKING = "Checking"
+ACCOUNT_TYPE_SAVINGS = "Savings"
+
 ADMINISTRATOR = "Administrator"
 ADMINISTRATOR_ATTRIBUTE = "administrator"
 
@@ -27,3 +30,8 @@ SAVINGS_ACCOUNT_ATTRIBUTE = "savings_account"
 
 SYSTEM_MANAGER = "System Manager"
 SYSTEM_MANAGER_ATTRIBUTE = "systemmanager"
+
+TRANSACTION_STATUS_UNRESOLVED = "unresolved"
+
+TRANSACTION_TYPE_CREDIT = "credit"
+TRANSACTION_TYPE_DEBIT = "debit"
