@@ -15,11 +15,11 @@ def resetUser(request):
 
     try:
         userNameEmailExists = User.objects.filter(username=request.POST['username'],email=request.POST['email']).exists()
-        # userEmailExists = User.objects.filter(email=request.POST['email']).exists()
-        print("The userNameEmailExists is %s\n"%(userNameEmailExists))
-        # print("The userEmailExists is %s\n"%(userEmailExists))
-        if userNameEmailExists is True:
-            pass
+        reCaptcha = request.POST['g-recaptcha-response']
+        # print("The userNameEmailExists is %s\n"%(userNameEmailExists))
+        # print("The reCaptcha is %s\n"%(reCaptcha))
+        if(userNameEmailExists is True and reCaptcha):
+            print("The username, email, and captcha have been verified\n")
             # return HttpResponseRedirect(reverse('login:loggedin'))
         else:
             raise Exception('Incorrect username and email combination')
