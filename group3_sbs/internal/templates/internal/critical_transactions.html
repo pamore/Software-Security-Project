@@ -12,6 +12,14 @@
 {% endblock %}
 
 {% block content %}
+
+{% if error_message %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>{{error_message}}</h1>
+  </div>
+{% endif %}
+
 <div class="row">
   <div class="col-md-12">
     <h1>List of all critical transactions</h1>
@@ -26,6 +34,7 @@
         <th>Status</th>
         <th>Resolver</th>
         <th>Time Resolved</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody>
@@ -42,6 +51,11 @@
         {% else %}
         <td>Unresolved</td>
         <td>Unresolved</td>
+        {% endif %}
+        {% if forloop.first %}
+        <td><a class="btn btn-success" href="{% url 'internal:validate_critical_transaction_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_critical_transaction_denial' transaction_id=transaction.id %}">Deny</a></td>
+        {% else %}
+        <td>None</td>
         {% endif %}
       </tr>
       {% endfor %}

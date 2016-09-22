@@ -5,14 +5,14 @@ def debit_description(userType, userID, accountType, accountID, routingID, amoun
     accountID = str(accountID)
     routingID = str(routingID)
     amount = str(amount)
-    return 'Transaction Type: debit,User Type: {0},User ID: {1},Account Type: {2},Account ID: {3},Routing ID:{4},Amount: {5}'.format(unicode(userType,'utf-8'), unicode(userID,'utf-8'), unicode(accountType,'utf-8'), unicode(accountID,'utf-8'), unicode(routingID,'utf-8'), unicode(amount,'utf-8'))
+    return 'Transaction Type: debit,User Type: {0},User ID: {1},Account Type: {2},Account ID: {3},Routing ID: {4},Amount: {5}'.format(unicode(userType,'utf-8'), unicode(userID,'utf-8'), unicode(accountType,'utf-8'), unicode(accountID,'utf-8'), unicode(routingID,'utf-8'), unicode(amount,'utf-8'))
 
 def credit_description(userType, userID, accountType, accountID, routingID, amount):
     userID = str(userID)
     accountID = str(accountID)
     routingID = str(routingID)
     amount = str(amount)
-    return 'Transaction Type: credit,User Type: {0},User ID: {1},Account Type: {2},Account ID: {3},Routing ID:{4},Amount: {5}'.format(unicode(userType,'utf-8'), unicode(userID,'utf-8'), unicode(accountType,'utf-8'), unicode(accountID,'utf-8'), unicode(routingID,'utf-8'), unicode(amount,'utf-8'))
+    return 'Transaction Type: credit,User Type: {0},User ID: {1},Account Type: {2},Account ID: {3},Routing ID: {4},Amount: {5}'.format(unicode(userType,'utf-8'), unicode(userID,'utf-8'), unicode(accountType,'utf-8'), unicode(accountID,'utf-8'), unicode(routingID,'utf-8'), unicode(amount,'utf-8'))
 
 def transfer_description(senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount):
     senderID = str(senderID)

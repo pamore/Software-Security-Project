@@ -5,10 +5,12 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.views.decorators.cache import never_cache
 
 # Create your views here
 
 # Login Page
+@never_cache
 def signin(request):
     if request.user.is_authenticated:
         return HttpResponseRedirect(reverse('login:loggedin'))
@@ -16,6 +18,7 @@ def signin(request):
         return render(request, 'login/signin.html')
 
 # Validate login
+@never_cache
 def loginValidate(request):
     try:
         user = authenticate(username=request.POST['username'], password=request.POST['password'])
@@ -30,11 +33,13 @@ def loginValidate(request):
         return render(request, 'login/signin.html', {'error_message': "Error occurred with submission",})
 
 # Logout
+@never_cache
 def signout(request):
     logout(request)
     return HttpResponseRedirect(reverse('login:signin'))
 
 # Logged in page
+@never_cache
 @login_required
 def loggedin(request):
     user = request.user

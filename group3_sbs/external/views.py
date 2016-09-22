@@ -1,4 +1,4 @@
-from datetime import datetime
+from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
@@ -6,6 +6,7 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_CREDIT
@@ -14,6 +15,7 @@ from global_templates.transaction_descriptions import debit_description, credit_
 # Create your views here.
 
 # External User Home Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def index(request):
@@ -26,6 +28,7 @@ def index(request):
         return render(request, 'external/error.html')
 
 # Checking Account Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def checking_account(request):
@@ -38,6 +41,7 @@ def checking_account(request):
         return render(request, 'external/error.html')
 
 # Savings Account Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def savings_account(request):
@@ -50,6 +54,7 @@ def savings_account(request):
         return render(request, 'external/error.html')
 
 # Credit Card Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def credit_card(request):
@@ -62,6 +67,7 @@ def credit_card(request):
         return render(request, 'external/error.html')
 
 # Credit Checking Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def credit_checking(request):
@@ -74,6 +80,7 @@ def credit_checking(request):
         return render(request, 'external/error.html')
 
 # Debit Checking Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def debit_checking(request):
@@ -86,6 +93,7 @@ def debit_checking(request):
         return render(request, 'external/error.html')
 
 # Credit Savings Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def credit_savings(request):
@@ -98,6 +106,7 @@ def credit_savings(request):
         return render(request, 'external/error.html')
 
 # Debit Savings Page
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def debit_savings(request):
@@ -110,6 +119,7 @@ def debit_savings(request):
         return render(request, 'external/error.html')
 
 # Validate Credit Checking Transaction
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def credit_checking_validate(request):
@@ -127,6 +137,7 @@ def credit_checking_validate(request):
     return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Debit Checking Transaction
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def debit_checking_validate(request):
@@ -145,6 +156,7 @@ def debit_checking_validate(request):
 
 
 # Validate Credit Savings Transaction
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def credit_savings_validate(request):
@@ -163,6 +175,7 @@ def credit_savings_validate(request):
 
 
 # Validate Debit Savings Transaction
+@never_cache
 @login_required
 @user_passes_test(is_external_user)
 def debit_savings_validate(request):
