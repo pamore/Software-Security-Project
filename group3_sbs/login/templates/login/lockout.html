@@ -1,0 +1,7 @@
+{% extends "global_templates/sbs.html" %}
+{% load static %}
+{% block content %}
+  <h1>You are locked out</h1>
+  <p>You attempted to access the same account three times in a row from the same IP with the same username without correctly entering a correct username password combination</p>
+  <p>Please attempt to log back in after 1 hour from your last incorrect login attempt</p>
+{% endblock %}
