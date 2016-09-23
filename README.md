@@ -62,6 +62,11 @@
 # Install Django
 * pip install django
 
+# Install Django-Axes
+* pip install django-axes
+  * See https://django-axes.readthedocs.io
+  * Make sure to make migrations and then migrate after installing and setting up database scheme.
+
 # How to clone repository
 1. Go to directory where you want you project to live
   * cd <path>/<destination_folder>

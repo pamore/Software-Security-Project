@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'axes',
     'login',
     'global_templates',
     'internal',
@@ -51,10 +52,69 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'global_templates.middleware.OneLoginPerUserMiddleware'
 ]
 
 ROOT_URLCONF = 'group3_sbs.urls'
 
+# Logging settings
+# https://docs.djangoproject.com/en/1.10/topics/logging/
+# https://github.com/jgutbub/CSE_545/wiki/Logging
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': './log/server_log.log',
+        },
+        'login_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/login_log.log',
+        },
+        'internal_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/internal_log.log',
+        },
+        'external_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/external_log.log',
+        },
+        'global_templates_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/global_templates_log.log',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'login': {
+            'handlers': ['login_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'internal': {
+            'handlers': ['internal_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'external': {
+            'handlers': ['external_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'global_templates': {
+            'handlers': ['global_templates_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 # Templates
 
@@ -131,6 +191,25 @@ USE_TZ = False
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
+# Axes Login settings
+# https://django-axes.readthedocs.io/en/latest/configuration.html
+
+AXES_LOGIN_FAILURE_LIMIT = 3
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_USE_USER_AGENT = False
+
+# Allow them retry after 1 hour
+AXES_COOLOFF_TIME = 1
+AXES_LOGGER = 'axes.watch_login'
+
+# Choose the template (html) to be rendered when locked out
+AXES_LOCKOUT_TEMPLATE = 'login/lockout.html'
+AXES_LOCKOUT_URL = None
+
+AXES_USERNAME_FORM_FIELD = 'username'
+AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
+AXES_NEVER_LOCKOUT_WHITELIST = False
+
 # Session settings
 # https://docs.djangoproject.com/en/1.10/topics/http/sessions/
 
@@ -143,3 +222,20 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 # Update the session life upon each request
 SESSION_SAVE_EVERY_REQUEST = True
 
+
+# Email Setup
+# https://docs.djangoproject.com/en/1.10/topics/email/
+# https://github.com/jgutbub/CSE_545/wiki/Sending-mail
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'group3sbs@gmail.com'
+EMAIL_HOST_PASSWORD = 'asussgroup3'
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
+TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBackend'
+
+# Login
+LOGIN_URL = "/login/"
