@@ -29,7 +29,6 @@ def signin(request):
 @watch_login
 def loginValidate(request):
     try:
-        print(request)
         user = authenticate(username=request.POST['username'], password=request.POST['password'])
         if user is not None:
             login(request, user)
