@@ -18,6 +18,14 @@
   <div class="col-md-12">
     <h1>{{error_message}}</h1>
   </div>
+</div>
+{% endif %}
+{% if not can_resolve and transactions %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>System manager or regular employee must resolve a prior non-critical transaction</h1>
+  </div>
+</div>
 {% endif %}
 
 <div class="row">
@@ -52,7 +60,7 @@
         <td>Unresolved</td>
         <td>Unresolved</td>
         {% endif %}
-        {% if forloop.first %}
+        {% if forloop.first and can_resolve %}
         <td><a class="btn btn-success" href="{% url 'internal:validate_critical_transaction_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_critical_transaction_denial' transaction_id=transaction.id %}">Deny</a></td>
         {% else %}
         <td>None</td>

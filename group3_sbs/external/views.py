@@ -25,7 +25,7 @@ def index(request):
     elif is_merchant_organization(user) and not has_no_account(user):
         return render(request, 'external/index.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Checking Account Page
 @never_cache
@@ -38,7 +38,7 @@ def checking_account(request):
     elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/checking_account.html', {'checking_account': user.merchantorganization.checking_account})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Savings Account Page
 @never_cache
@@ -51,7 +51,7 @@ def savings_account(request):
     elif is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/savings_account.html', {'savings_account': user.merchantorganization.savings_account})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Credit Card Page
 @never_cache
@@ -64,7 +64,7 @@ def credit_card(request):
     elif is_merchant_organization(user) and has_credit_card(user):
         return render(request, 'external/credit_card.html', {'credt_card': user.merchantorganization.credit_card})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Credit Checking Page
 @never_cache
@@ -77,7 +77,7 @@ def credit_checking(request):
     elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/credit.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Debit Checking Page
 @never_cache
@@ -90,7 +90,7 @@ def debit_checking(request):
     elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/debit.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Credit Savings Page
 @never_cache
@@ -103,7 +103,7 @@ def credit_savings(request):
     elif is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/credit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Debit Savings Page
 @never_cache
@@ -116,7 +116,7 @@ def debit_savings(request):
     elif  is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/debit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
-        return render(request, 'external/error.html')
+        return HttpResponseRedirect(reverse('external:error'))
 
 # Validate Credit Checking Transaction
 @never_cache
@@ -126,15 +126,9 @@ def credit_checking_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_CREDIT
     account_type = ACCOUNT_TYPE_CHECKING
-    error_redirect = 'external/error.html'
-    success_redirect = 'external/credit.html'
-    if is_individual_customer(user) and has_checking_account(user):
-        success_payload = {'checking_account': user.individualcustomer.checking_account, 'account_type': account_type}
-    elif is_merchant_organization(user) and has_checking_account(user):
-        success_payload = {'checking_account': user.merchantorganization.checking_account, 'account_type': account_type}
-    else:
-        return render(request, error_redirect)
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+    error_redirect = 'external:error'
+    success_redirect = 'external:checking_account'
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Debit Checking Transaction
 @never_cache
@@ -144,15 +138,9 @@ def debit_checking_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_DEBIT
     account_type = ACCOUNT_TYPE_CHECKING
-    error_redirect = 'external/error.html'
-    success_redirect = 'external/debit.html'
-    if is_individual_customer(user) and has_checking_account(user):
-        success_payload = {'checking_account': user.individualcustomer.checking_account, 'account_type': account_type}
-    elif is_merchant_organization(user) and has_checking_account(user):
-        success_payload = {'checking_account': user.merchantorganization.checking_account, 'account_type': account_type}
-    else:
-        return render(request, error_redirect)
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+    error_redirect = 'external:error'
+    success_redirect = 'external:checking_account'
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 
 # Validate Credit Savings Transaction
@@ -163,15 +151,9 @@ def credit_savings_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_CREDIT
     account_type = ACCOUNT_TYPE_SAVINGS
-    error_redirect = 'external/error.html'
-    success_redirect = 'external/credit.html'
-    if is_individual_customer(user) and has_savings_account(user):
-        success_payload = {'savings_account': user.individualcustomer.savings_account, 'account_type': account_type}
-    elif is_merchant_organization(user) and has_savings_account(user):
-        success_payload = {'savings_account': user.merchantorganization.savings_account, 'account_type': account_type}
-    else:
-        return render(request, error_redirect)
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+    error_redirect = 'external:error'
+    success_redirect = 'external:savings_account'
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
 
 
 # Validate Debit Savings Transaction
@@ -182,12 +164,6 @@ def debit_savings_validate(request):
     user = request.user
     type_of_transaction = TRANSACTION_TYPE_DEBIT
     account_type = ACCOUNT_TYPE_SAVINGS
-    error_redirect = 'external/error.html'
-    success_redirect = 'external/debit.html'
-    if is_individual_customer(user) and has_savings_account(user):
-        success_payload = {'savings_account': user.individualcustomer.savings_account, 'account_type': account_type}
-    elif is_merchant_organization(user) and has_savings_account(user):
-        success_payload = {'savings_account': user.merchantorganization.savings_account, 'account_type': account_type}
-    else:
-        return render(request, error_redirect)
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+    error_redirect = 'external:error'
+    success_redirect = 'external:savings_account'
+    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)

@@ -31,37 +31,38 @@ def commit_transaction_credit_or_debit(transaction, user):
         amount = float(data['amount'])
         account = data['account']
         if type_of_transaction == TRANSACTION_TYPE_CREDIT:
-            new_amount = float(account.current_balance) - amount
+            new_amount = float(account.current_balance) + amount
             if validate_amount(new_amount):
                 account.current_balance = new_amount
         elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
-            new_amount = float(account.current_balance) + amount
+            new_amount = float(account.current_balance) - amount
             if validate_amount(new_amount):
                 account.current_balance = new_amount
         else:
             return False
         save_transaction(transaction=transaction, user=user)
+        account.save()
         return True
     except:
         return False
 
-def create_debit_or_credit_transaction(user, user_type, account_type, type_of_transaction, amount):
+def create_debit_or_credit_transaction(user, user_type, account_type, type_of_transaction, amount, starting_balance, ending_balance):
     if is_individual_customer(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount)
+        description_string = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_individual_customer(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount)
+        description_string = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_merchant_organization(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string  = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount)
+        description_string  = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_merchant_organization(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string  = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount)
+        description_string  = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_individual_customer(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount)
+        description_string = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_individual_customer(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount)
+        description_string = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_merchant_organization(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string  = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount)
+        description_string  = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     elif is_merchant_organization(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string  = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount)
+        description_string  = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     else:
         return False
     if amount > NONCRITICAL_TRANSACTION_LIMIT:
@@ -72,84 +73,115 @@ def create_debit_or_credit_transaction(user, user_type, account_type, type_of_tr
     transaction.save()
     return True
 
-def credit_or_debit_validate(request, type_of_transaction, account_type, success_payload, success_redirect, error_redirect):
+def credit_or_debit_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     user = request.user
     if type_of_transaction == TRANSACTION_TYPE_CREDIT:
         amount = float(request.POST['credit_amount'])
     if type_of_transaction == TRANSACTION_TYPE_DEBIT:
         amount = float(request.POST['debit_amount'])
     if not validate_amount(amount):
-        return render(request, error_redirect)
+        return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        starting_balance = user.individualcustomer.checking_account.active_balance
         user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(user.individualcustomer.checking_account.active_balance) + amount
+        new_balance = float(starting_balance) + amount
         if new_balance <= MAX_BALANCE:
             user.individualcustomer.checking_account.active_balance = new_balance
             user.individualcustomer.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        starting_balance = user.merchantorganization.checking_account.active_balance
         user_type = MERCHANT_ORGANIZATION
-        new_balance = float(user.merchantorganization.checking_account.active_balance) + amount
+        new_balance = float(starting_balance) + amount
         if new_balance <= MAX_BALANCE:
             user.merchantorganization.checking_account.active_balance = new_balance
             user.merchantorganization.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        starting_balance = user.individualcustomer.savings_account.active_balance
         user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(user.individualcustomer.savings_account.active_balance) + amount
+        new_balance = float(starting_balance) + amount
         if new_balance <= MAX_BALANCE:
             user.individualcustomer.savings_account.active_balance = new_balance
             user.individualcustomer.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        starting_balance = user.merchantorganization.savings_account.active_balance
         user_type = MERCHANT_ORGANIZATION
-        new_balance = float(user.merchantorganization.savings_account.active_balance) + amount
+        new_balance = float(starting_balance) + amount
         if new_balance <= MAX_BALANCE:
             user.merchantorganization.savings_account.active_balance = new_balance
             user.merchantorganization.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        starting_balance = user.individualcustomer.checking_account.active_balance
         user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(user.individualcustomer.checking_account.active_balance) - amount
+        new_balance = float(starting_balance) - amount
         if new_balance <= MAX_BALANCE:
             user.individualcustomer.checking_account.active_balance = new_balance
             user.individualcustomer.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        starting_balance = user.merchantorganization.checking_account.active_balance
         user_type = MERCHANT_ORGANIZATION
-        new_balance = float(user.merchantorganization.checking_account.active_balance) - amount
+        new_balance = float(starting_balance) - amount
         if new_balance <= MAX_BALANCE:
             user.merchantorganization.checking_account.active_balance = new_balance
             user.merchantorganization.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        starting_balance = user.individualcustomer.savings_account.active_balance
         user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(user.individualcustomer.savings_account.active_balance) - amount
+        new_balance = float(starting_balance) - amount
         if new_balance <= MAX_BALANCE:
             user.individualcustomer.savings_account.active_balance = new_balance
             user.individualcustomer.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        starting_balance = user.merchantorganization.savings_account.active_balance
         user_type = MERCHANT_ORGANIZATION
-        new_balance = float(user.merchantorganization.savings_account.active_balance) - amount
+        new_balance = float(starting_balance) - amount
         if new_balance <= MAX_BALANCE:
             user.merchantorganization.savings_account.active_balance = new_balance
             user.merchantorganization.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount)
-        return render(request, success_redirect, success_payload)
+            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
     else:
-        return render(request, error_redirect)
+        return HttpResponseRedirect(reverse(error_redirect))
 
 def deny_transaction(transaction, user):
+    type_of_transaction = transaction.type_of_transaction
+    if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        return deny_transaction_credit_or_debit(transaction=transaction, user=user)
+    # To do: Add transfer and payment functionality
+    else:
+        return False
+
+def deny_transaction_credit_or_debit(transaction, user):
     try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        account = data['account']
+        if type_of_transaction == TRANSACTION_TYPE_CREDIT:
+            new_amount = float(account.active_balance) - amount
+            if validate_amount(new_amount):
+                account.active_balance = new_amount
+        elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
+            new_amount = float(account.active_balance) + amount
+            if validate_amount(new_amount):
+                account.active_balance = new_amount
+        else:
+            return False
         save_transaction(transaction=transaction, user=user)
+        account.save()
         return True
     except:
         return False
@@ -243,6 +275,8 @@ def parse_transaction_description_credit_or_debit(transaction_description):
         account_id = contents[4].split(': ')[1]
         routing_id = contents[5].split(': ')[1]
         amount = contents[6].split(': ')[1]
+        starting_balance = contents[7].split(': ')[1]
+        ending_balance = contents[8].split(': ')[1]
         external_user = User.objects.get(id=int(user_id))
         if account_type == ACCOUNT_TYPE_CHECKING:
             account = CheckingAccount.objects.get(id=account_id)
@@ -259,6 +293,8 @@ def parse_transaction_description_credit_or_debit(transaction_description):
             'account_id' : account_id,
             'routing_id' : routing_id,
             'amount' : amount,
+            'starting_balance' : starting_balance,
+            'ending_balance' : ending_balance,
         }
     except:
         return {}
