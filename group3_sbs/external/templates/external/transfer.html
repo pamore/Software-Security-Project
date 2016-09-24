@@ -1,0 +1,101 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Transfer from your {{account_type}} Account</h1>
+  </div>
+</div>
+
+{% if checking_account %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{checking_account.id}}</td>
+      <td>{{checking_account.routing_number}}</td>
+      <td>${{checking_account.current_balance}}</td>
+      <td>${{checking_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<form action="{% url 'external:transfer_checking_validate' %}" method="post">
+{% csrf_token %}
+<label for="transfer_amount">Please enter an amount less than or equal to ${{checking_account.active_balance}} to transfer from your checking account</label>
+<input type="number" class="form-control" name="transfer_amount" value="0.00" min="0.00" max="{{checking_account.active_balance}}" required />
+<label class="radio-inline"><input type="radio" name="account_type" value="Checking" required />Checking</label>
+<label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
+<br />
+<label for="account_number">Please enter recipient account number</label>
+<input type="number" class="form-control" name="account_number" value="1" min="1" step="1" required />
+<label for="route_amount">Please enter recipient route number</label>
+<input type="number" class="form-control" name="route_number" value="1" min="1" step="1" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+
+{% endif %}
+
+{% if savings_account %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{savings_account.id}}</td>
+      <td>{{savings_account.routing_number}}</td>
+      <td>${{savings_account.current_balance}}</td>
+      <td>${{savings_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<form action="{% url 'external:transfer_savings_validate' %}" method="post">
+{% csrf_token %}
+<label for="transfer_amount">Please enter an amount less than or equal to ${{savings_account.active_balance}} to transfer from your savings account</label>
+<input type="number" class="form-control" name="transfer_amount" value="0.00" min="0.00" max="{{savings_account.active_balance}}" required />
+<label class="radio-inline"><input type="radio" name="account_type" value="Checking" required />Checking</label>
+<label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
+<br />
+<label for="account_number">Please enter recipient account number</label>
+<input type="number" class="form-control" name="account_number" value="1" min="1" step="1" required />
+<label for="route_amount">Please enter recipient route number</label>
+<input type="number" class="form-control" name="route_number" value="1" min="1" step="1" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+
+{% endif %}
+
+{% endblock %}

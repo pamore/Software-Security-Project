@@ -175,10 +175,10 @@ def validate_critical_transaction_denial(request, transaction_id):
     top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status="resolved").order_by('time_created').first()
     transactions = ExternalCriticalTransaction.objects.filter().exclude(status="resolved").order_by('time_created')
     if top_noncritical_transaction is None and not top_critical_transaction is None:
-        if commit_transaction(transaction=top_critical_transaction, user=user):
+        if deny_transaction(transaction=top_critical_transaction, user=user):
             return HttpResponseRedirect(reverse(success_page_reverse))
         else:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
+            return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
     elif top_critical_transaction is None:
         return render(request, success_page, {'transactions': transactions, 'error_message': "No critical transactions to approve"})
     if top_critical_transaction.time_created > top_noncritical_transaction.time_created:
@@ -187,8 +187,10 @@ def validate_critical_transaction_denial(request, transaction_id):
         if int(transaction_id) != top_critical_transaction.id:
             return render(request, success_page, {'transactions': transactions, 'error_message': "Given critical transaction does not match oldest critical transaction to be resolved"})
         else:
-            deny_transaction(transaction=top_noncritical_transaction, user=user)
-            return HttpResponseRedirect(reverse(success_page_reverse))
+            if deny_transaction(transaction=top_critical_transaction, user=user):
+                return HttpResponseRedirect(reverse(success_page_reverse))
+            else:
+                return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
 
 # Approve Non-criticial Transactions
 @never_cache
@@ -231,7 +233,7 @@ def validate_noncritical_transaction_denial(request, transaction_id):
     top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status="resolved").order_by('time_created').first()
     transactions = ExternalNoncriticalTransaction.objects.filter().exclude(status="resolved").order_by('time_created')
     if top_critical_transaction is None and not top_noncritical_transaction is None:
-        if commit_transaction(transaction=top_noncritical_transaction, user=user):
+        if deny_transaction(transaction=top_noncritical_transaction, user=user):
             return HttpResponseRedirect(reverse(success_page_reverse))
         else:
             return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
@@ -243,5 +245,7 @@ def validate_noncritical_transaction_denial(request, transaction_id):
         if int(transaction_id) != top_noncritical_transaction.id:
             return render(request, success_page, {'transactions': transactions, 'error_message': "Given non-critical transaction does not match oldest non-critical transaction to be resolved"})
         else:
-            deny_transaction(transaction=top_noncritical_transaction, user=user)
-            return HttpResponseRedirect(reverse(success_page_reverse))
+            if deny_transaction(transaction=top_critical_transaction, user=user):
+                return HttpResponseRedirect(reverse(success_page_reverse))
+            else:
+                return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})

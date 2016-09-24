@@ -20,7 +20,11 @@ def commit_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         return commit_transaction_credit_or_debit(transaction=transaction, user=user)
-    # To do: Add transfer and payment functionality
+    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        return commit_transaction_payment(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        return commit_transaction_transfer(transaction=transaction, user=user)
+    # To do: Add payment functionality
     else:
         return False
 
@@ -32,16 +36,72 @@ def commit_transaction_credit_or_debit(transaction, user):
         account = data['account']
         if type_of_transaction == TRANSACTION_TYPE_CREDIT:
             new_amount = float(account.current_balance) + amount
-            if validate_amount(new_amount):
+            if validate_amount(new_amount) and validate_amount(amount):
                 account.current_balance = new_amount
+            else:
+                return False
         elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
             new_amount = float(account.current_balance) - amount
-            if validate_amount(new_amount):
+            if validate_amount(new_amount) and validate_amount(amount):
                 account.current_balance = new_amount
+            else:
+                return False
         else:
             return False
         save_transaction(transaction=transaction, user=user)
         account.save()
+        return True
+    except:
+        return False
+
+def commit_transaction_payment(transaction, user):
+    try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        sender = data['sender']
+        receiver = data['receiver']
+        sender_account = data['sender_account']
+        receiver_account = data['receiver_account']
+        sender_new_balance = float(sender_account.current_balance) - amount
+        receiver_new_balance = float(receiver_account.current_balance) + amount
+        if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+            if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+                sender_account.current_balance = sender_new_balance
+                receiver_account.current_balance = receiver_new_balance
+            else:
+                return False
+        else:
+            return False
+        save_transaction(transaction=transaction, user=user)
+        sender_account.save()
+        receiver_account.save()
+        return True
+    except:
+        return False
+
+def commit_transaction_transfer(transaction, user):
+    try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        sender = data['sender']
+        receiver = data['receiver']
+        sender_account = data['sender_account']
+        receiver_account = data['receiver_account']
+        sender_new_balance = float(sender_account.current_balance) - amount
+        receiver_new_balance = float(receiver_account.current_balance) + amount
+        if type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+            if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+                sender_account.current_balance = sender_new_balance
+                receiver_account.current_balance = receiver_new_balance
+            else:
+                return False
+        else:
+            return False
+        save_transaction(transaction=transaction, user=user)
+        sender_account.save()
+        receiver_account.save()
         return True
     except:
         return False
@@ -70,6 +130,30 @@ def create_debit_or_credit_transaction(user, user_type, account_type, type_of_tr
     else:
         transaction = ExternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
     transaction.participants.add(user)
+    transaction.save()
+    return True
+
+def create_payment_transaction(sender, senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiver, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
+    type_of_transaction = TRANSACTION_TYPE_PAYMENT
+    description_string = payment_description(senderType=senderType, senderID=senderID, senderAccountType=senderAccountType, senderAccountID=senderAccountID, senderRoutingID=senderRoutingID, receiverType=receiverType, receiverID=receiverID, receiverAccountType=receiverAccountType, receiverAccountID=receiverAccountID, receiverRoutingID=receiverRoutingID, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_ending_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_ending_balance)
+    if amount > NONCRITICAL_TRANSACTION_LIMIT:
+        transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
+    else:
+        transaction = ExternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
+    transaction.participants.add(sender)
+    transaction.participants.add(receiver)
+    transaction.save()
+    return True
+
+def create_transfer_transaction(sender, senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiver, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
+    type_of_transaction = TRANSACTION_TYPE_TRANSFER
+    description_string = transfer_description(senderType=senderType, senderID=senderID, senderAccountType=senderAccountType, senderAccountID=senderAccountID, senderRoutingID=senderRoutingID, receiverType=receiverType, receiverID=receiverID, receiverAccountType=receiverAccountType, receiverAccountID=receiverAccountID, receiverRoutingID=receiverRoutingID, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_ending_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_ending_balance)
+    if amount > NONCRITICAL_TRANSACTION_LIMIT:
+        transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
+    else:
+        transaction = ExternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
+    transaction.participants.add(sender)
+    transaction.participants.add(receiver)
     transaction.save()
     return True
 
@@ -160,7 +244,11 @@ def deny_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         return deny_transaction_credit_or_debit(transaction=transaction, user=user)
-    # To do: Add transfer and payment functionality
+    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        return deny_transaction_payment(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        return deny_transaction_transfer(transaction=transaction, user=user)
+    # To do: add payment functionality
     else:
         return False
 
@@ -182,6 +270,58 @@ def deny_transaction_credit_or_debit(transaction, user):
             return False
         save_transaction(transaction=transaction, user=user)
         account.save()
+        return True
+    except:
+        return False
+
+def deny_transaction_payment(transaction, user):
+    try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        sender = data['sender']
+        receiver = data['receiver']
+        sender_account = data['sender_account']
+        receiver_account = data['receiver_account']
+        sender_new_balance = float(sender_account.active_balance) + amount
+        receiver_new_balance = float(receiver_account.active_balance) - amount
+        if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+            if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+                sender_account.active_balance = sender_new_balance
+                receiver_account.active_balance = receiver_new_balance
+            else:
+                return False
+        else:
+            return False
+        save_transaction(transaction=transaction, user=user)
+        sender_account.save()
+        receiver_account.save()
+        return True
+    except:
+        return False
+
+def deny_transaction_transfer(transaction, user):
+    try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        sender = data['sender']
+        receiver = data['receiver']
+        sender_account = data['sender_account']
+        receiver_account = data['receiver_account']
+        sender_new_balance = float(sender_account.active_balance) + amount
+        receiver_new_balance = float(receiver_account.active_balance) - amount
+        if type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+            if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+                sender_account.active_balance = sender_new_balance
+                receiver_account.active_balance = receiver_new_balance
+            else:
+                return False
+        else:
+            return False
+        save_transaction(transaction=transaction, user=user)
+        sender_account.save()
+        receiver_account.save()
         return True
     except:
         return False
@@ -261,7 +401,11 @@ def has_savings_account(user):
 def parse_transaction_description(transaction_description, type_of_transaction):
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         return parse_transaction_description_credit_or_debit(transaction_description=transaction_description)
-    # To do: add transfer and payment
+    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        return parse_transaction_description_transfer(transaction_description=transaction_description)
+    elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        return parse_transaction_description_transfer(transaction_description=transaction_description)
+    # To do: payment
     else:
         return {}
 
@@ -299,12 +443,136 @@ def parse_transaction_description_credit_or_debit(transaction_description):
     except:
         return {}
 
+def parse_transaction_description_transfer(transaction_description):
+    try:
+        contents = transaction_description.split(',')
+        transaction_type = contents[0].split(': ')[1]
+        sender_type = contents[1].split(': ')[1]
+        sender_id = contents[2].split(': ')[1]
+        sender_account_type = contents[3].split(': ')[1]
+        sender_account_id = contents[4].split(': ')[1]
+        sender_routing_id = contents[5].split(': ')[1]
+        receiver_type = contents[6].split(': ')[1]
+        receiver_id = contents[7].split(': ')[1]
+        receiver_account_type = contents[8].split(': ')[1]
+        receiver_account_id = contents[9].split(': ')[1]
+        receiver_routing_id = contents[10].split(': ')[1]
+        amount = contents[11].split(': ')[1]
+        sender_starting_balance = contents[12].split(': ')[1]
+        sender_ending_balance = contents[13].split(': ')[1]
+        receiver_starting_balance = contents[14].split(': ')[1]
+        receiver_ending_balance = contents[15].split(': ')[1]
+        sender = User.objects.get(id=int(sender_id))
+        receiver = User.objects.get(id=int(receiver_id))
+        if sender_account_type == ACCOUNT_TYPE_CHECKING:
+            sender_account = CheckingAccount.objects.get(id=int(sender_account_id))
+        elif sender_account_type == ACCOUNT_TYPE_SAVINGS:
+            sender_account = SavingsAccount.objects.get(id=int(sender_account_id))
+        else:
+            raise Exception
+        if receiver_account_type == ACCOUNT_TYPE_CHECKING:
+            receiver_account = CheckingAccount.objects.get(id=int(receiver_account_id))
+        elif receiver_account_type == ACCOUNT_TYPE_SAVINGS:
+            receiver_account = SavingsAccount.objects.get(id=int(receiver_account_id))
+        else:
+            raise Exception
+        return {
+            'transaction_type' : transaction_type,
+            'sender_type' : sender_type,
+            'sender' : sender,
+            'sender_account_type' : sender_account_type,
+            'sender_account' : sender_account,
+            'sender_account_id' : sender_account_id,
+            'sender_routing_id' : sender_routing_id,
+            'receiver_type' : receiver_type,
+            'receiver' : receiver,
+            'receiver_account_type' : receiver_account_type,
+            'receiver_account' : receiver_account,
+            'receiver_account_id' : receiver_account_id,
+            'receiver_routing_id' : receiver_routing_id,
+            'amount' : amount,
+            'sender_starting_balance' : sender_starting_balance,
+            'sender_ending_balance' : sender_ending_balance,
+            'receiver_starting_balance' : receiver_starting_balance,
+            'receiver_ending_balance' : receiver_ending_balance,
+        }
+    except:
+        return {}
+
+def payment_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
+    return payment_or_transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+
+def payment_or_transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
+    user = request.user
+    sender_account_type = account_type
+    receiver_account_type = request.POST['account_type']
+    receiver_account_ID = request.POST['account_number']
+    receiver_routing_ID = request.POST['route_number']
+    if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        amount = float(request.POST['payment_amount'])
+    elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        amount = float(request.POST['transfer_amount'])
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if receiver_account_type == ACCOUNT_TYPE_CHECKING:
+        try:
+            receiver = User.objects.get(individualcustomer__checking_account__id=int(receiver_account_ID ), individualcustomer__checking_account__routing_number=int(receiver_routing_ID))
+            receiver_user_type = INDIVIDUAL_CUSTOMER
+            receiver_account = receiver.individualcustomer.checking_account
+        except:
+            receiver = User.objects.get(merchantorganization__checking_account__id=int(receiver_account_ID ), merchantorganization__checking_account__routing_number=int(receiver_routing_ID))
+            receiver_user_type = MERCHANT_ORGANIZATION
+            receiver_account = receiver.merchantorganization.checking_account
+        receiver_starting_balance = receiver_account.active_balance
+        receiver_new_balance = float(receiver_starting_balance) + amount
+    elif receiver_account_type == ACCOUNT_TYPE_SAVINGS:
+        try:
+            receiver = User.objects.get(individualcustomer__savings_account__id=int(receiver_account_ID ), individualcustomer__savings_account__routing_number=int(receiver_routing_ID))
+            receiver_user_type = INDIVIDUAL_CUSTOMER
+            receiver_account = receiver.individualcustomer.savings_account
+        except:
+            receiver = User.objects.get(merchantorganization__savings_account__id=int(receiver_account_ID ), merchantorganization__savings_account__routing_number=int(receiver_routing_ID))
+            receiver_user_type = MERCHANT_ORGANIZATION
+            receiver_account = receiver.merchantorganization.savings_account
+        receiver_starting_balance = receiver_account.active_balance
+        receiver_new_balance = float(receiver_starting_balance) + amount
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if not validate_amount(amount):
+        return HttpResponseRedirect(reverse(error_redirect))
+    if is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
+        user_account = user.individualcustomer.checking_account
+    elif is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_SAVINGS:
+        user_account = user.individualcustomer.savings_account
+    elif is_merchant_organization(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
+        user_account = user.merchantorganization.checking_account
+    elif is_merchant_organization(user) and sender_account_type == ACCOUNT_TYPE_SAVINGS:
+        user_account = user.merchantorganization.savings_account
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    sender_starting_balance = user_account.active_balance
+    sender_user_type = INDIVIDUAL_CUSTOMER
+    sender_new_balance = float(sender_starting_balance) - amount
+    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+        user_account.active_balance = sender_new_balance
+        receiver_account.active_balance = receiver_new_balance
+        user_account.save()
+        receiver_account.save()
+        if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+            create_payment_transaction(sender=user, senderType=sender_user_type, senderID=user.id, senderAccountType=sender_account_type, senderAccountID=user_account.id, senderRoutingID=user_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
+        elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+            create_transfer_transaction(sender=user, senderType=sender_user_type, senderID=user.id, senderAccountType=sender_account_type, senderAccountID=user_account.id, senderRoutingID=user_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
+    return HttpResponseRedirect(reverse(success_redirect))
+
 def save_transaction(transaction, user):
     transaction.participants.add(user)
     transaction.resolver = user
     transaction.status = TRANSACTION_STATUS_RESOLVED
     transaction.time_resolved = timezone.now()
     transaction.save()
+
+def transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
+    return payment_or_transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 def validate_amount(amount):
     if amount > MAX_BALANCE or amount < MIN_BALANCE:

@@ -8,9 +8,8 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_CREDIT
-from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
+from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, transfer_validate, validate_amount
+from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_TRANSFER
 
 # Create your views here.
 
@@ -117,6 +116,108 @@ def debit_savings(request):
         return render(request, 'external/debit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+
+# Transfer Checking Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_checking(request):
+    user = request.user
+    if is_individual_customer(user) and has_checking_account(user):
+        return render(request, 'external/transfer.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+    elif  is_merchant_organization(user) and has_checking_account(user):
+        return render(request, 'external/transfer.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Transfer Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_savings(request):
+    user = request.user
+    if is_individual_customer(user) and has_savings_account(user):
+        return render(request, 'external/transfer.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+    elif  is_merchant_organization(user) and has_savings_account(user):
+        return render(request, 'external/transfer.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Payment Checking Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_checking(request):
+    user = request.user
+    if is_individual_customer(user) and has_checking_account(user):
+        return render(request, 'external/payment.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+    elif  is_merchant_organization(user) and has_checking_account(user):
+        return render(request, 'external/payment.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Payment Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_savings(request):
+    user = request.user
+    if is_individual_customer(user) and has_savings_account(user):
+        return render(request, 'external/payment.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+    elif  is_merchant_organization(user) and has_savings_account(user):
+        return render(request, 'external/payment.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Validate Payment Checking Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_checking_validate(request):
+    user = request.user
+    type_of_transaction = TRANSACTION_TYPE_PAYMENT
+    account_type = ACCOUNT_TYPE_CHECKING
+    error_redirect = 'external:error'
+    success_redirect = 'external:checking_account'
+    return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate Payment Savings Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_savings_validate(request):
+    user = request.user
+    type_of_transaction = TRANSACTION_TYPE_PAYMENT
+    account_type = ACCOUNT_TYPE_SAVINGS
+    error_redirect = 'external:error'
+    success_redirect = 'external:savings_account'
+    return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate Transfer Checking Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_checking_validate(request):
+    user = request.user
+    type_of_transaction = TRANSACTION_TYPE_TRANSFER
+    account_type = ACCOUNT_TYPE_CHECKING
+    error_redirect = 'external:error'
+    success_redirect = 'external:checking_account'
+    return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate Transfer Savings Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_savings_validate(request):
+    user = request.user
+    type_of_transaction = TRANSACTION_TYPE_TRANSFER
+    account_type = ACCOUNT_TYPE_SAVINGS
+    error_redirect = 'external:error'
+    success_redirect = 'external:savings_account'
+    return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
+
 
 # Validate Credit Checking Transaction
 @never_cache

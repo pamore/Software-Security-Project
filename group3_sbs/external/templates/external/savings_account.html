@@ -43,11 +43,17 @@
 <br />
 
 <div class="row">
-  <div class="col-md-6">
+  <div class="col-md-4">
+    <a class="btn btn-primary" href="{% url 'external:credit_savings' %}">Credit your savings account</a>
+  </div>
+  <div class="col-md-4">
     <a class="btn btn-primary" href="{% url 'external:debit_savings' %}">Debit your savings account</a>
   </div>
-  <div class="col-md-6">
-    <a class="btn btn-primary" href="{% url 'external:credit_savings' %}">Credit your savings account</a>
+  <div class="col-md-3">
+    <a class="btn btn-primary" href="{% url 'external:payment_savings' %}">Pay from your savings account</a>
+  </div>
+  <div class="col-md-4">
+    <a class="btn btn-primary" href="{% url 'external:transfer_savings' %}">Transfer from your savings account</a>
   </div>
 </div>
 {% endif %}

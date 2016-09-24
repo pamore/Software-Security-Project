@@ -20,10 +20,15 @@ def credit_description(userType, userID, accountType, accountID, routingID, amou
     return credit_or_debit_description_helper(transactionType=transactionType, userType=userType, userID=userID, accountType=accountType, accountID=accountID, routingID=routingID, amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
 
 def transfer_or_payment_description_helper(transactionType, senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
+    transactionType = str(transactionType)
     senderID = str(senderID)
+    senderType = str(senderType)
+    senderAccountType = str(senderAccountType)
     senderAccountID = str(senderAccountID)
     senderRoutingID = str(senderRoutingID)
     receiverID = str(receiverID)
+    receiverType = str(receiverType)
+    receiverAccountType = str(receiverAccountType)
     receiverAccountID = str(receiverAccountID)
     receiverRoutingID = str(receiverRoutingID)
     amount = str(amount)
@@ -31,7 +36,7 @@ def transfer_or_payment_description_helper(transactionType, senderType, senderID
     sender_ending_balance = str(sender_ending_balance)
     receiver_starting_balance = str(receiver_starting_balance)
     receiver_ending_balance = str(receiver_ending_balance)
-    return 'Transaction Type: {0},Sender Type: {1},Sender ID: {2},Sender Account Type: {3},Sender Account ID: {4},Sender Routing ID: {5},Receiver Type: {6},Receiver ID: {7},Receiver Account Type: {8},Receiver Account ID: {9},Receiver Routing ID: {10},Amount: {11},Sender Starting Balance: {12},Sender Ending Balance: {13},Receiver Starting Balance: {14},Receiver Ending Balance: {15}'.format(unicode(transactionType,'utf-8'), unicode(senderType,'utf-8'), unicode(str(senderID),'utf-8'), unicode(senderAccountType,'utf-8'), unicode(senderAccountID,'utf-8'), unicode(senderRoutingID,'utf-8'), unicode(receiverType,'utf-8'), unicode(receiverID,'utf-8'), unicode(receiverAccountType,'utf-8'), unicode(receiverAccountID,'utf-8'), unicode(receiverRoutingID,'utf-8'), unicode(amount,'utf-8'), unicode(sender_starting_balance,'utf-8'), unicode(sender_ending_balance,'utf-8'),unicode(receiver_starting_balance,'utf-8'), unicode(receiver_ending_balance,'utf-8'))
+    return 'Transaction Type: {0},Sender Type: {1},Sender ID: {2},Sender Account Type: {3},Sender Account ID: {4},Sender Routing ID: {5},Receiver Type: {6},Receiver ID: {7},Receiver Account Type: {8},Receiver Account ID: {9},Receiver Routing ID: {10},Amount: {11},Sender Starting Balance: {12},Sender Ending Balance: {13},Receiver Starting Balance: {14},Receiver Ending Balance: {15}'.format(unicode(transactionType,'utf-8'), unicode(senderType,'utf-8'), unicode(senderID,'utf-8'), unicode(senderAccountType,'utf-8'), unicode(senderAccountID,'utf-8'), unicode(senderRoutingID,'utf-8'), unicode(receiverType,'utf-8'), unicode(receiverID,'utf-8'), unicode(receiverAccountType,'utf-8'), unicode(receiverAccountID,'utf-8'), unicode(receiverRoutingID,'utf-8'), unicode(amount,'utf-8'), unicode(sender_starting_balance,'utf-8'), unicode(sender_ending_balance,'utf-8'),unicode(receiver_starting_balance,'utf-8'), unicode(receiver_ending_balance,'utf-8'))
 
 def payment_description(senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
     transactionType = TRANSACTION_TYPE_PAYMENT
