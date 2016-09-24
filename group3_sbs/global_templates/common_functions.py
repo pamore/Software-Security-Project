@@ -105,23 +105,11 @@ def commit_transaction_transfer(transaction, user):
     except:
         return False
 
-def create_debit_or_credit_transaction(user, user_type, account_type, type_of_transaction, amount, starting_balance, ending_balance):
-    if is_individual_customer(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_individual_customer(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_merchant_organization(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string  = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_merchant_organization(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        description_string  = credit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_individual_customer(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.checking_account.id,routingID=user.individualcustomer.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_individual_customer(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.individualcustomer.savings_account.id,routingID=user.individualcustomer.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_merchant_organization(user) and has_checking_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string  = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.checking_account.id,routingID=user.merchantorganization.checking_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
-    elif is_merchant_organization(user) and has_savings_account(user) and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        description_string  = debit_description(userType=user_type,userID=user.id,accountType=account_type,accountID=user.merchantorganization.savings_account.id,routingID=user.merchantorganization.savings_account.routing_number,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
+def create_debit_or_credit_transaction(user, type_of_transaction, userType, accountType, accountID, routingID, amount, starting_balance, ending_balance):
+    if type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        description_string = credit_description(userType=userType,userID=user.id,accountType=accountType,accountID=accountID,routingID=routingID,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
+    elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        description_string  = debit_description(userType=userType,userID=user.id,accountType=accountType,accountID=accountID,routingID=routingID,amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
     else:
         return False
     if amount > NONCRITICAL_TRANSACTION_LIMIT:
@@ -176,90 +164,50 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
         amount = float(request.POST['debit_amount'])
     if not validate_amount(amount):
         return HttpResponseRedirect(reverse(error_redirect))
-    if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        starting_balance = user.individualcustomer.checking_account.active_balance
+    if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING:
+        account =  user.individualcustomer.checking_account
         user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(starting_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.individualcustomer.checking_account.active_balance = new_balance
-            user.individualcustomer.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        starting_balance = user.merchantorganization.checking_account.active_balance
-        user_type = MERCHANT_ORGANIZATION
-        new_balance = float(starting_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.merchantorganization.checking_account.active_balance = new_balance
-            user.merchantorganization.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        starting_balance = user.individualcustomer.savings_account.active_balance
+    elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_SAVINGS:
+        account =  user.individualcustomer.savings_account
         user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(starting_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.individualcustomer.savings_account.active_balance = new_balance
-            user.individualcustomer.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        starting_balance = user.merchantorganization.savings_account.active_balance
+    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_CHECKING:
+        account =  user.merchantorganization.checking_account
         user_type = MERCHANT_ORGANIZATION
-        new_balance = float(starting_balance) + amount
-        if new_balance <= MAX_BALANCE:
-            user.merchantorganization.savings_account.active_balance = new_balance
-            user.merchantorganization.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        starting_balance = user.individualcustomer.checking_account.active_balance
-        user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(starting_balance) - amount
-        if new_balance <= MAX_BALANCE:
-            user.individualcustomer.checking_account.active_balance = new_balance
-            user.individualcustomer.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        starting_balance = user.merchantorganization.checking_account.active_balance
+    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_SAVINGS:
+        account =  user.merchantorganization.savings_account
         user_type = MERCHANT_ORGANIZATION
-        new_balance = float(starting_balance) - amount
-        if new_balance <= MAX_BALANCE:
-            user.merchantorganization.checking_account.active_balance = new_balance
-            user.merchantorganization.checking_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        starting_balance = user.individualcustomer.savings_account.active_balance
-        user_type = INDIVIDUAL_CUSTOMER
-        new_balance = float(starting_balance) - amount
-        if new_balance <= MAX_BALANCE:
-            user.individualcustomer.savings_account.active_balance = new_balance
-            user.individualcustomer.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
-    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        starting_balance = user.merchantorganization.savings_account.active_balance
-        user_type = MERCHANT_ORGANIZATION
-        new_balance = float(starting_balance) - amount
-        if new_balance <= MAX_BALANCE:
-            user.merchantorganization.savings_account.active_balance = new_balance
-            user.merchantorganization.savings_account.save()
-            create_debit_or_credit_transaction(user=user, user_type=user_type, account_type=account_type, type_of_transaction=type_of_transaction, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
-        return HttpResponseRedirect(reverse(success_redirect))
     else:
         return HttpResponseRedirect(reverse(error_redirect))
+    if type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        starting_balance = account.active_balance
+        new_balance = float(starting_balance) + amount
+        if validate_amount(new_balance):
+            account.active_balance = new_balance
+            account.save()
+            create_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, userType=user_type, accountType=account_type, accountID=account.id, routingID=account.routing_number, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        starting_balance = account.active_balance
+        new_balance = float(starting_balance) - amount
+        if validate_amount(new_balance):
+            account.active_balance = new_balance
+            account.save()
+            create_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, userType=user_type, accountType=account_type, accountID=account.id, routingID=account.routing_number, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    return HttpResponseRedirect(reverse(success_redirect))
 
 def deny_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         return deny_transaction_credit_or_debit(transaction=transaction, user=user)
-    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
         return deny_transaction_payment(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
         return deny_transaction_transfer(transaction=transaction, user=user)
-    # To do: add payment functionality
     else:
         return False
 
@@ -296,7 +244,7 @@ def deny_transaction_payment(transaction, user):
         receiver_account = data['receiver_account']
         sender_new_balance = float(sender_account.active_balance) + amount
         receiver_new_balance = float(receiver_account.active_balance) - amount
-        if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        if type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
             if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
                 sender_account.active_balance = sender_new_balance
                 receiver_account.active_balance = receiver_new_balance
@@ -554,6 +502,12 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
         receiver_account.save()
         if type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
             create_payment_on_behalf_transaction(sender=sender, senderType=sender_user_type, senderID=sender.id, senderAccountType=sender_account_type, senderAccountID=sender_account.id, senderRoutingID=sender_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
+        else:
+            sender_account.active_balance = sender_starting_balance
+            receiver_account.active_balance = receiver_starting_balance
+            sender_account.save()
+            receiver_account.save()
+            return HttpResponseRedirect(reverse(error_redirect))
         return HttpResponseRedirect(reverse(success_redirect))
 
 def payment_or_transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
@@ -619,6 +573,12 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
             create_payment_transaction(sender=user, senderType=sender_user_type, senderID=user.id, senderAccountType=sender_account_type, senderAccountID=user_account.id, senderRoutingID=user_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
         elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
             create_transfer_transaction(sender=user, senderType=sender_user_type, senderID=user.id, senderAccountType=sender_account_type, senderAccountID=user_account.id, senderRoutingID=user_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
+        else:
+            user_account.active_balance = sender_starting_balance
+            receiver_account.active_balance = receiver_starting_balance
+            user_account.save()
+            receiver_account.save()
+            return HttpResponseRedirect(reverse(error_redirect))
     return HttpResponseRedirect(reverse(success_redirect))
 
 def save_transaction(transaction, user):
