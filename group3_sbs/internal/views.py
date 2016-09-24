@@ -29,6 +29,13 @@ def index(request):
     else:
         return HttpResponseRedirect(reverse('internal:error'))
 
+# Internal User Error Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def error(request):
+    return render(request, 'internal/error.html')
+
 # View Noncritical Transactions
 @never_cache
 @login_required

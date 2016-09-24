@@ -20,11 +20,10 @@ def commit_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         return commit_transaction_credit_or_debit(transaction=transaction, user=user)
-    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
         return commit_transaction_payment(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
         return commit_transaction_transfer(transaction=transaction, user=user)
-    # To do: Add payment functionality
     else:
         return False
 
@@ -65,7 +64,7 @@ def commit_transaction_payment(transaction, user):
         receiver_account = data['receiver_account']
         sender_new_balance = float(sender_account.current_balance) - amount
         receiver_new_balance = float(receiver_account.current_balance) + amount
-        if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        if type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
             if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
                 sender_account.current_balance = sender_new_balance
                 receiver_account.current_balance = receiver_new_balance
@@ -135,6 +134,18 @@ def create_debit_or_credit_transaction(user, user_type, account_type, type_of_tr
 
 def create_payment_transaction(sender, senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiver, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
     type_of_transaction = TRANSACTION_TYPE_PAYMENT
+    description_string = payment_description(senderType=senderType, senderID=senderID, senderAccountType=senderAccountType, senderAccountID=senderAccountID, senderRoutingID=senderRoutingID, receiverType=receiverType, receiverID=receiverID, receiverAccountType=receiverAccountType, receiverAccountID=receiverAccountID, receiverRoutingID=receiverRoutingID, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_ending_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_ending_balance)
+    if amount > NONCRITICAL_TRANSACTION_LIMIT:
+        transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
+    else:
+        transaction = ExternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
+    transaction.participants.add(sender)
+    transaction.participants.add(receiver)
+    transaction.save()
+    return True
+
+def create_payment_on_behalf_transaction(sender, senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiver, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
+    type_of_transaction = TRANSACTION_TYPE_PAYMENT_ON_BEHALF
     description_string = payment_description(senderType=senderType, senderID=senderID, senderAccountType=senderAccountType, senderAccountID=senderAccountID, senderRoutingID=senderRoutingID, receiverType=receiverType, receiverID=receiverID, receiverAccountType=receiverAccountType, receiverAccountID=receiverAccountID, receiverRoutingID=receiverRoutingID, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_ending_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_ending_balance)
     if amount > NONCRITICAL_TRANSACTION_LIMIT:
         transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=sender.id)
@@ -401,11 +412,10 @@ def has_savings_account(user):
 def parse_transaction_description(transaction_description, type_of_transaction):
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         return parse_transaction_description_credit_or_debit(transaction_description=transaction_description)
-    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+    elif type_of_transaction == TRANSACTION_TYPE_PAYMENT or TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
         return parse_transaction_description_transfer(transaction_description=transaction_description)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
         return parse_transaction_description_transfer(transaction_description=transaction_description)
-    # To do: payment
     else:
         return {}
 
@@ -502,6 +512,50 @@ def parse_transaction_description_transfer(transaction_description):
 def payment_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     return payment_or_transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
+def payment_on_behalf_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
+    receiver = request.user
+    receiver_account_type = account_type
+    sender_account_type = request.POST['account_type']
+    sender_account_ID = request.POST['account_number']
+    sender_routing_ID = request.POST['route_number']
+    if type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
+        amount = float(request.POST['payment_on_behalf_amount'])
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    try:
+        if sender_account_type == ACCOUNT_TYPE_CHECKING:
+            sender = User.objects.get(individualcustomer__checking_account__id=int(sender_account_ID ), individualcustomer__checking_account__routing_number=int(sender_routing_ID))
+            sender_account = sender.individualcustomer.checking_account
+        elif sender_account_type == ACCOUNT_TYPE_SAVINGS:
+            sender = User.objects.get(individualcustomer__savings_account__id=int(sender_account_ID ), individualcustomer__savings_account__routing_number=int(sender_routing_ID))
+            sender_account = sender.individualcustomer.savings_account
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    sender_user_type = INDIVIDUAL_CUSTOMER
+    sender_starting_balance = sender_account.active_balance
+    sender_new_balance = float(sender_starting_balance) - amount
+    if not validate_amount(amount):
+        return HttpResponseRedirect(reverse(error_redirect))
+    if is_merchant_organization(receiver) and receiver_account_type == ACCOUNT_TYPE_CHECKING:
+        receiver_account = receiver.merchantorganization.checking_account
+    elif is_merchant_organization(receiver) and receiver_account_type == ACCOUNT_TYPE_SAVINGS:
+        receiver_account = receiver.merchantorganization.savings_account
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    receiver_starting_balance = receiver_account.active_balance
+    receiver_user_type = MERCHANT_ORGANIZATION
+    receiver_new_balance = float(receiver_starting_balance) + amount
+    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+        sender_account.active_balance = sender_new_balance
+        receiver_account.active_balance = receiver_new_balance
+        sender_account.save()
+        receiver_account.save()
+        if type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
+            create_payment_on_behalf_transaction(sender=sender, senderType=sender_user_type, senderID=sender.id, senderAccountType=sender_account_type, senderAccountID=sender_account.id, senderRoutingID=sender_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
+        return HttpResponseRedirect(reverse(success_redirect))
+
 def payment_or_transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     user = request.user
     sender_account_type = account_type
@@ -542,16 +596,19 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
         user_account = user.individualcustomer.checking_account
+        sender_user_type = INDIVIDUAL_CUSTOMER
     elif is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_SAVINGS:
         user_account = user.individualcustomer.savings_account
+        sender_user_type = INDIVIDUAL_CUSTOMER
     elif is_merchant_organization(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
         user_account = user.merchantorganization.checking_account
+        sender_user_type = MERCHANT_ORGANIZATION
     elif is_merchant_organization(user) and sender_account_type == ACCOUNT_TYPE_SAVINGS:
         user_account = user.merchantorganization.savings_account
+        sender_user_type = MERCHANT_ORGANIZATION
     else:
         return HttpResponseRedirect(reverse(error_redirect))
     sender_starting_balance = user_account.active_balance
-    sender_user_type = INDIVIDUAL_CUSTOMER
     sender_new_balance = float(sender_starting_balance) - amount
     if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
         user_account.active_balance = sender_new_balance

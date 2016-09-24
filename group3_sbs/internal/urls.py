@@ -4,6 +4,7 @@ from . import views
 app_name = 'internal'
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    url(r'^error/$', views.error, name='error'),
     url(r'^transaction/noncritical/$', views.noncritical_transactions, name='noncritical_transactions'),
     url(r'^transaction/noncritical/(?P<transaction_id>[1-9][0-9]*)/approve/$', views.validate_noncritical_transaction_approval, name='validate_noncritical_transaction_approval'),
     url(r'^transaction/noncritical/(?P<transaction_id>[1-9][0-9]*)/deny/$', views.validate_noncritical_transaction_denial, name='validate_noncritical_transaction_denial'),
