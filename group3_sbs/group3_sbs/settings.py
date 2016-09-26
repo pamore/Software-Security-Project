@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'global_templates',
     'internal',
     'external',
+    'reset',
 ]
 
 MIDDLEWARE = [
@@ -143,7 +144,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'group3_sbs',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': 'cse545',
         'HOST': 'localhost',
         'PORT': '3306',
     }

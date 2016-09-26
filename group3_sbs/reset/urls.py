@@ -5,5 +5,6 @@ app_name = 'reset'
 urlpatterns = [
     url(r'^$', views.reset, name='reset'),
     url(r'^reset/$', views.resetUser, name='resetUser'),
+    url(r'^otpReset/$', views.otpUserReset, name='otpUserReset'),
 
 ]
