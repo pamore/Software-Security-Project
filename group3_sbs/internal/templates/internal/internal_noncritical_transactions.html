@@ -20,17 +20,10 @@
   </div>
 </div>
 {% endif %}
-{% if not can_resolve and transactions %}
-<div class="row">
-  <div class="col-md-12">
-    <h1>Cannot resolve a transaction</h1>
-  </div>
-</div>
-{% endif %}
 
 <div class="row">
   <div class="col-md-12">
-    <h1>List of all non-critical transactions</h1>
+    <h1>List of all regular employee request transactions</h1>
   </div>
   <table class="table">
     <thead>
@@ -60,10 +53,8 @@
         <td>Unresolved</td>
         <td>Unresolved</td>
         {% endif %}
-        {% if forloop.first and access_to_resolve and can_resolve %}
-        <td><a class="btn btn-success" href="{% url 'internal:validate_noncritical_transaction_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_noncritical_transaction_denial' transaction_id=transaction.id %}">Deny</a></td>
-        {% elif forloop.first and not access_to_resolve and can_resolve and can_request %}
-        <td><a class="btn btn-success" href="{% url 'internal:validate_internal_noncritical_transaction_request' transaction_id=transaction.id %}">Request Approval to Resolve</a></td></td>
+        {% if forloop.first %}
+        <td><a class="btn btn-success" href="{% url 'internal:validate_external_noncritical_transaction_access_request_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_external_noncritical_transaction_access_request_denial' transaction_id=transaction.id %}">Deny</a></td>
         {% else %}
         <td>None</td>
         {% endif %}
