@@ -11,7 +11,7 @@ class UserProfile(models.Model):
     # Attributes
     first_name = models.CharField(validators=[MinLengthValidator(2)], max_length=100)
     last_name = models.CharField(validators=[MinLengthValidator(2)], max_length=100)
-    email = models.CharField(validators=[MinLengthValidator(3)], max_length=100)
+    email = models.CharField(validators=[MinLengthValidator(3)], max_length=100, unique=True)
     street_address = models.CharField(validators=[MinLengthValidator(4)], max_length=100)
     city = models.CharField(validators=[MinLengthValidator(2)], max_length=100)
     state = models.CharField(validators=[MinLengthValidator(2)], max_length=2)
