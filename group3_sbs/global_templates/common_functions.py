@@ -13,6 +13,23 @@ from global_templates.constants import *
 from templated_email import send_templated_mail
 from django.core.mail import EmailMessage, send_mail
 
+#return the user_type, first_name and last_name, for Internal Employees, render this info all pages
+def get_user_det(user):
+    list = []
+    if is_regular_employee(user):
+        list.append(user.regularemployee.first_name)
+        list.append(user.regularemployee.last_name)
+        list.append(REGULAR_EMPLOYEE)
+    elif is_system_manager(user):
+        list.append(user.systemmanager.first_name)
+        list.append(user.systemmanager.last_name)
+        list.append(SYSTEM_MANAGER)
+    elif is_administrator(user):
+        list.append(user.administrator.first_name)
+        list.append(user.administrator.last_name)
+        list.append(ADMINISTRATOR)  
+    return list
+
 def can_view_noncritical_transaction(user):
     if is_regular_employee(user) or is_system_manager(user):
         return True

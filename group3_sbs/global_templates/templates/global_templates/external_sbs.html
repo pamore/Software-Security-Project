@@ -9,10 +9,11 @@
   <!-- Latest compiled JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <!-- Global CSS -->
-  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}" /
+  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/simple-sidebar.css' %}" />
   {% block stylesheets %}{% endblock %}
 </head>
-<body class="body-background">
+<body class="">
     <div class="container-fluid">
     <nav class="navbar navbar-top navbar-default">
         <a class="navbar-brand" href="{% url 'external:index' %}">CSE545 Group 3 Secure Banking System</a>
@@ -25,11 +26,89 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'login:signout' %}">Sign-out</a>
           </li>
+          <li class="nav-item">
+              Welcome {{first_name}} {{last_name}}
+               {{user_type}} 
+          </li>
+
         </ul>
     </nav>
-    </div>
-    <div class="container">
-      {% block content %}{% endblock %}
-    </div>
+
+    <!--Side Navigation Bar Added Start -->
+      <div id="wrapper">
+        <!-- Sidebar wrapper-->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                Menu Options
+                </li>
+
+                
+                <li>
+                     <font color="#FF7F50"> View Account Balances </font>  
+                              <a href="{% url 'external:savings_account' %}"> &nbsp &nbsp &nbsp Savings </a>
+                              <a href="{% url 'external:checking_account' %}"> &nbsp &nbsp &nbsp Checkings </a>
+                              <a href="#"> &nbsp &nbsp &nbsp View All </a>
+                </li>
+
+
+                <li>
+                      <font color="#FF7F50"> Debit Or Credit Account </font>
+                              <a href="{% url 'external:credit_savings' %}"> &nbsp &nbsp &nbsp Credit Savings Account </a>
+                              <a href="{% url 'external:debit_savings' %}"> &nbsp &nbsp &nbsp Debit Savings Account </a>
+                              <a href="{% url 'external:credit_checking' %}"> &nbsp &nbsp &nbsp Credit Checkings Account </a>
+                              <a href="{% url 'external:debit_checking' %}"> &nbsp &nbsp &nbsp Debit Checkings Account </a>
+
+                </li>
+            
+                <li>
+                    <font color="#FF7F50"> Transfer Funds -account Number</font>
+                              <a href="{% url 'external:payment_savings' %}"> &nbsp &nbsp &nbsp From Savings Account </a>
+                              <a href="{% url 'external:payment_checking' %}"> &nbsp &nbsp &nbsp From Checkings Account </a>
+                </li>
+                 <li>             
+                    <font color="#FF7F50"> Transfer Funds -Email  </font>
+                              <a href="#"> &nbsp &nbsp &nbsp From Savings Account </a>
+                              <a href="#"> &nbsp &nbsp &nbsp From Checkings Account </a>
+                </li>
+                <li>
+                    <a href="{% url 'external:credit_card' %}" color="#FF7F50">Credit Card</a>
+                </li>
+                
+                {% if user_type == "Merchant / Organization" %}
+                <li>
+                  <font color="#FF7F50"> Payment on Behalf of </font>
+                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp savings Account</a>
+                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp checking Account</a>
+                </li>
+                {% endif %}
+                
+                 <li>
+                    -------               
+                 <li>
+
+                  <li>
+                    -------               
+                 <li>
+            </ul>
+        </div>
+       <!-- Side Bar Content -->
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                    {% block content %}{% endblock %}
+                   </div>
+                </div>
+            </div>
+        </div>
+      </div>   
+      <!--Side Navigation Bar Added End -->
+
+
+
+
+
+   
   </body>
 </html>

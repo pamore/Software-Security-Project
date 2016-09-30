@@ -42,20 +42,6 @@
 
 <br />
 
-<div class="row">
-  <div class="col-md-3">
-    <a class="btn btn-primary" href="{% url 'external:credit_checking' %}">Credit your checking account</a>
-  </div>
-  <div class="col-md-3">
-    <a class="btn btn-primary" href="{% url 'external:debit_checking' %}">Debit your checking account</a>
-  </div>
-  <div class="col-md-3">
-    <a class="btn btn-primary" href="{% url 'external:payment_checking' %}">Pay from your checking account</a> {% if is_merchant_organization %}<a class="btn btn-primary" href="{% url 'external:payment_on_behalf_checking' %}">Pay on behalf to your checking account</a>{% endif %}
-  </div>
-  <div class="col-md-3">
-    <a class="btn btn-primary" href="{% url 'external:transfer_checking' %}">Transfer from your checking account</a>
-  </div>
-</div>
 {% endif %}
 
 {% endblock %}

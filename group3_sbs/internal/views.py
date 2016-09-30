@@ -12,8 +12,6 @@ from internal.models import Administrator, RegularEmployee, SystemManager, Inter
 from global_templates.common_functions import can_view_noncritical_transaction, can_resolve_internal_noncritical_transaction, can_resolve_noncritical_transaction, create_internal_noncritical_transaction, commit_transaction, deny_transaction, get_external_noncritical_transaction, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, REGULAR_EMPLOYEE, SYSTEM_MANAGER, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
 
-# Create your views here.
-
 # Internal User Home Page
 @never_cache
 @login_required
@@ -35,6 +33,7 @@ def index(request):
 @user_passes_test(is_internal_user)
 def error(request):
     return render(request, 'internal/error.html')
+
 
 # View Noncritical Transactions
 @never_cache
