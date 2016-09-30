@@ -21,11 +21,16 @@
 
 <br />
 
- <!-- Menu option details : pls check the links in internal_sbs.html
-   Admin :          Non-Critical Transactions , External User Profile
-   System Manager:  Critical Transactions, Non-Critical Transactions, External User Profile, 
-   Regular Emp: Non-Critical Transactions , External User Profile
 
-   -->
+<div class="row">
+  <div class="col-md-6">
+    <a class="btn btn-info" href="{% url 'internal:noncritical_transactions' %}">Access Noncritical Transactions</a>
+  </div>
+  <div class="col-md-6">
+    {% if user_type == "System Manager" %}
+    <a class="btn btn-info" href="{% url 'internal:critical_transactions' %}">Access Critical Transactions</a>
+      <a class="btn btn-info" href="{% url 'internal:internal_noncritical_transactions' %}">Access Employee Requests</a>
+    {% endif %}
+  </div>
 
 {% endblock %}
