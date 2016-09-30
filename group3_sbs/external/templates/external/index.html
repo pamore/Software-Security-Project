@@ -20,23 +20,36 @@
 </div>
 <div class="row">
 {% if checkingaccount %}
-  <div class="col-md-4">
+  <div class="col-md-3">
     <a class="btn btn-info" href="{% url 'external:checking_account' %}">Access Your Checking Account</a>
   </div>
 {% endif %}
 
 {% if savingsaccount %}
-  <div class="col-md-4">
+  <div class="col-md-3">
     <a class="btn btn-info" href="{% url 'external:savings_account' %}">Access Your Savings Account</a>
   </div>
 {% endif %}
 
 {% if creditcard %}
-  <div class="col-md-4">
+  <div class="col-md-3">
     <a class="btn btn-info" href="{% url 'external:credit_card' %}">Access Your Credit Card</a>
   </div>
 
 {% endif %}
+{% if user_type != 'Individual Customer'%}
+<div class="col-md-3">
+    <a class="btn btn-info" href="{% url 'external:request_payment' %}">Request Payments</a>
+</div>
+{% endif %}
+
+{% if user_type == 'Individual Customer'%}
+<div class="col-md-3">
+    <a class="btn btn-info" href="{% url 'external:approve_request_payments' %}">Approve Payment Requests</a>
+</div>
+{% endif %}
+
+
 </div>
 
 {% endblock %}
