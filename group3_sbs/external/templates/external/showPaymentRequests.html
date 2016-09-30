@@ -1,0 +1,53 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Payments waiting for approval</h1>
+  </div>
+</div>
+<!--
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{checking_account.id}}</td>
+      <td>{{checking_account.routing_number}}</td>
+      <td>${{checking_account.current_balance}}</td>
+      <td>${{checking_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+-->
+<br />
+
+<table>
+{% for currentRequest in requests %}
+    <tr>
+    <td>{{currentRequest.requestAmount}}</td>
+    <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
+    </tr>
+{% endfor %}
+</table>
+{% endblock %}

@@ -344,3 +344,12 @@ def addPaymentRequestToDB(request):
     paymentRequest.save()
     return render(request, 'external/requestPayment.html',
                   {'checking_account': user.merchantorganization.checking_account})
+
+
+# Show payment Requests
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def showPaymentRequests(request):
+    fullTable = MerchantPaymentRequest.objects.all()
+    return render(request, 'external/showPaymentRequests.html',{'requests':fullTable})
