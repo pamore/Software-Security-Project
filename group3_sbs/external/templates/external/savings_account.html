@@ -42,20 +42,6 @@
 
 <br />
 
-<div class="row">
-  <div class="col-md-4">
-    <a class="btn btn-primary" href="{% url 'external:credit_savings' %}">Credit your savings account</a>
-  </div>
-  <div class="col-md-4">
-    <a class="btn btn-primary" href="{% url 'external:debit_savings' %}">Debit your savings account</a>
-  </div>
-  <div class="col-md-3">
-    <a class="btn btn-primary" href="{% url 'external:payment_savings' %}">Pay from your savings account</a> {% if is_merchant_organization %}<a class="btn btn-primary" href="{% url 'external:payment_on_behalf_checking' %}">Pay on behalf to your savings account</a>{% endif %}
-  </div>
-  <div class="col-md-4">
-    <a class="btn btn-primary" href="{% url 'external:transfer_savings' %}">Transfer from your savings account</a>
-  </div>
-</div>
 {% endif %}
 
 {% endblock %}

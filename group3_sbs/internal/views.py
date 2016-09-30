@@ -9,10 +9,8 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from internal.models import Administrator, RegularEmployee, SystemManager
-from global_templates.common_functions import can_view_noncritical_transaction, commit_transaction, deny_transaction, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account
+from global_templates.common_functions import can_view_noncritical_transaction, commit_transaction, deny_transaction, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account, get_user_det
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, REGULAR_EMPLOYEE, SYSTEM_MANAGER
-
-# Create your views here.
 
 # Internal User Home Page
 @never_cache
@@ -35,6 +33,7 @@ def index(request):
 @user_passes_test(is_internal_user)
 def error(request):
     return render(request, 'internal/error.html')
+
 
 # View Noncritical Transactions
 @never_cache

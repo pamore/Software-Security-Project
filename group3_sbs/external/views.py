@@ -40,9 +40,9 @@ def error(request):
 def checking_account(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/checking_account.html', {'checking_account': user.individualcustomer.checking_account, 'is_merchant_organization' : False})
+        return render(request, 'external/checking_account.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, 'is_merchant_organization' : False})
     elif is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/checking_account.html', {'checking_account': user.merchantorganization.checking_account, 'is_merchant_organization' : True})
+        return render(request, 'external/checking_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, 'is_merchant_organization' : True})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -53,9 +53,9 @@ def checking_account(request):
 def savings_account(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/savings_account.html', {'savings_account': user.individualcustomer.savings_account, 'is_merchant_organization' : False})
+        return render(request, 'external/savings_account.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, 'is_merchant_organization' : False})
     elif is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/savings_account.html', {'savings_account': user.merchantorganization.savings_account, 'is_merchant_organization' : True})
+        return render(request, 'external/savings_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, 'is_merchant_organization' : True})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -66,9 +66,9 @@ def savings_account(request):
 def credit_card(request):
     user = request.user
     if is_individual_customer(user) and has_credit_card(user):
-        return render(request, 'external/credit_card.html', {'credt_card': user.individualcustomer.credit_card})
+        return render(request, 'external/credit_card.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'credt_card': user.individualcustomer.credit_card})
     elif is_merchant_organization(user) and has_credit_card(user):
-        return render(request, 'external/credit_card.html', {'credt_card': user.merchantorganization.credit_card})
+        return render(request, 'external/credit_card.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'credt_card': user.merchantorganization.credit_card})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -79,9 +79,9 @@ def credit_card(request):
 def credit_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/credit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        return render(request, 'external/credit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
     elif is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/credit.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        return render(request, 'external/credit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -92,9 +92,9 @@ def credit_checking(request):
 def credit_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/credit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        return render(request, 'external/credit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
     elif is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/credit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        return render(request, 'external/credit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -105,9 +105,9 @@ def credit_savings(request):
 def debit_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/debit.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        return render(request, 'external/debit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
     elif is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/debit.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -118,9 +118,9 @@ def debit_checking(request):
 def debit_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/debit.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        return render(request, 'external/debit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
     elif  is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/debit.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -131,9 +131,9 @@ def debit_savings(request):
 def payment_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/payment.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
     elif  is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/payment.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -144,9 +144,9 @@ def payment_checking(request):
 def payment_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/payment.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
     elif  is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/payment.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -157,7 +157,7 @@ def payment_savings(request):
 def payment_on_behalf_checking(request):
     user = request.user
     if is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/payment_on_behalf.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        return render(request, 'external/payment_on_behalf.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -168,7 +168,7 @@ def payment_on_behalf_checking(request):
 def payment_on_behalf_savings(request):
     user = request.user
     if is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/payment_on_behalf.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        return render(request, 'external/payment_on_behalf.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -179,9 +179,9 @@ def payment_on_behalf_savings(request):
 def transfer_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/transfer.html', {'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
     elif  is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/transfer.html', {'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -192,9 +192,9 @@ def transfer_checking(request):
 def transfer_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/transfer.html', {'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
     elif  is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/transfer.html', {'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
