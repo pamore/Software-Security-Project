@@ -28,4 +28,7 @@ urlpatterns = [
     url(r'^account/payment/savings/validate/$', views.payment_savings_validate, name='payment_savings_validate'),
     url(r'^account/transfer/savings/validate/$', views.transfer_savings_validate, name='transfer_savings_validate'),
     url(r'^account/payment_on_behalf/savings/validate/$', views.payment_on_behalf_savings_validate, name='payment_on_behalf_savings_validate'),
+    url(r'^account/request_payment/$', views.request_payment, name='request_payment'),
+    url(r'^account/addPaymentRequestToDB/$', views.addPaymentRequestToDB, name='add_merchantPaymentRequest_toDB')
+
 ]

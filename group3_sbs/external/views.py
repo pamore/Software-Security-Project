@@ -7,9 +7,10 @@ from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
+from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
+
 
 # Create your views here.
 
@@ -318,3 +319,28 @@ def transfer_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Redirect to Request Payment web page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def request_payment(request):
+    user = request.user
+    return render(request, 'external/requestPayment.html',
+                  {'checking_account': user.merchantorganization.checking_account})
+
+# Add requested payment to DB
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def addPaymentRequestToDB(request):
+    user = request.user
+    payment_amount = request.POST['payment_amount']
+    accountType = request.POST['account_type']
+    clientAccountNum = request.POST['account_number']
+    clientRoutingNum = request.POST['route_number']
+    merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+    paymentRequest = MerchantPaymentRequest.objects.create(merchantCheckingsAccountNum = merchantCheckingsAccountNum,accountType = accountType, clientAccountNum=clientAccountNum, clientRoutingNum = clientAccountNum,requestAmount=payment_amount)
+    paymentRequest.save()
+    return render(request, 'external/requestPayment.html',
+                  {'checking_account': user.merchantorganization.checking_account})
