@@ -57,6 +57,20 @@ def commit_transaction(transaction, user):
     if result:
         recipients = get_all_emails(transaction.participants.all())
         #send_notification_transaction(subject=TRANSACTION_SUBJECT_APPROVED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_APPROVED, email_template=None, recipients=recipients)
+        send_templated_mail(
+            template_name='transaction_approval',
+            from_email='group3sbs@gmail.com',
+            recipient_list=[get_user_email(user)],
+            context={
+                'username':"user_name",
+            },
+            # Optional:
+            # cc=['cc@example.com'],
+            # bcc=['bcc@example.com'],
+            # headers={'My-Custom-Header':'Custom Value'},
+            # template_prefix="my_emails/",
+            # template_suffix="email",
+        )
     return result
 
 def commit_transaction_credit_or_debit(transaction, user):
@@ -277,6 +291,20 @@ def deny_transaction(transaction, user):
     if result:
         recipients = get_all_emails(transaction.participants.all())
         #send_notification_transaction(subject=TRANSACTION_SUBJECT_DENIED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_DENIED, email_template=None, recipients=[get_user_email(transaction.initiator)])
+        send_templated_mail(
+            template_name='transaction_denial',
+            from_email='group3sbs@gmail.com',
+            recipient_list=[get_user_email(user)],
+            context={
+                'username':"user_name",
+            },
+            # Optional:
+            # cc=['cc@example.com'],
+            # bcc=['bcc@example.com'],
+            # headers={'My-Custom-Header':'Custom Value'},
+            # template_prefix="my_emails/",
+            # template_suffix="email",
+        )
     return result
 
 def deny_transaction_credit_or_debit(transaction, user):
