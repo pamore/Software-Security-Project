@@ -28,7 +28,7 @@
           </li>
           <li class="nav-item">
               Welcome {{first_name}} {{last_name}}
-               {{user_type}} 
+               {{user_type}}
           </li>
 
         </ul>
@@ -43,52 +43,52 @@
                 Menu Options
                 </li>
 
-                
+
                 <li>
-                     <font color="#FF7F50"> View Account Balances </font>  
-                              <a href="{% url 'external:savings_account' %}"> &nbsp &nbsp &nbsp Savings </a>
+                     <font color="#FF7F50"> View Account Balances </font>
                               <a href="{% url 'external:checking_account' %}"> &nbsp &nbsp &nbsp Checkings </a>
-                              <a href="#"> &nbsp &nbsp &nbsp View All </a>
+                              <a href="{% url 'external:savings_account' %}"> &nbsp &nbsp &nbsp Savings </a>
                 </li>
 
 
                 <li>
-                      <font color="#FF7F50"> Debit Or Credit Account </font>
-                              <a href="{% url 'external:credit_savings' %}"> &nbsp &nbsp &nbsp Credit Savings Account </a>
-                              <a href="{% url 'external:debit_savings' %}"> &nbsp &nbsp &nbsp Debit Savings Account </a>
+                      <font color="#FF7F50"> Debit or Credit Account </font>
                               <a href="{% url 'external:credit_checking' %}"> &nbsp &nbsp &nbsp Credit Checkings Account </a>
                               <a href="{% url 'external:debit_checking' %}"> &nbsp &nbsp &nbsp Debit Checkings Account </a>
+                              <a href="{% url 'external:credit_savings' %}"> &nbsp &nbsp &nbsp Credit Savings Account </a>
+                              <a href="{% url 'external:debit_savings' %}"> &nbsp &nbsp &nbsp Debit Savings Account </a>
 
                 </li>
-            
+
                 <li>
-                    <font color="#FF7F50"> Transfer Funds -account Number</font>
-                              <a href="{% url 'external:payment_savings' %}"> &nbsp &nbsp &nbsp From Savings Account </a>
-                              <a href="{% url 'external:payment_checking' %}"> &nbsp &nbsp &nbsp From Checkings Account </a>
+                    <font color="#FF7F50"> Transfer Funds</font>
+                              <a href="{% url 'external:payment_checking' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
+                              <a href="{% url 'external:payment_savings' %}"> &nbsp &nbsp &nbsp Savings Account </a>
                 </li>
-                 <li>             
-                    <font color="#FF7F50"> Transfer Funds -Email  </font>
-                              <a href="#"> &nbsp &nbsp &nbsp From Savings Account </a>
-                              <a href="#"> &nbsp &nbsp &nbsp From Checkings Account </a>
+                 <li>
+                    <font color="#FF7F50"> Transfer Funds by Email Address  </font>
+                              <a href="{% url 'external:payment_savings' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
+                              <a href="{% url 'external:payment_checking' %}"> &nbsp &nbsp &nbsp Savings Account </a>
                 </li>
                 <li>
-                    <a href="{% url 'external:credit_card' %}" color="#FF7F50">Credit Card</a>
+                    <font color="#FF7F50">Credit Card</font>
+                      <a href="{% url 'external:credit_card' %}" color="#FF7F50">&nbsp &nbsp &nbsp Credit Card</a>
                 </li>
-                
+
                 {% if user_type == "Merchant / Organization" %}
                 <li>
-                  <font color="#FF7F50"> Payment on Behalf of </font>
-                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp savings Account</a>
-                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp checking Account</a>
+                  <font color="#FF7F50">Payment on Behalf of Customer</font>
+                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Checking Account</a>
+                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
                 </li>
                 {% endif %}
-                
+
                  <li>
-                    -------               
+                    -------
                  <li>
 
                   <li>
-                    -------               
+                    -------
                  <li>
             </ul>
         </div>
@@ -102,13 +102,13 @@
                 </div>
             </div>
         </div>
-      </div>   
+      </div>
       <!--Side Navigation Bar Added End -->
 
 
 
 
 
-   
+
   </body>
 </html>

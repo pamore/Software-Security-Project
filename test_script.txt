@@ -30,7 +30,7 @@ savingsaccount2 = SavingsAccount.objects.create(interest_rate=0.03, routing_numb
 savingsaccount2.save()
 creditcard2 = CreditCard.objects.create(interest_rate=0.03, creditcard_number="0000000000000002", charge_limit=1000.00, remaining_credit=1000.00, late_fee=15.00, days_late=0)
 creditcard2.save()
-merchantorganization = MerchantOrganization.objects.create(first_name="Garrett", last_name="Garrett", email="gdgutier@asu.edu", street_address="I don't care", city="Tempe", state="AZ", zipcode=85122, session_key="None", checking_account_id=checkingaccount2.id, savings_account_id=savingsaccount2.id, credit_card_id=creditcard2.id, user_id=user2.id)
+merchantorganization = MerchantOrganization.objects.create(first_name="Garrett", last_name="Gutierrez", email="gdgutier@asu.edu", street_address="I don't care", city="Tempe", state="AZ", zipcode=85122, session_key="None", checking_account_id=checkingaccount2.id, savings_account_id=savingsaccount2.id, credit_card_id=creditcard2.id, user_id=user2.id)
 merchantorganization.save()
 
 regularemployee = RegularEmployee.objects.create(first_name="Paul", last_name="McCartney", email="paulmccartney@beatles.com", street_address="Heart of the Country", city="Liverpool", state="UK", zipcode=12345, session_key="None", user_id=user3.id)

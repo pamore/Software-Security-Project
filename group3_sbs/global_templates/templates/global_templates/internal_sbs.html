@@ -27,16 +27,16 @@
           </li>
            <li class="nav-item">
               Welcome {{first_name}} {{last_name}}
-               {{user_type}} 
+               {{user_type}}
           </li>
 
         </ul>
     </nav>
     </div>
 
-   <!-- Menu option details 
+   <!-- Menu option details
    Admin :          Non-Critical Transactions , External User Profile
-   System Manager:  Critical Transactions, Non-Critical Transactions, External User Profile, 
+   System Manager:  Critical Transactions, Non-Critical Transactions, External User Profile,
    Regular Emp: Non-Critical Transactions , External User Profile
 
    -->
@@ -50,18 +50,19 @@
                 Menu Options
                 </li>
 
-                
+
                 <li>
-                     <font color="#FF7F50"> Access Transactions </font>  
+                     <font color="#FF7F50"> Access Transactions </font>
                               <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp Critical Transactions </a>
                               <a  href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp Non-Critical Transactions </a>
                 </li>
-
+                {% if user_type == "Regular Employee" %}
                  <li>
+                   <font color="#FF7F50">Account Access Request</font>
                               <a href="{% url 'internal:external_user_account_access_request' %}"> &nbsp &nbsp &nbsp Request Access to External Users Profile </a>
-                              
                 </li>
-               
+                {% endif %}
+
             </ul>
         </div>
        <!-- Side Bar Content -->
@@ -74,7 +75,7 @@
                 </div>
             </div>
         </div>
-      </div>   
+      </div>
       <!--Side Navigation Bar Added End -->
   </body>
 </html>

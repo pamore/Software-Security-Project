@@ -27,7 +27,7 @@ def get_user_det(user):
     elif is_administrator(user):
         list.append(user.administrator.first_name)
         list.append(user.administrator.last_name)
-        list.append(ADMINISTRATOR)  
+        list.append(ADMINISTRATOR)
     return list
 
 def can_view_noncritical_transaction(user):
@@ -56,6 +56,8 @@ def can_resolve_noncritical_transaction(user, transaction_id):
                 return False
         except:
             return False
+    elif is_system_manager(user):
+        return True
     else:
         return False
 
@@ -77,7 +79,7 @@ def commit_transaction(transaction, user):
         send_templated_mail(
             template_name='transaction_approval',
             from_email='group3sbs@gmail.com',
-            recipient_list=[get_user_email(user)],
+            recipient_list=recipients,
             context={
                 'username':"user_name",
             },
@@ -306,12 +308,12 @@ def deny_transaction(transaction, user):
     else:
         result = False
     if result:
-        recipients = get_all_emails(transaction.participants.all())
+        recipients = ails(transaction.participants.all())
         #send_notification_transaction(subject=TRANSACTION_SUBJECT_DENIED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_DENIED, email_template=None, recipients=[get_user_email(transaction.initiator)])
         send_templated_mail(
             template_name='transaction_denial',
             from_email='group3sbs@gmail.com',
-            recipient_list=[get_user_email(user)],
+            recipient_list=recipients,
             context={
                 'username':"user_name",
             },
