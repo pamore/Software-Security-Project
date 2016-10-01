@@ -7,10 +7,12 @@
   <!-- Latest compiled JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <!-- Global CSS -->
-  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}" /
+  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}" />
+  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/simple-sidebar.css' %}" />
+
   {% block stylesheets %}{% endblock %}
 </head>
-<body class="body-background">
+<body class="">
     <div class="container-fluid">
     <nav class="navbar navbar-top navbar-default">
         <a class="navbar-brand" href="{% url 'internal:index' %}">CSE545 Group 3 Secure Banking System</a>
@@ -23,11 +25,57 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'login:signout' %}">Sign-out</a>
           </li>
+           <li class="nav-item">
+              Welcome {{first_name}} {{last_name}}
+               {{user_type}}
+          </li>
+
         </ul>
     </nav>
     </div>
-    <div class="container">
-      {% block content %}{% endblock %}
-    </div>
+
+   <!-- Menu option details
+   Admin :          Non-Critical Transactions , External User Profile
+   System Manager:  Critical Transactions, Non-Critical Transactions, External User Profile,
+   Regular Emp: Non-Critical Transactions , External User Profile
+
+   -->
+
+    <!--Side Navigation Bar Added Start -->
+      <div id="wrapper">
+        <!-- Sidebar wrapper-->
+        <div id="sidebar-wrapper">
+            <ul class="sidebar-nav">
+                <li class="sidebar-brand">
+                Menu Options
+                </li>
+
+
+                <li>
+                     <font color="#FF7F50"> Access Transactions </font>
+                              <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp Critical Transactions </a>
+                              <a  href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp Non-Critical Transactions </a>
+                </li>
+                {% if user_type == "Regular Employee" %}
+                 <li>
+                   <font color="#FF7F50">Account Access Request</font>
+                              <a href="{% url 'internal:external_user_account_access_request' %}"> &nbsp &nbsp &nbsp Request Access to External Users Profile </a>
+                </li>
+                {% endif %}
+
+            </ul>
+        </div>
+       <!-- Side Bar Content -->
+        <div id="page-content-wrapper">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12">
+                    {% block content %}{% endblock %}
+                   </div>
+                </div>
+            </div>
+        </div>
+      </div>
+      <!--Side Navigation Bar Added End -->
   </body>
 </html>

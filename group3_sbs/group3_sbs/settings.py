@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'axes',
     'login',
     'global_templates',
     'internal',
@@ -52,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'global_templates.middleware.OneLoginPerUserMiddleware'
 ]
 
 ROOT_URLCONF = 'group3_sbs.urls'
@@ -189,6 +191,25 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
+
+# Axes Login settings
+# https://django-axes.readthedocs.io/en/latest/configuration.html
+
+AXES_LOGIN_FAILURE_LIMIT = 3
+AXES_LOCK_OUT_AT_FAILURE = True
+AXES_USE_USER_AGENT = False
+
+# Allow them retry after 1 hour
+AXES_COOLOFF_TIME = 1
+AXES_LOGGER = 'axes.watch_login'
+
+# Choose the template (html) to be rendered when locked out
+AXES_LOCKOUT_TEMPLATE = 'login/lockout.html'
+AXES_LOCKOUT_URL = None
+
+AXES_USERNAME_FORM_FIELD = 'username'
+AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
+AXES_NEVER_LOCKOUT_WHITELIST = False
 
 # Session settings
 # https://docs.djangoproject.com/en/1.10/topics/http/sessions/

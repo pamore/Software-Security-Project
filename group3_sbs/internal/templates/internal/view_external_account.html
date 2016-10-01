@@ -12,6 +12,13 @@
 {% endblock %}
 
 {% block content %}
+{% if error_message %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Error: {{error_message}}</h1>
+  </div>
+</div>
+{% else %}
 <div class="row">
   <div class="col-md-12">
     <h1>Welcome {{first_name}} {{last_name}}</h1>
@@ -19,7 +26,7 @@
   </div>
 </div>
 <div class="row">
-<!--{% if checkingaccount %}
+{% if checkingaccount %}
   <div class="col-md-4">
     <a class="btn btn-info" href="{% url 'external:checking_account' %}">Access Your Checking Account</a>
   </div>
@@ -35,9 +42,9 @@
   <div class="col-md-4">
     <a class="btn btn-info" href="{% url 'external:credit_card' %}">Access Your Credit Card</a>
   </div>
-
 {% endif %}
 </div>
--->
+
+{% endif %}
 
 {% endblock %}

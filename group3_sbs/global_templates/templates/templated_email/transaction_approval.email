@@ -1,0 +1,3 @@
+{% block html %}
+  <p>Transaction Approval Email</p>
+{% endblock %}

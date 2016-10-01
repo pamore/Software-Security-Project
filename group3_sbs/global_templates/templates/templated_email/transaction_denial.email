@@ -1,0 +1,3 @@
+{% block html %}
+  <p>Transaction Denial Email</p>
+{% endblock %}
