@@ -13,23 +13,6 @@ from global_templates.constants import *
 from templated_email import send_templated_mail
 from django.core.mail import EmailMessage, send_mail
 
-#return the user_type, first_name and last_name, for Internal Employees, render this info all pages
-def get_user_det(user):
-    list = []
-    if is_regular_employee(user):
-        list.append(user.regularemployee.first_name)
-        list.append(user.regularemployee.last_name)
-        list.append(REGULAR_EMPLOYEE)
-    elif is_system_manager(user):
-        list.append(user.systemmanager.first_name)
-        list.append(user.systemmanager.last_name)
-        list.append(SYSTEM_MANAGER)
-    elif is_administrator(user):
-        list.append(user.administrator.first_name)
-        list.append(user.administrator.last_name)
-        list.append(ADMINISTRATOR)
-    return list
-
 def can_view_noncritical_transaction(user):
     if is_regular_employee(user) or is_system_manager(user):
         return True
@@ -99,14 +82,16 @@ def commit_transaction_credit_or_debit(transaction, user):
         amount = float(data['amount'])
         account = data['account']
         if type_of_transaction == TRANSACTION_TYPE_CREDIT:
+            check = max(float(account.active_balance), float(account.current_balance)) + amount
             new_amount = float(account.current_balance) + amount
-            if validate_amount(new_amount) and validate_amount(amount):
+            if validate_amount(check) and validate_amount(amount):
                 account.current_balance = new_amount
             else:
                 return False
         elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
+            check = min(float(account.active_balance), float(account.current_balance)) - amount
             new_amount = float(account.current_balance) - amount
-            if validate_amount(new_amount) and validate_amount(amount):
+            if validate_amount(check) and validate_amount(amount):
                 account.current_balance = new_amount
             else:
                 return False
@@ -134,10 +119,12 @@ def commit_transaction_payment(transaction, user):
         receiver = data['receiver']
         sender_account = data['sender_account']
         receiver_account = data['receiver_account']
+        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
+        receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
         sender_new_balance = float(sender_account.current_balance) - amount
         receiver_new_balance = float(receiver_account.current_balance) + amount
         if type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
-            if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+            if validate_amount(amount) and validate_amount(sender_check) and validate_amount(receiver_check):
                 sender_account.current_balance = sender_new_balance
                 receiver_account.current_balance = receiver_new_balance
             else:
@@ -160,10 +147,12 @@ def commit_transaction_transfer(transaction, user):
         receiver = data['receiver']
         sender_account = data['sender_account']
         receiver_account = data['receiver_account']
+        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
+        receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
         sender_new_balance = float(sender_account.current_balance) - amount
         receiver_new_balance = float(receiver_account.current_balance) + amount
         if type_of_transaction == TRANSACTION_TYPE_TRANSFER:
-            if validate_amount(amount) and validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+            if validate_amount(amount) and validate_amount(sender_check) and validate_amount(receiver_check):
                 sender_account.current_balance = sender_new_balance
                 receiver_account.current_balance = receiver_new_balance
             else:
@@ -275,8 +264,9 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
         return HttpResponseRedirect(reverse(error_redirect))
     if type_of_transaction == TRANSACTION_TYPE_CREDIT:
         starting_balance = account.active_balance
+        check = max(float(account.active_balance), float(account.current_balance)) + amount
         new_balance = float(starting_balance) + amount
-        if validate_amount(new_balance):
+        if validate_amount(check):
             account.active_balance = new_balance
             account.save()
             create_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, userType=user_type, accountType=account_type, accountID=account.id, routingID=account.routing_number, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
@@ -284,8 +274,9 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
             return HttpResponseRedirect(reverse(error_redirect))
     elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
         starting_balance = account.active_balance
+        check = min(float(account.active_balance), float(account.current_balance)) - amount
         new_balance = float(starting_balance) - amount
-        if validate_amount(new_balance):
+        if validate_amount(check):
             account.active_balance = new_balance
             account.save()
             create_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, userType=user_type, accountType=account_type, accountID=account.id, routingID=account.routing_number, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
@@ -308,7 +299,7 @@ def deny_transaction(transaction, user):
     else:
         result = False
     if result:
-        recipients = ails(transaction.participants.all())
+        recipients = get_all_emails(transaction.participants.all())
         #send_notification_transaction(subject=TRANSACTION_SUBJECT_DENIED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_DENIED, email_template=None, recipients=[get_user_email(transaction.initiator)])
         send_templated_mail(
             template_name='transaction_denial',
@@ -407,6 +398,87 @@ def deny_transaction_transfer(transaction, user):
     except:
         return False
 
+def get_account_for_external_user(user):
+    account = None
+    if user:
+        if is_individual_customer(user) and has_checking_account(user):
+            account = user.individualcustomer.checking_account
+        elif is_individual_customer(user) and has_savings_account(user):
+            account = user.individualcustomer.savings_account
+        elif is_merchant_organization(user) and has_checking_account(user):
+            account = user.merchantorganization.checking_account
+        elif is_merchant_organization(user) and has_savings_account(user):
+            account = user.merchantorganization.savings_account
+    else:
+        return account
+    return account
+
+def get_all_emails(queryset):
+    emails = []
+    for user in queryset:
+        emails.append(get_user_email(user))
+    return emails
+
+def get_external_noncritical_transaction(transaction):
+    transaction_description = transaction.description
+    data = parse_transaction_description(transaction_description=transaction_description, type_of_transaction=TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST)
+    return data['external_transaction']
+
+def get_external_user(email=None, account_ID=None, routing_ID=None, account_type=None):
+    user = None
+    if email:
+        try:
+            user = User.objects.get(individualcustomer__email=email)
+        except:
+            user = User.objects.get(merchantorganization__email=email)
+    elif routing_ID and account_ID and account_type:
+        if account_type == ACCOUNT_TYPE_CHECKING:
+            try:
+                user = User.objects.get(individualcustomer__checking_account__id=int(account_ID ), individualcustomer__checking_account__routing_number=int(routing_ID))
+            except:
+                user = User.objects.get(merchantorganization__checking_account__id=int(account_ID ), merchantorganization__checking_account__routing_number=int(routing_ID))
+        elif account_type == ACCOUNT_TYPE_SAVINGS:
+            try:
+                user = User.objects.get(individualcustomer__savings_account__id=int(account_ID ), individualcustomer__savings_account__routing_number=int(routing_ID))
+            except:
+                user = User.objects.get(merchantorganization__savings_account__id=int(account_ID ), merchantorganization__savings_account__routing_number=int(routing_ID))
+        else:
+            return user
+    else:
+        return user
+    return user
+
+#return the user_type, first_name and last_name, for Internal Employees, render this info all pages
+def get_user_det(user):
+    list = []
+    if is_regular_employee(user):
+        list.append(user.regularemployee.first_name)
+        list.append(user.regularemployee.last_name)
+        list.append(REGULAR_EMPLOYEE)
+    elif is_system_manager(user):
+        list.append(user.systemmanager.first_name)
+        list.append(user.systemmanager.last_name)
+        list.append(SYSTEM_MANAGER)
+    elif is_administrator(user):
+        list.append(user.administrator.first_name)
+        list.append(user.administrator.last_name)
+        list.append(ADMINISTRATOR)
+    return list
+
+def get_user_email(user):
+    if is_individual_customer(user):
+        return user.individualcustomer.email
+    elif is_merchant_organization(user):
+        return user.merchantorganization.email
+    elif is_regular_employee(user):
+        return user.regularemployee.email
+    elif is_system_manager(user):
+        return user.systemmanager.email
+    elif is_administrator(user):
+        return user.administrator.email
+    else:
+        return ""
+
 def is_external_user(user):
     if (hasattr(user, INDIVIDUAL_CUSTOMER_ATTRIBUTE) or hasattr(user, MERCHANT_ORGANIZATION_ATTRIBUTE)) and not (is_internal_user(user)):
         return True
@@ -448,70 +520,6 @@ def is_system_manager(user):
         return True
     else:
         return False
-
-def get_external_noncritical_transaction(transaction):
-    transaction_description = transaction.description
-    data = parse_transaction_description(transaction_description=transaction_description, type_of_transaction=TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST)
-    return data['external_transaction']
-
-def get_account_for_external_user(user):
-    account = None
-    if user:
-        if is_individual_customer(user) and has_checking_account(user):
-            account = user.individualcustomer.checking_account
-        elif is_individual_customer(user) and has_savings_account(user):
-            account = user.individualcustomer.savings_account
-        elif is_merchant_organization(user) and has_checking_account(user):
-            account = user.merchantorganization.checking_account
-        elif is_merchant_organization(user) and has_savings_account(user):
-            account = user.merchantorganization.savings_account
-    else:
-        return account
-    return account
-
-def get_external_user(email=None, account_ID=None, routing_ID=None, account_type=None):
-    user = None
-    if email:
-        try:
-            user = User.objects.get(individualcustomer__email=email)
-        except:
-            user = User.objects.get(merchantorganization__email=email)
-    elif routing_ID and account_ID and account_type:
-        if account_type == ACCOUNT_TYPE_CHECKING:
-            try:
-                user = User.objects.get(individualcustomer__checking_account__id=int(account_ID ), individualcustomer__checking_account__routing_number=int(routing_ID))
-            except:
-                user = User.objects.get(merchantorganization__checking_account__id=int(account_ID ), merchantorganization__checking_account__routing_number=int(routing_ID))
-        elif account_type == ACCOUNT_TYPE_SAVINGS:
-            try:
-                user = User.objects.get(individualcustomer__savings_account__id=int(account_ID ), individualcustomer__savings_account__routing_number=int(routing_ID))
-            except:
-                user = User.objects.get(merchantorganization__savings_account__id=int(account_ID ), merchantorganization__savings_account__routing_number=int(routing_ID))
-        else:
-            return user
-    else:
-        return user
-    return user
-
-def get_user_email(user):
-    if is_individual_customer(user):
-        return user.individualcustomer.email
-    elif is_merchant_organization(user):
-        return user.merchantorganization.email
-    elif is_regular_employee(user):
-        return user.regularemployee.email
-    elif is_system_manager(user):
-        return user.systemmanager.email
-    elif is_administrator(user):
-        return user.administrator.email
-    else:
-        return ""
-
-def get_all_emails(queryset):
-    emails = []
-    for user in queryset:
-        emails.append(get_user_email(user))
-    return emails
 
 def has_checking_account(user):
     if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CHECKING_ACCOUNT_ATTRIBUTE):
@@ -681,6 +689,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
             sender_user_type = INDIVIDUAL_CUSTOMER
         else:
             return HttpResponseRedirect(reverse(error_redirect))
+        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
         sender_starting_balance = sender_account.active_balance
         sender_new_balance = float(sender_starting_balance) - amount
     else:
@@ -693,10 +702,11 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
         receiver_account = receiver.merchantorganization.savings_account
     else:
         return HttpResponseRedirect(reverse(error_redirect))
+    receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
     receiver_starting_balance = receiver_account.active_balance
     receiver_user_type = MERCHANT_ORGANIZATION
     receiver_new_balance = float(receiver_starting_balance) + amount
-    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+    if validate_amount(sender_check) and validate_amount(receiver_check):
         sender_account.active_balance = sender_new_balance
         receiver_account.active_balance = receiver_new_balance
         sender_account.save()
@@ -737,6 +747,7 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
             receiver_user_type = MERCHANT_ORGANIZATION
         else:
             return HttpResponseRedirect(reverse(error_redirect))
+        receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
         receiver_starting_balance = receiver_account.active_balance
         receiver_new_balance = float(receiver_starting_balance) + amount
     else:
@@ -757,6 +768,7 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
         sender_user_type = MERCHANT_ORGANIZATION
     else:
         return HttpResponseRedirect(reverse(error_redirect))
+    sender_check = min(float(user_account.active_balance), float(user_account.current_balance)) - amount
     sender_starting_balance = user_account.active_balance
     sender_new_balance = float(sender_starting_balance) - amount
     if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):

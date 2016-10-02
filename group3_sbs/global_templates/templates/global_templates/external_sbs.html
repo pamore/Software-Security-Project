@@ -42,15 +42,11 @@
                 <li class="sidebar-brand">
                 Menu Options
                 </li>
-
-
                 <li>
                      <font color="#FF7F50"> View Account Balances </font>
                               <a href="{% url 'external:checking_account' %}"> &nbsp &nbsp &nbsp Checkings </a>
                               <a href="{% url 'external:savings_account' %}"> &nbsp &nbsp &nbsp Savings </a>
                 </li>
-
-
                 <li>
                       <font color="#FF7F50"> Debit or Credit Account </font>
                               <a href="{% url 'external:credit_checking' %}"> &nbsp &nbsp &nbsp Credit Checkings Account </a>
@@ -59,16 +55,25 @@
                               <a href="{% url 'external:debit_savings' %}"> &nbsp &nbsp &nbsp Debit Savings Account </a>
 
                 </li>
-
                 <li>
-                    <font color="#FF7F50"> Transfer Funds</font>
+                    <font color="#FF7F50"> Make Payment </font>
                               <a href="{% url 'external:payment_checking' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
                               <a href="{% url 'external:payment_savings' %}"> &nbsp &nbsp &nbsp Savings Account </a>
                 </li>
                  <li>
+                    <font color="#FF7F50"> Make Payment by Email Address  </font>
+                              <a href="{% url 'external:payment_email_checking' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
+                              <a href="{% url 'external:payment_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account </a>
+                </li>
+                <li>
+                    <font color="#FF7F50"> Transfer Funds</font>
+                              <a href="{% url 'external:transfer_checking' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
+                              <a href="{% url 'external:transfer_savings' %}"> &nbsp &nbsp &nbsp Savings Account </a>
+                </li>
+                 <li>
                     <font color="#FF7F50"> Transfer Funds by Email Address  </font>
-                              <a href="{% url 'external:payment_savings' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
-                              <a href="{% url 'external:payment_checking' %}"> &nbsp &nbsp &nbsp Savings Account </a>
+                              <a href="{% url 'external:transfer_email_checking' %}"> &nbsp &nbsp &nbsp Checkings Account </a>
+                              <a href="{% url 'external:transfer_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account </a>
                 </li>
                 <li>
                     <font color="#FF7F50">Credit Card</font>
@@ -78,8 +83,13 @@
                 {% if user_type == "Merchant / Organization" %}
                 <li>
                   <font color="#FF7F50">Payment on Behalf of Customer</font>
-                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Checking Account</a>
+                  <a href="{% url 'external:payment_on_behalf_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
                   <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
+                </li>
+                <li>
+                  <font color="#FF7F50">Payment on Behalf of Customer Email</font>
+                  <a href="{% url 'external:payment_on_behalf_email_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
+                  <a href="{% url 'external:payment_on_behalf_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
                 </li>
                 {% endif %}
 

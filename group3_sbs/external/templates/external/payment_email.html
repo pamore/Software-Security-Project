@@ -14,7 +14,7 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>Payment on behalf of an Individual Customer from your {{account_type}} Account</h1>
+    <h1>Payment from your {{account_type}} Account</h1>
   </div>
 </div>
 
@@ -41,19 +41,15 @@
 </table>
 
 <br />
-
-<form action="{% url 'external:payment_on_behalf_checking_validate' %}" method="post">
+<form action="{% url 'external:payment_checking_validate' %}" method="post">
 {% csrf_token %}
-<p> Send by Specifying Account and Routing Number</p>
-<label for="payment_on_behalf_amount">Please enter an amount for payment</label>
-<input type="number" class="form-control" name="payment_on_behalf_amount" value="0.00" min="0.00" max="9999999.99" required />
+<p>Send by Specifying Email Address </p>
+<input type="number" class="form-control" name="payment_amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
-<label for="account_number">Please enter recipient individual customer account number</label>
-<input type="number" class="form-control" name="account_number" value="1" min="1" step="1" required />
-<label for="route_number">Please enter recipient inidividual customer route number</label>
-<input type="number" class="form-control" name="route_number" value="1" min="1" step="1" required />
+<label for="email_address">Please enter recipient email</label>
+<input type="email" class="form-control" name="email_address" value="" min="3" max="100" />
 <input type="submit" class="btn btn-default" value="Submit" />
 </form>
 
@@ -82,19 +78,15 @@
 </table>
 
 <br />
-
-<form action="{% url 'external:payment_on_behalf_savings_validate' %}" method="post">
+<form action="{% url 'external:payment_savings_validate' %}" method="post">
 {% csrf_token %}
-<p>Send by Specifying Account and Routing Number</p>
-<label for="payment_on_behalf_amount">Please enter an amount for payment</label>
-<input type="number" class="form-control" name="payment_on_behalf_amount" value="0.00" min="0.00" max="9999999.99" required />
+<p>Send by Specifying Email Address </p>
+<input type="number" class="form-control" name="payment_amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
-<label for="account_number">Please enter recipient individual customer account number</label>
-<input type="number" class="form-control" name="account_number" value="1" min="1" step="1" required />
-<label for="route_number">Please enter recipient individual customer route number</label>
-<input type="number" class="form-control" name="route_number" value="1" min="1" step="1" required />
+<label for="email_address">Please enter recipient email</label>
+<input type="email" class="form-control" name="email_address" value="" min="3" max="100" />
 <input type="submit" class="btn btn-default" value="Submit" />
 </form>
 

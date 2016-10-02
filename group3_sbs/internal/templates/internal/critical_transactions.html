@@ -60,7 +60,7 @@
         <td>Unresolved</td>
         <td>Unresolved</td>
         {% endif %}
-        {% if forloop.first and can_resolve %}
+        {% if can_resolve %}
         <td><a class="btn btn-success" href="{% url 'internal:validate_critical_transaction_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_critical_transaction_denial' transaction_id=transaction.id %}">Deny</a></td>
         {% else %}
         <td>None</td>
