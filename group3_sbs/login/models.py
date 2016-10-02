@@ -17,6 +17,8 @@ class UserProfile(models.Model):
     state = models.CharField(validators=[MinLengthValidator(2)], max_length=2)
     zipcode = models.IntegerField(validators=[MinValueValidator(5), MaxValueValidator(5)])
     session_key = models.CharField(max_length=100)
+    otp_pass = models.CharField(validators=[MinLengthValidator(13)], max_length=13, default="")
+    otp_timestamp = models.IntegerField(validators=[MinValueValidator(0)], default=0)
 
     # Inner class to define meta attributes about class
     class Meta:

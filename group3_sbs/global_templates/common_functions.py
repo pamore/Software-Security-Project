@@ -449,6 +449,33 @@ def is_system_manager(user):
     else:
         return False
 
+def get_any_user_profile(username, email):
+    user = User.objects.get(username=username)
+    profile = None
+
+    if is_individual_customer(user):
+        if user.individualcustomer.email == email:
+            print("user.individualcustomer")
+            profile = user.individualcustomer
+    elif is_merchant_organization(user):
+        if user.merchantorganization.email == email:
+            print("user.merchantorganization")
+            profile = user.merchantorganization
+    elif is_regular_employee(user):
+        if user.regularemployee.email == email:
+            print("user.regularemployee")
+            profile = user.regularemployee
+    elif is_system_manager(user):
+        if user.systemmanager.email == email:
+            print("user.systemmanager")
+            profile = user.systemmanager
+    elif is_administrator(user):
+        if user.administrator.email == email:
+            print("user.administrator")
+            profile = user.administrator
+
+    return profile
+
 def get_external_noncritical_transaction(transaction):
     transaction_description = transaction.description
     data = parse_transaction_description(transaction_description=transaction_description, type_of_transaction=TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST)
