@@ -60,9 +60,9 @@
         <td>Unresolved</td>
         <td>Unresolved</td>
         {% endif %}
-        {% if forloop.first and access_to_resolve and can_resolve %}
+        {% if access_to_resolve and can_resolve %}
         <td><a class="btn btn-success" href="{% url 'internal:validate_noncritical_transaction_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_noncritical_transaction_denial' transaction_id=transaction.id %}">Deny</a></td>
-        {% elif forloop.first and not access_to_resolve and can_resolve and can_request %}
+        {% elif not access_to_resolve and can_resolve and can_request %}
         <td><a class="btn btn-success" href="{% url 'internal:validate_internal_noncritical_transaction_request' transaction_id=transaction.id %}">Request Approval to Resolve</a></td></td>
         {% else %}
         <td>None</td>

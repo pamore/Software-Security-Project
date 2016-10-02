@@ -134,6 +134,42 @@ def internal_noncritical_transactions(request):
     transactions = InternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
     return render(request, success_page, {'transactions': transactions})
 
+# Approve Criticial Transactions
+@never_cache
+@login_required
+@user_passes_test(is_system_manager)
+def validate_critical_transaction_approval(request, transaction_id):
+    user = request.user
+    success_page = 'internal/critical_transactions.html'
+    success_page_reverse = 'internal:critical_transactions'
+    try:
+        top_critical_transaction = ExternalCriticalTransaction.objects.get(id=transaction_id)
+    except:
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Transaction does not exist"})
+    transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    if commit_transaction(transaction=top_critical_transaction, user=user):
+        return HttpResponseRedirect(reverse(success_page_reverse))
+    else:
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
+
+# Deny Criticial Transactions
+@never_cache
+@login_required
+@user_passes_test(is_system_manager)
+def validate_critical_transaction_denial(request, transaction_id):
+    user = request.user
+    success_page = 'internal/critical_transactions.html'
+    success_page_reverse = 'internal:critical_transactions'
+    try:
+        top_critical_transaction = ExternalCriticalTransaction.objects.get(id=transaction_id)
+    except:
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Transaction does not exist"})
+    transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    if deny_transaction(transaction=top_critical_transaction, user=user):
+        return HttpResponseRedirect(reverse(success_page_reverse))
+    else:
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
+
 # Request External User Transaction Access
 @never_cache
 @login_required
@@ -163,7 +199,6 @@ def validate_external_noncritical_transaction_access_request_approval(request, t
     else:
         return HttpResponseRedirect(reverse('internal:error'))
 
-
 # Request External User Transaction Access
 @never_cache
 @login_required
@@ -177,83 +212,6 @@ def validate_external_noncritical_transaction_access_request_denial(request, tra
         else:
             return render(request, 'internal/internal_noncritical_transactions.html', {'error_message': 'Denied transaction not committed'})
     except:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-
-# Approve Criticial Transactions
-@never_cache
-@login_required
-@user_passes_test(is_system_manager)
-def validate_critical_transaction_approval(request, transaction_id):
-    user = request.user
-    success_page = 'internal/critical_transactions.html'
-    success_page_reverse = 'internal:critical_transactions'
-    top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-    top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-    transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    if top_noncritical_transaction is None and not top_critical_transaction is None:
-        if commit_transaction(transaction=top_critical_transaction, user=user):
-            return HttpResponseRedirect(reverse(success_page_reverse))
-        else:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
-    elif top_critical_transaction is None:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "No critical transactions to approve"})
-    if top_critical_transaction.time_created > top_noncritical_transaction.time_created:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "Non-critical transaction requested before this critical transaction must be resolved"})
-    else:
-        if int(transaction_id) != top_critical_transaction.id:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Given critical transaction does not match oldest critical transaction to be resolved"})
-        else:
-            if commit_transaction(transaction=top_critical_transaction, user=user):
-                return HttpResponseRedirect(reverse(success_page_reverse))
-            else:
-                return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
-
-# Deny Criticial Transactions
-@never_cache
-@login_required
-@user_passes_test(is_system_manager)
-def validate_critical_transaction_denial(request, transaction_id):
-    user = request.user
-    success_page = 'internal/critical_transactions.html'
-    success_page_reverse = 'internal:critical_transactions'
-    top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-    top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-    transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    if top_noncritical_transaction is None and not top_critical_transaction is None:
-        if deny_transaction(transaction=top_critical_transaction, user=user):
-            return HttpResponseRedirect(reverse(success_page_reverse))
-        else:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
-    elif top_critical_transaction is None:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "No critical transactions to approve"})
-    if top_critical_transaction.time_created > top_noncritical_transaction.time_created:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "Non-critical transaction requested before this critical transaction must be resolved"})
-    else:
-        if int(transaction_id) != top_critical_transaction.id:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Given critical transaction does not match oldest critical transaction to be resolved"})
-        else:
-            if deny_transaction(transaction=top_critical_transaction, user=user):
-                return HttpResponseRedirect(reverse(success_page_reverse))
-            else:
-                return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
-
-# Validate Internal Noncritical Transactions Reqeust
-@never_cache
-@login_required
-@user_passes_test(is_regular_employee)
-def validate_internal_noncritical_transaction_request(request, transaction_id):
-    user = request.user
-    try:
-        external_transaction = ExternalNoncriticalTransaction.objects.get(id=int(transaction_id))
-        already_exists = InternalNoncriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED)
-        if already_exists.exists():
-            raise Exception
-    except:
-        return HttpResponseRedirect(reverse('internal:index'))
-    if create_internal_noncritical_transaction(user=user, external_transaction=external_transaction):
-        return HttpResponseRedirect(reverse('internal:noncritical_transactions'))
-    else:
         return HttpResponseRedirect(reverse('internal:error'))
 
 # Request External User Account Access
@@ -285,6 +243,24 @@ def validate_external_account_access_request(request):
     user.save()
     return HttpResponseRedirect(reverse('internal:index'))
 
+# Validate Internal Noncritical Transactions Reqeust
+@never_cache
+@login_required
+@user_passes_test(is_regular_employee)
+def validate_internal_noncritical_transaction_request(request, transaction_id):
+    user = request.user
+    try:
+        external_transaction = ExternalNoncriticalTransaction.objects.get(id=int(transaction_id))
+        already_exists = InternalNoncriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED)
+        if already_exists.exists():
+            raise Exception
+    except:
+        return HttpResponseRedirect(reverse('internal:index'))
+    if create_internal_noncritical_transaction(user=user, external_transaction=external_transaction):
+        return HttpResponseRedirect(reverse('internal:noncritical_transactions'))
+    else:
+        return HttpResponseRedirect(reverse('internal:error'))
+
 # Approve Non-criticial Transactions
 @never_cache
 @login_required
@@ -293,28 +269,17 @@ def validate_noncritical_transaction_approval(request, transaction_id):
     user = request.user
     success_page = 'internal/noncritical_transactions.html'
     success_page_reverse = 'internal:noncritical_transactions'
-    top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-    top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
+    try:
+        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.get(id=transaction_id)
+    except:
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Transaction does not exist"})
     transactions = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
     if not can_resolve_noncritical_transaction(user, transaction_id):
         return render(request, success_page, {'transactions': transactions, 'error_message': "Do not have permission to resolve transaction"})
-    if top_critical_transaction is None and not top_noncritical_transaction is None:
-        if commit_transaction(transaction=top_noncritical_transaction, user=user):
-            return HttpResponseRedirect(reverse(success_page_reverse))
-        else:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
-    elif top_noncritical_transaction is None:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "No critical transactions to approve"})
-    if top_critical_transaction.time_created < top_noncritical_transaction.time_created:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "System manager must resolve of critical transaction requested before this non-critical transaction"})
+    if commit_transaction(transaction=top_noncritical_transaction, user=user):
+        return HttpResponseRedirect(reverse(success_page_reverse))
     else:
-        if int(transaction_id) != top_noncritical_transaction.id:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Given non-critical transaction does not match oldest non-critical transaction to be resolved"})
-        else:
-            if commit_transaction(transaction=top_noncritical_transaction, user=user):
-                return HttpResponseRedirect(reverse(success_page_reverse))
-            else:
-                return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
 
 # Deny Non-criticial Transactions
 @never_cache
@@ -324,25 +289,14 @@ def validate_noncritical_transaction_denial(request, transaction_id):
     user = request.user
     success_page = 'internal/noncritical_transactions.html'
     success_page_reverse = 'internal:noncritical_transactions'
-    top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-    top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
+    try:
+        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.get(id=transaction_id)
+    except:
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Transaction does not exist"})
     transactions = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
     if not can_resolve_noncritical_transaction(user, transaction_id):
         return render(request, success_page, {'transactions': transactions, 'error_message': "Do not have permission to resolve transaction"})
-    if top_critical_transaction is None and not top_noncritical_transaction is None:
-        if deny_transaction(transaction=top_noncritical_transaction, user=user):
-            return HttpResponseRedirect(reverse(success_page_reverse))
-        else:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Approved transaction not commmited"})
-    elif top_noncritical_transaction is None:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "No critical transactions to approve"})
-    if top_critical_transaction.time_created < top_noncritical_transaction.time_created:
-        return render(request, success_page, {'transactions': transactions, 'error_message': "System manager must resolve of critical transaction requested before this non-critical transaction"})
+    if deny_transaction(transaction=top_noncritical_transaction, user=user):
+        return HttpResponseRedirect(reverse(success_page_reverse))
     else:
-        if int(transaction_id) != top_noncritical_transaction.id:
-            return render(request, success_page, {'transactions': transactions, 'error_message': "Given non-critical transaction does not match oldest non-critical transaction to be resolved"})
-        else:
-            if deny_transaction(transaction=top_critical_transaction, user=user):
-                return HttpResponseRedirect(reverse(success_page_reverse))
-            else:
-                return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
+        return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})

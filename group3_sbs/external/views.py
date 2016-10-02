@@ -105,9 +105,11 @@ def credit_savings(request):
 def debit_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/debit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/debit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     elif is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -118,9 +120,11 @@ def debit_checking(request):
 def debit_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/debit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/debit.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     elif  is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -131,9 +135,26 @@ def debit_savings(request):
 def payment_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     elif  is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Payment Checking Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_email_checking(request):
+    user = request.user
+    if is_individual_customer(user) and has_checking_account(user):
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/payment_email.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_checking_account(user):
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/payment_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -144,9 +165,26 @@ def payment_checking(request):
 def payment_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     elif  is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Payment Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_email_savings(request):
+    user = request.user
+    if is_individual_customer(user) and has_savings_account(user):
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/payment_email.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_savings_account(user):
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/payment_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -161,6 +199,17 @@ def payment_on_behalf_checking(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
+# Payment on Behalf Checking Page
+@never_cache
+@login_required
+@user_passes_test(is_merchant_organization)
+def payment_on_behalf_email_checking(request):
+    user = request.user
+    if is_merchant_organization(user) and has_checking_account(user):
+        return render(request, 'external/payment_on_behalf_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
 # Payment on Behalf Savings Page
 @never_cache
 @login_required
@@ -172,6 +221,17 @@ def payment_on_behalf_savings(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
+# Payment on Behalf Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_merchant_organization)
+def payment_on_behalf_email_savings(request):
+    user = request.user
+    if is_merchant_organization(user) and has_savings_account(user):
+        return render(request, 'external/payment_on_behalf_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
 # Transfer Checking Page
 @never_cache
 @login_required
@@ -179,9 +239,26 @@ def payment_on_behalf_savings(request):
 def transfer_checking(request):
     user = request.user
     if is_individual_customer(user) and has_checking_account(user):
-        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking"})
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     elif  is_merchant_organization(user) and has_checking_account(user):
-        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Transfer Checking Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_email_checking(request):
+    user = request.user
+    if is_individual_customer(user) and has_checking_account(user):
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/transfer_email.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_checking_account(user):
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/transfer_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -192,9 +269,26 @@ def transfer_checking(request):
 def transfer_savings(request):
     user = request.user
     if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings"})
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     elif  is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Transfer Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_email_savings(request):
+    user = request.user
+    if is_individual_customer(user) and has_savings_account(user):
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/transfer_email.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_savings_account(user):
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/transfer_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
