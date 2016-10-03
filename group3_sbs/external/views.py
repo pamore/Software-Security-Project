@@ -8,7 +8,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
+from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, create_transaction_external_user_profile_edit_request, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_permission_to_edit_profile, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, STATES, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 
 """ Render Functions for Web Pages """
@@ -238,7 +238,6 @@ def payment_on_behalf_email_savings(request):
 def profile(request):
     user = request.user
     profile = get_any_user_profile(username=user.username)
-    print(hasattr(profile, 'ssn'))
     return render(request, 'external/profile.html', {'profile': profile})
 
 # User Profile Edit Page
@@ -248,7 +247,13 @@ def profile(request):
 def profile_edit(request):
     user = request.user
     profile = get_any_user_profile(username=user.username)
-    return render(request, 'external/profile_edit.html', {'profile': profile, 'STATES': STATES})
+    if has_permission_to_edit_profile(user):
+        return render(request, 'external/profile_edit.html', {'profile': profile, 'STATES': STATES})
+    else:
+        if create_transaction_external_user_profile_edit_request(user):
+            return render(request, 'external/profile.html', {'profile': profile, 'message': "Awaiting Internal Employee Approval for Account Edit"})
+        else:
+            return HttpResponseRedirect(reverse("external:error"))
 
 # Transfer Checking Page
 @never_cache
@@ -382,7 +387,6 @@ def payment_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
-
 
 # Validate Payment Checking Transaction
 @never_cache

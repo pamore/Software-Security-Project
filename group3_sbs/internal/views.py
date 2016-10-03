@@ -12,6 +12,8 @@ from internal.models import Administrator, RegularEmployee, SystemManager, Inter
 from global_templates.common_functions import add_view_external_user_permission, can_view_noncritical_transaction, can_resolve_internal_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, does_user_have_external_user_permission, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, PAGE_TO_VIEW_CREDIT_CARD, PAGE_TO_VIEW_CHECKING_ACCOUNT, PAGE_TO_VIEW_PROFILE, PAGE_TO_VIEW_SAVINGS_ACCOUNT, REGULAR_EMPLOYEE, SYSTEM_MANAGER, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
 
+""" Render Web Pages """
+
 # Internal User Home Page
 @never_cache
 @login_required
@@ -33,6 +35,57 @@ def index(request):
 @user_passes_test(is_internal_user)
 def error(request):
     return render(request, 'internal/error.html')
+
+# View Critical Transactions
+@never_cache
+@login_required
+@user_passes_test(is_system_manager)
+def critical_transactions(request):
+    user = request.user
+    if is_regular_employee(user) or is_administrator(user):
+        return render(request, 'internal/index.html')
+    elif is_system_manager(user):
+        transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+        top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
+        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
+        if top_critical_transaction is None:
+            return render(request, 'internal/critical_transactions.html', {'transactions': transactions})
+        elif top_noncritical_transaction is None:
+            can_resolve = True
+        elif top_critical_transaction.time_created > top_noncritical_transaction.time_created:
+            can_resolve = False
+        else:
+            can_resolve = True
+        return render(request, 'internal/critical_transactions.html', {'transactions': transactions, 'can_resolve': can_resolve})
+    else:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# External User Account Request Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def external_user_access_request(request):
+    return render (request, 'internal/external_user_access_request.html')
+
+# Internal Noncritical Transactions Page
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def internal_noncritical_transactions(request):
+    user = request.user
+    success_page = 'internal/internal_noncritical_transactions.html'
+    transactions = InternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    return render(request, success_page, {'transactions': transactions})
+
+# Internal Critical Transactions Page
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def internal_critical_transactions(request):
+    user = request.user
+    success_page = 'internal/internal_critical_transactions.html'
+    transactions = InternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    return render(request, success_page, {'transactions': transactions})
 
 # View Noncritical Transactions
 @never_cache
@@ -66,30 +119,6 @@ def noncritical_transactions(request):
             if user.has_perm(permission_codename):
                 access_to_resolve = True
         return render(request, 'internal/noncritical_transactions.html', {'transactions': transactions, 'can_resolve': can_resolve, 'access_to_resolve': access_to_resolve, 'can_request': can_request})
-    else:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-# View Critical Transactions
-@never_cache
-@login_required
-@user_passes_test(is_system_manager)
-def critical_transactions(request):
-    user = request.user
-    if is_regular_employee(user) or is_administrator(user):
-        return render(request, 'internal/index.html')
-    elif is_system_manager(user):
-        transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-        top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-        if top_critical_transaction is None:
-            return render(request, 'internal/critical_transactions.html', {'transactions': transactions})
-        elif top_noncritical_transaction is None:
-            can_resolve = True
-        elif top_critical_transaction.time_created > top_noncritical_transaction.time_created:
-            can_resolve = False
-        else:
-            can_resolve = True
-        return render(request, 'internal/critical_transactions.html', {'transactions': transactions, 'can_resolve': can_resolve})
     else:
         return HttpResponseRedirect(reverse('internal:error'))
 
@@ -150,32 +179,8 @@ def view_external_user_savings_account(request, external_user_id):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
-# External User Account Request Page
-@never_cache
-@login_required
-@user_passes_test(is_internal_user)
-def external_user_access_request(request):
-    return render (request, 'internal/external_user_access_request.html')
 
-# Internal Noncritical Transactions Page
-@never_cache
-@login_required
-@user_passes_test(can_resolve_internal_transaction)
-def internal_noncritical_transactions(request):
-    user = request.user
-    success_page = 'internal/internal_noncritical_transactions.html'
-    transactions = InternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    return render(request, success_page, {'transactions': transactions})
-
-# Internal Critical Transactions Page
-@never_cache
-@login_required
-@user_passes_test(can_resolve_internal_transaction)
-def internal_critical_transactions(request):
-    user = request.user
-    success_page = 'internal/internal_critical_transactions.html'
-    transactions = InternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    return render(request, success_page, {'transactions': transactions})
+""" Validate Webpages """
 
 # Approve Criticial Transactions
 @never_cache

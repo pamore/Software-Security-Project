@@ -53,11 +53,11 @@
 
                 <li>
                      <font color="#FF7F50"> Access Transactions </font>
-                              {% if user_type == 'System Manager' %}
+                              {% if request.user.systemmanager %}
                               <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp External Critical </a>
                               {% endif%}
                               <a href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp External Non-Critical</a>
-                              {% if user_type == 'System Manager' %}
+                              {% if request.user.systemmanager %}
                               <a href="{% url 'internal:internal_critical_transactions' %}"> &nbsp &nbsp &nbsp Internal Critical </a>
                               <a href="{% url 'internal:internal_noncritical_transactions' %}"> &nbsp &nbsp &nbsp Internal Non-Critical </a>
                               {% endif%}

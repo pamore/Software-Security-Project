@@ -8,12 +8,35 @@ from django.contrib.auth.models import User, Permission
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required, user_passes_test
-from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
+from external.models import CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, IndividualCustomer, MerchantOrganization, SavingsAccount
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
 from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
 from global_templates.constants import *
 from templated_email import send_templated_mail
 import re
+
+def add_edit_external_user_profile_permission(user):
+    if is_external_user(user):
+        try:
+            if is_individual_customer(user):
+                content_type = ContentType.objects.get_for_model(IndividualCustomer)
+            else:
+                content_type = ContentType.objects.get_for_model(MerchantOrganization)
+            permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+            permission_name = "Can external user " + str(user.id) + " edit their profile"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    else:
+        return False
 
 def add_view_external_user_permission(user, external_user, page_to_view):
     if is_regular_employee(user):
@@ -102,6 +125,8 @@ def commit_transaction(transaction, user):
         result = commit_transaction_internal_noncritical(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
         result = commit_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST:
+        result = commit_transaction_external_user_profile_edit_request(transaction=transaction, user=user)
     else:
         result = False
     if result:
@@ -148,6 +173,17 @@ def commit_transaction_credit_or_debit(transaction, user):
         save_transaction(transaction=transaction, user=user)
         account.save()
         return True
+    except:
+        return False
+
+def commit_transaction_external_user_profile_edit_request(transaction, user):
+    try:
+        initiator = transaction.initiator
+        if add_edit_external_user_profile_permission(user=initiator):
+            save_transaction(transaction=transaction, user=user)
+            return True
+        else:
+            return False
     except:
         return False
 
@@ -241,6 +277,17 @@ def create_debit_or_credit_transaction(user, type_of_transaction, userType, acco
         else:
             transaction = ExternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
         transaction.participants.add(user)
+        transaction.save()
+        return True
+    except:
+        return False
+
+def create_transaction_external_user_profile_edit_request(user):
+    try:
+        type_of_transaction = TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST
+        description_string = "User ID: " + str(user.id)
+        description_string = description_string + ",Action: requests access to edit their profile"
+        transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
         transaction.save()
         return True
     except:
@@ -374,6 +421,8 @@ def deny_transaction(transaction, user):
         result = deny_transaction_internal_noncritical(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
         result = deny_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST:
+        result = deny_transaction_external_user_profile_edit_request(transaction=transaction, user=user)
     else:
         result = False
     if result:
@@ -413,6 +462,13 @@ def deny_transaction_credit_or_debit(transaction, user):
             return False
         save_transaction(transaction=transaction, user=user)
         account.save()
+        return True
+    except:
+        return False
+
+def deny_transaction_external_user_profile_edit_request(transaction, user):
+    try:
+        save_transaction(transaction=transaction, user=user)
         return True
     except:
         return False
@@ -646,6 +702,23 @@ def has_credit_card(user):
 def has_no_account(user):
     if not has_credit_card(user) and not has_checking_account(user) and not has_savings_account(user):
         True
+    else:
+        return False
+
+def has_permission_to_edit_profile(user):
+    if is_external_user(user):
+        try:
+            permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'external.' + permission_codename
+            if user.has_perm(permission_codename):
+                user.user_permissions.remove(permission)
+                user.save()
+                return True
+            else:
+                return False
+        except:
+            return False
     else:
         return False
 
