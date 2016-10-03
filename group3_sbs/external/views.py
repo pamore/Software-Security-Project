@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template import loader
 from django.shortcuts import render
@@ -427,8 +427,19 @@ def profile_edit_validate(request):
     city = request.POST['city']
     state = request.POST['state']
     zipcode = request.POST['zipcode']
-    if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
-        return HttpResponseRedirect(reverse(success_redirect))
+    try:
+        permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+        permission = Permission.objects.get(codename=permission_codename)
+        permission_codename = 'external.' + permission_codename
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if user.has_perm(permission_codename):
+        if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+            user.user_permissions.remove(permission)
+            user.save()
+            return HttpResponseRedirect(reverse(success_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 

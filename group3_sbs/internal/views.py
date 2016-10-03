@@ -9,8 +9,8 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
-from global_templates.common_functions import add_view_external_user_permission, can_view_noncritical_transaction, can_resolve_internal_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, does_user_have_external_user_permission, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, PAGE_TO_VIEW_CREDIT_CARD, PAGE_TO_VIEW_CHECKING_ACCOUNT, PAGE_TO_VIEW_PROFILE, PAGE_TO_VIEW_SAVINGS_ACCOUNT, REGULAR_EMPLOYEE, SYSTEM_MANAGER, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
+from global_templates.common_functions import add_view_external_user_permission, can_edit_external_user_page, can_view_noncritical_transaction, can_resolve_internal_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, does_user_have_external_user_permission, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account, validate_profile_change
+from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, PAGE_TO_VIEW_CREDIT_CARD, PAGE_TO_VIEW_CHECKING_ACCOUNT, PAGE_TO_VIEW_EDIT_PROFILE, PAGE_TO_VIEW_PROFILE, PAGE_TO_VIEW_SAVINGS_ACCOUNT, REGULAR_EMPLOYEE, SYSTEM_MANAGER, STATES, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
 
 """ Render Web Pages """
 
@@ -59,6 +59,25 @@ def critical_transactions(request):
         return render(request, 'internal/critical_transactions.html', {'transactions': transactions, 'can_resolve': can_resolve})
     else:
         return HttpResponseRedirect(reverse('internal:error'))
+
+# Edit External User Profile Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def edit_external_user_profile(request, external_user_id):
+    user = request.user
+    page_to_view = PAGE_TO_VIEW_EDIT_PROFILE
+    success_page = "internal/edit_external_user_profile.html"
+    error_redirect = "internal:index"
+    if can_edit_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        profile = get_any_user_profile(username=external_user.username)
+        return render(request, success_page, {"external_user": external_user, "profile": profile, 'STATES': STATES})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # External User Account Request Page
 @never_cache
@@ -179,7 +198,6 @@ def view_external_user_savings_account(request, external_user_id):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
-
 """ Validate Webpages """
 
 # Approve Criticial Transactions
@@ -271,7 +289,10 @@ def validate_external_user_access_request(request):
     error_redirect = "internal:error"
     external_user_id = request.POST['external_user_id']
     page_to_view = request.POST['page_to_view']
-    success_redirect = "internal:view_external_user_" + page_to_view
+    if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+        success_redirect = "internal:edit_external_user_profile"
+    else:
+        success_redirect = "internal:view_external_user_" + page_to_view
     pending_approval_redirect = "internal:index"
     try:
         external_user = User.objects.get(id=int(external_user_id))
@@ -386,3 +407,43 @@ def validate_noncritical_transaction_denial(request, transaction_id):
         return HttpResponseRedirect(reverse(success_page_reverse))
     else:
         return render(request, success_page, {'transactions': transactions, 'error_message': "Denied transaction not commmited"})
+
+# Validate Profile Edit Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def validate_profile_edit(request, external_user_id):
+    user = request.user
+    success_redirect = 'internal:index'
+    error_redirect = 'internal:error'
+    username = request.POST['username']
+    profile = get_any_user_profile(username=username)
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    street_address = request.POST['street_address']
+    city = request.POST['city']
+    state = request.POST['state']
+    zipcode = request.POST['zipcode']
+    if is_system_manager(user):
+        if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+            return HttpResponseRedirect(reverse(success_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    elif is_regular_employee(user):
+        try:
+            permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        if user.has_perm(permission_codename):
+            if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+                user.user_permissions.remove(permission)
+                user.save()
+                return HttpResponseRedirect(reverse(success_redirect))
+            else:
+                return HttpResponseRedirect(reverse(error_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))

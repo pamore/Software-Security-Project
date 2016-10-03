@@ -38,6 +38,28 @@ def add_edit_external_user_profile_permission(user):
     else:
         return False
 
+def add_internal_edit_external_user_profile_permission(user, external_user):
+    if is_regular_employee(user):
+        try:
+            content_type = ContentType.objects.get_for_model(RegularEmployee)
+            permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user.id)
+            permission_name = "Can internal user" + str(user.id) + " edit external user " + str(external_user.id) + "'s profile"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    elif is_system_manager(user):
+        return True
+    else:
+        return False
+
 def add_view_external_user_permission(user, external_user, page_to_view):
     if is_regular_employee(user):
         try:
@@ -50,10 +72,52 @@ def add_view_external_user_permission(user, external_user, page_to_view):
                 permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
             if user.has_perm(permission):
                 return True
-
             user.user_permissions.add(permission)
             user.save()
             return True
+        except:
+            return False
+    elif is_system_manager(user):
+        return True
+    else:
+        return False
+
+def can_edit_external_user_page(user, external_user_id, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                external_user = User.objects.get(id=int(external_user_id))
+                if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+                    verify = True
+        except:
+            pass
+    elif is_system_manager(user):
+        if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+            verify = True
+    return verify
+
+def can_resolve_internal_transaction(user):
+    if is_administrator(user) or is_system_manager(user):
+        return True
+    else:
+        return False
+
+def can_resolve_noncritical_transaction(user, transaction_id):
+    if is_regular_employee(user):
+        try:
+            permission_codename = 'can_resolve_external_noncritical_transaction_' + str(transaction_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                user.user_permissions.remove(permission)
+                user.save()
+                return True
+            else:
+                return False
         except:
             return False
     elif is_system_manager(user):
@@ -84,31 +148,6 @@ def can_view_external_user_page(user, external_user_id, page_to_view):
 
 def can_view_noncritical_transaction(user):
     if is_regular_employee(user) or is_system_manager(user):
-        return True
-    else:
-        return False
-
-def can_resolve_internal_transaction(user):
-    if is_administrator(user) or is_system_manager(user):
-        return True
-    else:
-        return False
-
-def can_resolve_noncritical_transaction(user, transaction_id):
-    if is_regular_employee(user):
-        try:
-            permission_codename = 'can_resolve_external_noncritical_transaction_' + str(transaction_id)
-            permission = Permission.objects.get(codename=permission_codename)
-            permission_codename = 'internal.' + permission_codename
-            if user.has_perm(permission_codename):
-                user.user_permissions.remove(permission)
-                user.save()
-                return True
-            else:
-                return False
-        except:
-            return False
-    elif is_system_manager(user):
         return True
     else:
         return False
@@ -200,11 +239,18 @@ def commit_transaction_internal_transcaction_for_access(transaction, user):
         initiator = transaction.initiator
         external_user = data['external_user']
         page_to_view = data['page_to_view']
-        if add_view_external_user_permission(user=initiator, external_user=external_user, page_to_view=page_to_view):
-            save_transaction(transaction=transaction, user=user)
-            return True
+        if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+            if add_internal_edit_external_user_profile_permission(user=initiator, external_user=external_user):
+                save_transaction(transaction=transaction, user=user)
+                return True
+            else:
+                return False
         else:
-            return False
+            if add_view_external_user_permission(user=initiator, external_user=external_user, page_to_view=page_to_view):
+                save_transaction(transaction=transaction, user=user)
+                return True
+            else:
+                return False
     except:
         return False
 
@@ -543,7 +589,10 @@ def does_user_have_external_user_permission(user, external_user, page_to_view):
     verify = False
     if is_regular_employee(user):
         try:
-            permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
+            if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+                permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user.id)
+            else:
+                permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
             permission = Permission.objects.filter(codename=permission_codename).first()
             permission_codename = 'internal.' + permission_codename
             if permission is None:
@@ -555,8 +604,8 @@ def does_user_have_external_user_permission(user, external_user, page_to_view):
                 else:
                     if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
                         verify = False
-        except Exception as Message:
-            print(Message)
+        except:
+            pass
     elif is_system_manager(user):
         verify = True
     return verify
@@ -712,8 +761,6 @@ def has_permission_to_edit_profile(user):
             permission = Permission.objects.get(codename=permission_codename)
             permission_codename = 'external.' + permission_codename
             if user.has_perm(permission_codename):
-                user.user_permissions.remove(permission)
-                user.save()
                 return True
             else:
                 return False
