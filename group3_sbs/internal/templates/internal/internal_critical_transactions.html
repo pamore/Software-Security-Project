@@ -1,0 +1,68 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add stylesheets or javascript here !-->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Navigation here !-->
+{% endblock %}
+
+{% block content %}
+
+{% if error_message %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>{{error_message}}</h1>
+  </div>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h1>List of all regular employee  requests for external access</h1>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Initiator</th>
+        <th>Description</th>
+        <th>Time Created</th>
+        <th>Status</th>
+        <th>Resolver</th>
+        <th>Time Resolved</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{transaction.type_of_transaction}}</td>
+        <td>{{transaction.initiator.username}}</td>
+        <td>{{transaction.description}}</td>
+        <td>{{transaction.time_created}}</td>
+        <td>{{transaction.status}}</td>
+        {% if transaction.resolver %}
+        <td>{{transaction.resolver.username}}</td>
+        <td>{{transaction.time_resolved}}</td>
+        {% else %}
+        <td>Unresolved</td>
+        <td>Unresolved</td>
+        {% endif %}
+        {% if forloop.first %}
+        <td><a class="btn btn-success" href="{% url 'internal:validate_internal_critical_transaction_access_request_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_internal_critical_transaction_access_request_denial' transaction_id=transaction.id %}">Deny</a></td>
+        {% else %}
+        <td>None</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}

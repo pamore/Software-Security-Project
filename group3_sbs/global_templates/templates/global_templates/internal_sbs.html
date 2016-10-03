@@ -53,14 +53,19 @@
 
                 <li>
                      <font color="#FF7F50"> Access Transactions </font>
-                              <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp Critical Transactions </a>
-                              <a  href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp Non-Critical Transactions </a>
+                              {% if user_type == 'System Manager' %}
+                              <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp External Critical </a>
+                              {% endif%}
+                              <a href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp External Non-Critical</a>
+                              {% if user_type == 'System Manager' %}
+                              <a href="{% url 'internal:internal_critical_transactions' %}"> &nbsp &nbsp &nbsp Internal Critical </a>
+                              <a href="{% url 'internal:internal_noncritical_transactions' %}"> &nbsp &nbsp &nbsp Internal Non-Critical </a>
+                              {% endif%}
                 </li>
-                 <li>
+                <li>
                    <font color="#FF7F50"> View External User Page</font>
                               <a href="{% url 'internal:external_user_access_request' %}"> &nbsp &nbsp &nbsp View External User Page </a>
                 </li>
-
             </ul>
         </div>
        <!-- Side Bar Content -->

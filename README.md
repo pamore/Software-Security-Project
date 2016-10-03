@@ -36,7 +36,7 @@
 
 # Install MySQL
 1. Download deb for 2.7.15
-  * wget http://dev.  * mysql.com/get/mysql-apt-config_0.6.0-1_all.de
+  * wget http://dev.mysql.com/get/mysql-apt-config_0.6.0-1_all.deb
 
 2. Install using dpkg
   * sudo dpkg -i mysql-apt-config_0.6.0-1_all.deb

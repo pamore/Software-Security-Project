@@ -27,6 +27,7 @@ def add_view_external_user_permission(user, external_user, page_to_view):
                 permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
             if user.has_perm(permission):
                 return True
+
             user.user_permissions.add(permission)
             user.save()
             return True
@@ -46,7 +47,7 @@ def can_view_external_user_page(user, external_user_id, page_to_view):
             permission_codename = 'internal.' + permission_codename
             if user.has_perm(permission_codename):
                 external_user = User.objects.get(id=int(external_user_id))
-                if page_to_view == "profile" or (page_to_view == "savings_account" and has_savings_account(external_user)) or (page_to_view == "checking_account" and has_checking_account(external_user)) or (page_to_view == "credit_card" and has_credit_card(external_user)):
+                if page_to_view == PAGE_TO_VIEW_PROFILE or (page_to_view == PAGE_TO_VIEW_SAVINGS_ACCOUNT and has_savings_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CHECKING_ACCOUNT and has_checking_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CREDIT_CARD and has_credit_card(external_user)):
                     verify = True
                     user.user_permissions.remove(permission)
                     user.save()
@@ -54,7 +55,7 @@ def can_view_external_user_page(user, external_user_id, page_to_view):
             pass
     elif is_system_manager(user):
         external_user = User.objects.get(id=int(external_user_id))
-        if page_to_view == "profile" or (page_to_view == "savings_account" and has_savings_account(external_user)) or (page_to_view == "checking_account" and has_checking_account(external_user)) or (page_to_view == "credit_card" and has_credit_card(external_user)):
+        if page_to_view == PAGE_TO_VIEW_PROFILE or (page_to_view == PAGE_TO_VIEW_SAVINGS_ACCOUNT and has_savings_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CHECKING_ACCOUNT and has_checking_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CREDIT_CARD and has_credit_card(external_user)):
             verify = True
     return verify
 
@@ -64,7 +65,7 @@ def can_view_noncritical_transaction(user):
     else:
         return False
 
-def can_resolve_internal_noncritical_transaction(user):
+def can_resolve_internal_transaction(user):
     if is_administrator(user) or is_system_manager(user):
         return True
     else:
@@ -99,6 +100,8 @@ def commit_transaction(transaction, user):
         result = commit_transaction_transfer(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
         result = commit_transaction_internal_noncritical(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+        result = commit_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
     else:
         result = False
     if result:
@@ -152,6 +155,20 @@ def commit_transaction_internal_noncritical(transaction, user):
     try:
         save_transaction(transaction=transaction, user=user)
         return True
+    except:
+        return False
+
+def commit_transaction_internal_transcaction_for_access(transaction, user):
+    try:
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=transaction.type_of_transaction)
+        initiator = transaction.initiator
+        external_user = data['external_user']
+        page_to_view = data['page_to_view']
+        if add_view_external_user_permission(user=initiator, external_user=external_user, page_to_view=page_to_view):
+            save_transaction(transaction=transaction, user=user)
+            return True
+        else:
+            return False
     except:
         return False
 
@@ -232,9 +249,23 @@ def create_debit_or_credit_transaction(user, type_of_transaction, userType, acco
 def create_internal_noncritical_transaction(user, external_transaction):
     try:
         type_of_transaction = TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST
-        description_string = "User " + user.regularemployee.first_name + " " + user.regularemployee.last_name
-        description_string = description_string + " requests access to external non-critical transaction " + str(external_transaction.id)
+        description_string = "User: " + user.username
+        description_string = description_string + ",Action: requests access to external non-critical transaction"
+        description_string = description_string + ",Transaction ID: " +  str(external_transaction.id)
         transaction = InternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
+        transaction.save()
+        return True
+    except:
+        return False
+
+def create_internal_transcaction_for_access(user, external_user, page_to_view):
+    try:
+        type_of_transaction = TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST
+        description_string = "User: " + user.username
+        description_string = description_string + ",Action: requests access to external user page"
+        description_string = description_string + ",External User: " +  str(external_user.id)
+        description_string = description_string + ",Page: " +  page_to_view
+        transaction = InternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
         transaction.save()
         return True
     except:
@@ -341,6 +372,8 @@ def deny_transaction(transaction, user):
         result = deny_transaction_transfer(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
         result = deny_transaction_internal_noncritical(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+        result = deny_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
     else:
         result = False
     if result:
@@ -385,6 +418,13 @@ def deny_transaction_credit_or_debit(transaction, user):
         return False
 
 def deny_transaction_internal_noncritical(transaction, user):
+    try:
+        save_transaction(transaction=transaction, user=user)
+        return True
+    except:
+        return False
+
+def deny_transaction_internal_transcaction_for_access(transaction, user):
     try:
         save_transaction(transaction=transaction, user=user)
         return True
@@ -442,6 +482,28 @@ def deny_transaction_transfer(transaction, user):
         return True
     except:
         return False
+
+def does_user_have_external_user_permission(user, external_user, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
+            permission = Permission.objects.filter(codename=permission_codename).first()
+            permission_codename = 'internal.' + permission_codename
+            if permission is None:
+                if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
+                    verify = False
+            else:
+                if user.has_perm(permission_codename):
+                    verify = True
+                else:
+                    if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
+                        verify = False
+        except Exception as Message:
+            print(Message)
+    elif is_system_manager(user):
+        verify = True
+    return verify
 
 def get_account_for_external_user(user):
     account = None
@@ -646,6 +708,8 @@ def parse_transaction_description(transaction_description, type_of_transaction):
         return parse_transaction_description_transfer(transaction_description=transaction_description)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
         return parse_transaction_description_internal_noncritical(transaction_description=transaction_description)
+    elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+        return parse_transaction_description_internal_transaction_for_access(transaction_description=transaction_description)
     else:
         return {}
 
@@ -685,11 +749,29 @@ def parse_transaction_description_credit_or_debit(transaction_description):
 
 def parse_transaction_description_internal_noncritical(transaction_description):
     try:
-        external_transaction_data = [int(value) for value in transaction_description.split() if value.isdigit()]
-        external_transaction_id = external_transaction_data[0]
+        contents = transaction_description.split(',')
+        username = contents[0].split(': ')[1]
+        description = contents[1].split(': ')[1]
+        external_transaction_id = int(contents[2].split(': ')[1])
         external_transaction = ExternalNoncriticalTransaction.objects.get(id=external_transaction_id)
         return {
             'external_transaction': external_transaction,
+        }
+    except:
+        return {}
+
+def parse_transaction_description_internal_transaction_for_access(transaction_description):
+    try:
+        contents = transaction_description.split(',')
+        contents = transaction_description.split(',')
+        username = contents[0].split(': ')[1]
+        description = contents[1].split(': ')[1]
+        external_user_id = int(contents[2].split(': ')[1])
+        page_to_view = contents[3].split(': ')[1]
+        external_user = User.objects.get(id=external_user_id)
+        return {
+            'external_user': external_user,
+            'page_to_view' : page_to_view,
         }
     except:
         return {}
