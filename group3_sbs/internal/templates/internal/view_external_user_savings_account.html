@@ -1,0 +1,44 @@
+{% extends "global_templates/sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Savings Account for {{user.username}}</h1>
+  </div>
+</div>
+
+{% if savings_account %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Account Number</th>
+      <th>Routing Number</th>
+      <th>Current Balance</th>
+      <th>Active Balance</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{savings_account.id}}</td>
+      <td>{{savings_account.routing_number}}</td>
+      <td>${{savings_account.current_balance}}</td>
+      <td>${{savings_account.active_balance}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+{% endif %}
+
+{% endblock %}

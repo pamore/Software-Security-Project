@@ -15,7 +15,7 @@ class UserProfile(models.Model):
     street_address = models.CharField(validators=[MinLengthValidator(4)], max_length=100)
     city = models.CharField(validators=[MinLengthValidator(2)], max_length=100)
     state = models.CharField(validators=[MinLengthValidator(2)], max_length=2)
-    zipcode = models.IntegerField(validators=[MinValueValidator(5), MaxValueValidator(5)])
+    zipcode = models.CharField(validators=[MinLengthValidator(5)], max_length=5)
     session_key = models.CharField(max_length=100)
 
     # Inner class to define meta attributes about class

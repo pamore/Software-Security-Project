@@ -1,0 +1,53 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>View Your Profile</h1>
+  </div>
+</div>
+<div class="row">
+  <table class="table">
+    <tbody>
+      <tr>
+        <th>First Name</th>
+        <td>{{profile.first_name}}</td>
+      </tr>
+      <tr>
+        <th>Last Name</th>
+        <td>{{profile.last_name}}</td>
+      </tr>
+      <tr>
+        <th>Email</th>
+        <td>{{profile.email}}</td>
+      </tr>
+      <tr>
+        <th>Address</th>
+        <td>{{profile.street_address}}, {{profile.city}}, {{profile.state}} {{profile.zipcode}}</td>
+      </tr>
+      <tr>
+        <th>Social Security Number</th>
+        <td>{{profile.ssn}}</td>
+      </tr>
+    </tbody>
+    <tfoot>
+    </tfoot>
+  </table>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <a class="btn btn-primary" href="{% url 'external:profile_edit' %}">Edit</a>
+  </div>
+</div>
+{% endblock %}

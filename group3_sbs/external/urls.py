@@ -34,4 +34,7 @@ urlpatterns = [
     url(r'^account/view/savings/$', views.savings_account, name='savings_account'),
     url(r'^credit_card/$', views.credit_card, name='credit_card'),
     url(r'^error/$', views.error, name='error'),
+    url(r'^profile/edit/$', views.profile_edit, name='profile_edit'),
+    url(r'^profile/edit/validate/$', views.profile_edit_validate, name='profile_edit_validate'),
+    url(r'^profile/view/$', views.profile, name='profile'),
 ]

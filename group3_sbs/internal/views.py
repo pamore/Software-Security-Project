@@ -9,7 +9,7 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
-from global_templates.common_functions import can_view_noncritical_transaction, can_resolve_internal_noncritical_transaction, can_resolve_noncritical_transaction, create_internal_noncritical_transaction, commit_transaction, deny_transaction, get_external_noncritical_transaction, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account
+from global_templates.common_functions import add_view_external_user_permission, can_view_noncritical_transaction, can_resolve_internal_noncritical_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, REGULAR_EMPLOYEE, SYSTEM_MANAGER, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
 
 # Internal User Home Page
@@ -33,7 +33,6 @@ def index(request):
 @user_passes_test(is_internal_user)
 def error(request):
     return render(request, 'internal/error.html')
-
 
 # View Noncritical Transactions
 @never_cache
@@ -94,35 +93,69 @@ def critical_transactions(request):
     else:
         return HttpResponseRedirect(reverse('internal:error'))
 
-# View External User Account Page
+# View External User Checking Account Page
 @never_cache
 @login_required
 @user_passes_test(is_internal_user)
-def view_external_account(request, external_user_id):
+def view_external_user_checking_account(request, external_user_id):
     user = request.user
-    permission_codename = 'internal.can_view_external_user_page_' + external_user_id
-    permission = Permission.objects.get(codename='can_view_external_user_page_' + external_user_id)
-    if user.has_perm(permission_codename):
-        external_user = User.objects.get(id=int(external_user_id))
-        if is_individual_customer(external_user) and not has_no_account(external_user):
-            return_value = render(request, 'internal/view_external_account.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': external_user.individualcustomer.first_name, 'last_name': external_user.individualcustomer.last_name, 'checkingaccount': external_user.individualcustomer.checking_account, 'savingsaccount': external_user.individualcustomer.savings_account, 'creditcard': external_user.individualcustomer.credit_card})
-        elif is_merchant_organization(external_user) and not has_no_account(external_user):
-            return_value = render(request, 'internal/view_external_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': external_user.merchantorganization.first_name, 'last_name': external_user.merchantorganization.last_name, 'checkingaccount': external_user.merchantorganization.checking_account, 'savingsaccount': external_user.merchantorganization.savings_account, 'creditcard': external_user.merchantorganization.credit_card})
-        else:
-            return_value = render(request, 'internal/view_external_account.html', {'error_message': 'User is not an external user to be viewed'})
-        user.user_permissions.remove(permission)
-        user.save()
-        return return_value
+    page_to_view = "checking_account"
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        checking_account = get_external_user_account(user=external_user, account_type=ACCOUNT_TYPE_CHECKING)
+        return render(request, success_page, {"user": external_user, "checking_account": checking_account})
     else:
-        return HttpResponseRedirect(reverse('internal:index'))
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# View External User Profile Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def view_external_user_profile(request, external_user_id):
+    user = request.user
+    page_to_view = "profile"
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        profile = get_any_user_profile(username=external_user.username)
+        return render(request, success_page, {"user": external_user, "profile": profile})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# View External User Savings Account Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def view_external_user_savings_account(request, external_user_id):
+    user = request.user
+    page_to_view = "savings_account"
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        savings_account = get_external_user_account(user=external_user, account_type=ACCOUNT_TYPE_SAVINGS)
+        return render(request, success_page, {"user": external_user, "savings_account": savings_account})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # External User Account Request Page
 @never_cache
 @login_required
 @user_passes_test(is_internal_user)
-def external_user_account_access_request(request):
-    return render (request, 'internal/external_user_account_access_request.html')
-
+def external_user_access_request(request):
+    return render (request, 'internal/external_user_access_request.html')
 
 # Internal Noncritical Transactions Page
 @never_cache
@@ -218,30 +251,20 @@ def validate_external_noncritical_transaction_access_request_denial(request, tra
 @never_cache
 @login_required
 @user_passes_test(is_internal_user)
-def validate_external_account_access_request(request):
+def validate_external_user_access_request(request):
     user = request.user
+    error_redirect = "internal:error"
     external_user_id = request.POST['external_user_id']
+    page_to_view = request.POST['page_to_view']
+    success_redirect = "internal:view_external_user_" + page_to_view
     try:
         external_user = User.objects.get(id=int(external_user_id))
     except:
-        return HttpResponseRedirect(reverse('internal:error'))
-    if is_regular_employee(user):
-        content_type = ContentType.objects.get_for_model(RegularEmployee)
-    elif is_system_manager(user):
-        content_type = ContentType.objects.get_for_model(SystemManager)
-    elif is_administrator(user):
-        content_type = ContentType.objects.get_for_model(Administrator)
+        return HttpResponseRedirect(reverse(error_redirect))
+    if add_view_external_user_permission(user=user, external_user=external_user, page_to_view=page_to_view):
+        return HttpResponseRedirect(reverse(success_redirect, kwargs={'external_user_id': external_user.id}))
     else:
-        return HttpResponseRedirect(reverse('internal:error'))
-    permission_codename = 'can_view_external_user_page_' + external_user_id
-    permission_name = "Can view external user " + external_user_id + "'s page"
-    try:
-        permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
-    except:
-        permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
-    user.user_permissions.add(permission)
-    user.save()
-    return HttpResponseRedirect(reverse('internal:index'))
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # Validate Internal Noncritical Transactions Reqeust
 @never_cache

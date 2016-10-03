@@ -1,17 +1,62 @@
 from django.utils import timezone
 from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.core.mail import EmailMessage, send_mail
 from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.models import User, Permission
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required, user_passes_test
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
 from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
 from global_templates.constants import *
 from templated_email import send_templated_mail
-from django.core.mail import EmailMessage, send_mail
+import re
+
+def add_view_external_user_permission(user, external_user, page_to_view):
+    if is_regular_employee(user):
+        try:
+            content_type = ContentType.objects.get_for_model(RegularEmployee)
+            permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
+            permission_name = "Can view external user " + str(external_user.id) + "'s"+ page_to_view + " page"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    elif is_system_manager(user):
+        return True
+    else:
+        return False
+
+def can_view_external_user_page(user, external_user_id, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                external_user = User.objects.get(id=int(external_user_id))
+                if page_to_view == "profile" or (page_to_view == "savings_account" and has_savings_account(external_user)) or (page_to_view == "checking_account" and has_checking_account(external_user)) or (page_to_view == "credit_card" and has_credit_card(external_user)):
+                    verify = True
+                    user.user_permissions.remove(permission)
+                    user.save()
+        except:
+            pass
+    elif is_system_manager(user):
+        external_user = User.objects.get(id=int(external_user_id))
+        if page_to_view == "profile" or (page_to_view == "savings_account" and has_savings_account(external_user)) or (page_to_view == "checking_account" and has_checking_account(external_user)) or (page_to_view == "credit_card" and has_credit_card(external_user)):
+            verify = True
+    return verify
 
 def can_view_noncritical_transaction(user):
     if is_regular_employee(user) or is_system_manager(user):
@@ -419,6 +464,48 @@ def get_all_emails(queryset):
         emails.append(get_user_email(user))
     return emails
 
+def get_any_user_profile(username, email=None):
+    user = User.objects.get(username=username)
+    profile = None
+    if email == None:
+        if is_individual_customer(user):
+            profile = user.individualcustomer
+        elif is_merchant_organization(user):
+            profile = user.merchantorganization
+        elif is_regular_employee(user):
+            profile = user.regularemployee
+        elif is_system_manager(user):
+            profile = user.systemmanager
+        elif is_administrator(user):
+            profile = user.administrator
+    else:
+        if is_individual_customer(user):
+            if user.individualcustomer.email == email:
+                profile = user.individualcustomer
+        elif is_merchant_organization(user):
+            if user.merchantorganization.email == email:
+                profile = user.merchantorganization
+        elif is_regular_employee(user):
+            if user.regularemployee.email == email:
+                profile = user.regularemployee
+        elif is_system_manager(user):
+            if user.systemmanager.email == email:
+                profile = user.systemmanager
+        elif is_administrator(user):
+            if user.administrator.email == email:
+                profile = user.administrator
+    return profile
+
+def get_external_user_account(user, account_type):
+    account = None
+    if is_external_user(user):
+        profile = get_any_user_profile(username=user.username)
+        if account_type == ACCOUNT_TYPE_CHECKING:
+            account = profile.checking_account
+        elif account_type == ACCOUNT_TYPE_SAVINGS:
+            account = profile.savings_account
+    return account
+
 def get_external_noncritical_transaction(transaction):
     transaction_description = transaction.description
     data = parse_transaction_description(transaction_description=transaction_description, type_of_transaction=TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST)
@@ -448,7 +535,6 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
         return user
     return user
 
-#return the user_type, first_name and last_name, for Internal Employees, render this info all pages
 def get_user_det(user):
     list = []
     if is_regular_employee(user):
@@ -478,6 +564,36 @@ def get_user_email(user):
         return user.administrator.email
     else:
         return ""
+
+def has_checking_account(user):
+    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CHECKING_ACCOUNT_ATTRIBUTE):
+        return True
+    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CHECKING_ACCOUNT_ATTRIBUTE):
+        return True
+    else:
+        return False
+
+def has_credit_card(user):
+    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CREDIT_CARD_ATTRIBUTE):
+        return True
+    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CREDIT_CARD_ATTRIBUTE):
+        return True
+    else:
+        return False
+
+def has_no_account(user):
+    if not has_credit_card(user) and not has_checking_account(user) and not has_savings_account(user):
+        True
+    else:
+        return False
+
+def has_savings_account(user):
+    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, SAVINGS_ACCOUNT_ATTRIBUTE):
+        return True
+    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, SAVINGS_ACCOUNT_ATTRIBUTE):
+        return True
+    else:
+        return False
 
 def is_external_user(user):
     if (hasattr(user, INDIVIDUAL_CUSTOMER_ATTRIBUTE) or hasattr(user, MERCHANT_ORGANIZATION_ATTRIBUTE)) and not (is_internal_user(user)):
@@ -517,36 +633,6 @@ def is_regular_employee(user):
 
 def is_system_manager(user):
     if is_internal_user(user) and hasattr(user, SYSTEM_MANAGER_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def has_checking_account(user):
-    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CHECKING_ACCOUNT_ATTRIBUTE):
-        return True
-    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CHECKING_ACCOUNT_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def has_credit_card(user):
-    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CREDIT_CARD_ATTRIBUTE):
-        return True
-    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CREDIT_CARD_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def has_no_account(user):
-    if not has_credit_card(user) and not has_checking_account(user) and not has_savings_account(user):
-        True
-    else:
-        return False
-
-def has_savings_account(user):
-    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, SAVINGS_ACCOUNT_ATTRIBUTE):
-        return True
-    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, SAVINGS_ACCOUNT_ATTRIBUTE):
         return True
     else:
         return False
@@ -823,6 +909,70 @@ def validate_amount(amount):
         return False
     else:
         return True
+
+def validate_city(city):
+    validated = False
+    if len(city) <= 100 or len(city) >= 4:
+        if re.search('^([a-zA-Z0-9]| )+$', city):
+            validated = True
+            #print('Valid city')
+    return validated
+
+def validate_email(email):
+    validated = False
+    if len(email) <= 100 or len(email) >= 3:
+        parts = email.strip('\r').strip('\n').split('@')
+        if len(parts) == 2:
+            local = parts[0]
+            domain = parts[1]
+            if re.search("^([a-zA-Z0-9]|!|#|\$|%|&|'|\*|\+|-|\/|=|\?|\^\_|`|{|\||}|~|\.|,)+$", local):
+                if re.search("^([a-zA-Z0-9]|\.|-)+$", domain):
+                    validated = True
+    return validated
+
+def validate_name(name):
+    validated = False
+    if len(name) <= 100 or len(name) >= 2:
+        if re.search('^[a-zA-Z]+$', name):
+            #print('Valid name')
+            validated = True
+    return validated
+
+def validate_profile_change(profile, first_name, last_name, street_address, city, state, zipcode):
+    if validate_name(name=first_name) and validate_name(name=last_name) and validate_street_address(street_address=street_address) and validate_city(city=city) and validate_state(state=state) and validate_zipcode(zipcode=zipcode):
+        profile.first_name = first_name
+        profile.last_name = last_name
+        profile.street_address = street_address
+        profile.city = city
+        profile.state = state
+        profile.zipcode = zipcode
+        profile.save()
+        return True
+    else:
+        return False
+
+def validate_state(state):
+    validated = False
+    if state in STATES:
+        #print('Valid state')
+        validated = True
+    return validated
+
+def validate_street_address(street_address):
+    validated = False
+    if len(street_address) <= 100 or len(street_address) >= 4:
+        if re.search('^([a-zA-Z0-9]| )+$', street_address):
+            validated = True
+            #print('Valid street address')
+    return validated
+
+def validate_zipcode(zipcode):
+    validated = False
+    if len(zipcode) == 5:
+        if re.search('^[0-9]+$', zipcode):
+            #print('Valid zipcode')
+            validated = True
+    return validated
 
 def validate_user_type(user, user_type):
     if is_individual_customer(user) and user_type == INDIVIDUAL_CUSTOMER:

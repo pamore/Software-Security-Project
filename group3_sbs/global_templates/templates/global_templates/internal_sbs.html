@@ -56,12 +56,10 @@
                               <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp Critical Transactions </a>
                               <a  href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp Non-Critical Transactions </a>
                 </li>
-                {% if user_type == "Regular Employee" %}
                  <li>
-                   <font color="#FF7F50">Account Access Request</font>
-                              <a href="{% url 'internal:external_user_account_access_request' %}"> &nbsp &nbsp &nbsp Request Access to External Users Profile </a>
+                   <font color="#FF7F50"> View External User Page</font>
+                              <a href="{% url 'internal:external_user_access_request' %}"> &nbsp &nbsp &nbsp View External User Page </a>
                 </li>
-                {% endif %}
 
             </ul>
         </div>
