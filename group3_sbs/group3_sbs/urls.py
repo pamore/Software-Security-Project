@@ -22,5 +22,6 @@ urlpatterns = [
     url(r'^internal/', include('internal.urls', namespace='internal')),
     url(r'^external/', include('external.urls', namespace='external')),
     url(r'^reset/', include('reset.urls', namespace='reset')),
+    url(r'^create/', include('create.urls', namespace='create')),
     url(r'^.*', include('login.urls', namespace='login')),
 ]

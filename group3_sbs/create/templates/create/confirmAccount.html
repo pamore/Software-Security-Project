@@ -16,7 +16,7 @@
 <h1>New Account Confirmation</h1>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 
-<form action="{% url 'create:finalizeUser' %}" method="post">
+<form action="{% url 'create:confirmAccount' %}" method="post">
 {% csrf_token %}
 <label for="username">Username</label>
 <input type="text" class="form-control" name="username" value="" required />
@@ -28,9 +28,9 @@
 <input type="password" class="form-control" name="newPassword" value="" required />
 <label for="password">Confirm New Password</label>
 <input type="password" class="form-control" name="confirmPassword" value="" required />
-<label for="firstname">First Name</label>
+<label for="firstname">First Name or Business Name</label>
 <input type="text" class="form-control" name="firstname" value="" required />
-<label for="lastname">Last Name</label>
+<label for="lastname">Last Name or Company Type (e.g. LLC, inc, corp, etc.)</label>
 <input type="text" class="form-control" name="lastname" value="" required />
 <label for="address">Street Address</label>
 <input type="text" class="form-control" name="address" value="" required />
@@ -40,7 +40,12 @@
 <input type="text" class="form-control" name="state" value="" required />
 <label for="zipcode">Zip Code</label>
 <input type="text" class="form-control" name="zipcode" value="" required />
+<label for="personalcode">SSN or Business Code</label>
+<input type="text" class="form-control" name="personalcode" value="" required />
 
+<br></br>
+<label class="radio-inline"><input type="radio" name="user_type" value="Individual Customer" checked="checked" required >Individual Customer</label>
+<label class="radio-inline"><input type="radio" name="user_type" value="Merchant / Organization" required >Merchant / Organization</label>
 <br></br>
 <div class="g-recaptcha" data-sitekey="6LeHWAcUAAAAAL_TtxsIcRhoC3IrD6yKdJNp0E2N"></div>
 <br></br>

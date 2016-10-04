@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'internal',
     'external',
     'reset',
+    'create',
 ]
 
 MIDDLEWARE = [

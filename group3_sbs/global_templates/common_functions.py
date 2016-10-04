@@ -13,6 +13,9 @@ from global_templates.constants import *
 from templated_email import send_templated_mail
 from django.core.mail import EmailMessage, send_mail
 
+import string
+import random
+
 def can_view_noncritical_transaction(user):
     if is_regular_employee(user) or is_system_manager(user):
         return True
@@ -441,8 +444,11 @@ def is_system_manager(user):
         return False
 
 def get_any_user_profile(username, email):
-    user = User.objects.get(username=username)
     profile = None
+    user = None
+
+    if(User.objects.filter(username=username)):
+        user = User.objects.get(username=username)
 
     if is_individual_customer(user):
         if user.individualcustomer.email == email:
@@ -516,6 +522,23 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
     else:
         return user
     return user
+
+def get_new_routing_number():
+    size=19
+    firstchar = '123456789'
+    chars = string.digits
+
+    routing = ''
+    routing.join(random.choice(firstchar))
+    routing.join(random.choice(chars) for _ in range(size))
+
+    while(User.objects.filter(merchantorganization__checking_account__routing_number=int(routing)) or
+          User.objects.filter(individualcustomer__checking_account__routing_number=int(routing))):
+        routing = ''
+        routing.join(random.choice(firstchar))
+        routing.join(random.choice(chars) for _ in range(size))
+
+    return int(routing_number)
 
 #return the user_type, first_name and last_name, for Internal Employees, render this info all pages
 def get_user_det(user):
@@ -619,6 +642,9 @@ def has_savings_account(user):
         return True
     else:
         return False
+
+def otpGenerator(size=6, chars=string.ascii_letters + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 def parse_transaction_description(transaction_description, type_of_transaction):
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:

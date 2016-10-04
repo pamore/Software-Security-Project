@@ -1,13 +1,10 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from global_templates.common_functions import get_any_user_profile
+from global_templates.common_functions import get_any_user_profile, otpGenerator
 import time
 
 # Create your views here.
-
-import string
-import random
 
 # 15 minute expiration time for OTP
 EXPIRATION = 15 * 60
@@ -24,10 +21,6 @@ OTP_MESSAGE = "Hello Group3SBS User,\n\r" +\
               "\n\r"
 
 DEBUG = False
-
-def otpGenerator(size=6, chars=string.ascii_letters + string.digits):
-    return ''.join(random.choice(chars) for _ in range(size))
-
 
 # Reset Page
 def reset(request):
