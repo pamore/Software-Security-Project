@@ -6,7 +6,7 @@ from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATIO
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
 
 # Create your views here.
-DEBUG = True
+DEBUG = False
 
 NEW_ACCOUNT_MESSAGE = "Hello New User,\n\r" +\
                       "You have recently requested a new Group3SBS account.\n\r" +\
@@ -152,9 +152,7 @@ def confirmAccount(request):
                         if DEBUG: print("The new password and confirm new password match\n")
 
                         newUser = User.objects.get(username=request.POST['username'],email=request.POST['email'])
-                        newUser.email = ""
-                        newUser.first_name = ""
-                        newUser.save()
+
                         if DEBUG: print("Save new user\n")
 
                         new_routing = get_new_routing_number()
@@ -226,6 +224,10 @@ def confirmAccount(request):
                             if DEBUG: print("Create and save merch. account type\n")
                             new_account = merchantcustomer
 
+                        newUser.set_password(request.POST['newPassword'])
+                        newUser.email = ""
+                        newUser.first_name = ""
+                        newUser.save()
 
                         if DEBUG: print("The user account has been created and added to the system\n")
                         check = send_mail(
