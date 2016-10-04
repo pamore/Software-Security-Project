@@ -523,22 +523,40 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
         return user
     return user
 
+def get_new_credit_card_number():
+    size=16
+    chars = string.digits
+    #
+    ccnumber = ''
+    for _ in range(size):
+        ccnumber += random.choice(chars)
+
+    while(User.objects.filter(merchantorganization__credit_card__creditcard_number=ccnumber) or
+          User.objects.filter(individualcustomer__credit_card__creditcard_number=ccnumber)):
+        ccnumber = ''
+        for _ in range(size):
+            ccnumber += random.choice(chars)
+
+    return ccnumber
+
 def get_new_routing_number():
-    size=19
+    size=6
     firstchar = '123456789'
     chars = string.digits
 
     routing = ''
-    routing.join(random.choice(firstchar))
-    routing.join(random.choice(chars) for _ in range(size))
+    routing += random.choice(firstchar)
+    for _ in range(size):
+        routing += random.choice(chars)
 
     while(User.objects.filter(merchantorganization__checking_account__routing_number=int(routing)) or
           User.objects.filter(individualcustomer__checking_account__routing_number=int(routing))):
         routing = ''
-        routing.join(random.choice(firstchar))
-        routing.join(random.choice(chars) for _ in range(size))
+        routing += random.choice(firstchar)
+        for _ in range(size):
+            routing += random.choice(chars)
 
-    return int(routing_number)
+    return int(routing)
 
 #return the user_type, first_name and last_name, for Internal Employees, render this info all pages
 def get_user_det(user):

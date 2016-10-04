@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number
+from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number
 from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
 
@@ -20,6 +20,14 @@ NEW_ACCOUNT_MESSAGE = "Hello New User,\n\r" +\
                       "\n\r" +\
                       "Please continue to create your account by entering the above confirmation code on the account creation page when prompted.\n\r" +\
                       "\n\r"
+
+CREATED_ACCOUNT_MESSAGE = "Hello %s,\n\r" +\
+                          "You have recently created a new Group3SBS account.\n\r" +\
+                          "\n\r" +\
+                          "Your account routing number is: '%07d'\n\r" +\
+                          "\n\r" +\
+                          "To continue please login to begin using your new account.\n\r" +\
+                          "\n\r"
 
 # Create Account Page
 def create(request):
@@ -169,7 +177,7 @@ def confirmAccount(request):
 
                         creditcard = CreditCard.objects.create(
                                             interest_rate=0.03,
-                                            creditcard_number="0000000000000001",
+                                            creditcard_number=get_new_credit_card_number(),
                                             charge_limit=1000.00,
                                             remaining_credit=1000.00,
                                             late_fee=15.00,
@@ -222,7 +230,7 @@ def confirmAccount(request):
                         if DEBUG: print("The user account has been created and added to the system\n")
                         check = send_mail(
                         'Group 3 SBS New Account Created',
-                        CREATED_ACCOUNT_MESSAGE%(new_account.username),
+                        CREATED_ACCOUNT_MESSAGE%(new_account.user.username,new_routing),
                         'group3sbs@gmail.com',
                         [new_account.email],
                         fail_silently=False,
@@ -231,7 +239,7 @@ def confirmAccount(request):
                         while(check == 0):
                             check = send_mail(
                             'Group 3 SBS New Account',
-                            CREATED_ACCOUNT_MESSAGE%(new_account.username),
+                            CREATED_ACCOUNT_MESSAGE%(new_account.user.username,new_routing),
                             'group3sbs@gmail.com',
                             [new_account.email],
                             fail_silently=False,
