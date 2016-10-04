@@ -4,7 +4,38 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" type="text/css" href="{% static 'login/style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/jquery-ui.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/keyboard.css' %}" />
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-autocomplete.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-typing.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.js' %}"></script>
+<script src="{% static 'global_templates/keyboard/jquery.mousewheel.js' %}"> </script>
+
 <script src='https://www.google.com/recaptcha/api.js'></script>
+
+<script type="text/javascript">
+$( document ).ready(function() {
+
+$('#keyboard').keyboard({
+    // caret places at the end of any text
+    caretToEnd: false,
+    // Event (namespaced) on the input to reveal the keyboard.
+    // To disable it, just set it to ''.
+    openOn: ''
+})
+.addTyping({
+    showTyping: true,
+    delay: 50
+});
+
+// Open keyboard by clicking on icon
+$('#icon').click(function () {
+    $('#keyboard').getkeyboard().reveal();
+});
+
+});
+</script>
+
 {% endblock %}
 
 
@@ -31,7 +62,9 @@
 					<!-- <label for="username">Username</label>-->
 					<div class="form-group"> <input type="text" class="form-control" name="username" value="" placeholder="User Name" required /> </div>
 					<!-- <label for="password">Password</label>-->
-					<div class="form-group"> <input type="password" class="form-control" name="password" value="" placeholder="Password" required /> </div>
+					<div class="form-group"> <input type="password" id="keyboard" class="form-control" name="password" value="" placeholder="Password" required />
+						    <img id="icon" src="{% static 'global_templates/images/keyboard.png' %}"/>
+					 </div>
 
 	                <!-- Panel for External Users-->
 	                <div class="panel panel-danger">  <div class="panel-body">
