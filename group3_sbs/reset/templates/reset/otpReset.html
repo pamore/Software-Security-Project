@@ -4,6 +4,32 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" type="text/css" href="{% static 'reset/style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/jquery-ui.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/keyboard.css' %}" />
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-autocomplete.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-typing.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.js' %}"></script>
+<script src="{% static 'global_templates/keyboard/jquery.mousewheel.js' %}"> </script>
+
+<script type="text/javascript">
+$( document ).ready(function() {
+
+$('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard4').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard5').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+
+// Open keyboard by clicking on icon
+$('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
+$('#icon2').click(function () { $('#keyboard2').getkeyboard().reveal(); });
+$('#icon3').click(function () { $('#keyboard3').getkeyboard().reveal(); });
+$('#icon4').click(function () { $('#keyboard4').getkeyboard().reveal(); });
+$('#icon5').click(function () { $('#keyboard5').getkeyboard().reveal(); });
+
+});
+</script>
+
 {% endblock %}
 
 
@@ -19,15 +45,30 @@
 <form action="{% url 'reset:otpUserReset' %}" method="post">
 {% csrf_token %}
 <label for="username">Username</label>
-<input type="text" class="form-control" name="username" value="" required />
+<div class="form-group"> <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" required />
+	    <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="username" value="" required /> -->
 <label for="email">Email</label>
-<input type="email" class="form-control" name="email" value="" required />
+<div class="form-group"> <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" required />
+	    <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="email" class="form-control" name="email" value="" required /> -->
 <label for="password">Confirmation Code (OTP)</label>
-<input type="password" class="form-control" name="otpPassword" value="" required />
+<div class="form-group"> <input type="password" id="keyboard3" class="form-control" name="otpPassword" value="" placeholder="OTP Password" required />
+	    <img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="password" class="form-control" name="otpPassword" value="" required /> -->
 <label for="password">New Password</label>
-<input type="password" class="form-control" name="newPassword" value="" required />
-<label for="password">Confirm New Password</label>
-<input type="password" class="form-control" name="confirmPassword" value="" required />
+<div class="form-group"> <input type="password" id="keyboard4" class="form-control" name="newPassword" value="" placeholder="New Password" required />
+	    <img id="icon4" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="password" class="form-control" name="newPassword" value="" required /> -->
+<label for="password">Confirm Password</label>
+<div class="form-group"> <input type="password" id="keyboard5" class="form-control" name="confirmPassword" value="" placeholder="Confirm Password" required />
+	    <img id="icon5" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="password" class="form-control" name="confirmPassword" value="" required /> -->
 <br></br>
 <div class="g-recaptcha" data-sitekey="6LeHWAcUAAAAAL_TtxsIcRhoC3IrD6yKdJNp0E2N"></div>
 <br></br>
