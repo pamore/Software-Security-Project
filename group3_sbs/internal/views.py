@@ -9,8 +9,10 @@ from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
-from global_templates.common_functions import can_view_noncritical_transaction, can_resolve_internal_noncritical_transaction, can_resolve_noncritical_transaction, create_internal_noncritical_transaction, commit_transaction, deny_transaction, get_external_noncritical_transaction, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account, get_user_det
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, REGULAR_EMPLOYEE, SYSTEM_MANAGER, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
+from global_templates.common_functions import add_view_external_user_permission, can_edit_external_user_page, can_view_noncritical_transaction, can_resolve_internal_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, does_user_have_external_user_permission, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, get_user_det, is_administrator, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account, validate_profile_change
+from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, PAGE_TO_VIEW_CREDIT_CARD, PAGE_TO_VIEW_CHECKING_ACCOUNT, PAGE_TO_VIEW_EDIT_PROFILE, PAGE_TO_VIEW_PROFILE, PAGE_TO_VIEW_SAVINGS_ACCOUNT, REGULAR_EMPLOYEE, SYSTEM_MANAGER, STATES, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
+
+""" Render Web Pages """
 
 # Internal User Home Page
 @never_cache
@@ -34,6 +36,95 @@ def index(request):
 def error(request):
     return render(request, 'internal/error.html')
 
+# View Critical Transactions
+@never_cache
+@login_required
+@user_passes_test(is_system_manager)
+def critical_transactions(request):
+    user = request.user
+    if is_regular_employee(user) or is_administrator(user):
+        return render(request, 'internal/index.html')
+    elif is_system_manager(user):
+        transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+        top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
+        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
+        if top_critical_transaction is None:
+            return render(request, 'internal/critical_transactions.html', {'transactions': transactions})
+        elif top_noncritical_transaction is None:
+            can_resolve = True
+        elif top_critical_transaction.time_created > top_noncritical_transaction.time_created:
+            can_resolve = False
+        else:
+            can_resolve = True
+        return render(request, 'internal/critical_transactions.html', {'transactions': transactions, 'can_resolve': can_resolve})
+    else:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Edit External User Profile Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def edit_external_user_profile(request, external_user_id):
+    user = request.user
+    page_to_view = PAGE_TO_VIEW_EDIT_PROFILE
+    success_page = "internal/edit_external_user_profile.html"
+    error_redirect = "internal:index"
+    if can_edit_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        profile = get_any_user_profile(username=external_user.username)
+        return render(request, success_page, {"external_user": external_user, "profile": profile, 'STATES': STATES})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# External User Account Request Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def external_user_access_request(request):
+    return render (request, 'internal/external_user_access_request.html')
+
+# Request to access external user account
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def external_user_account_access_request(request):
+    user = request.user
+    list = get_user_det(user)
+    return render (request, 'internal/external_user_account_access_request.html',{'user_type': list[2], 'first_name': list[0],'last_name':list[1] })
+
+# Internal Noncritical Transactions Page
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def internal_noncritical_transactions(request):
+    user = request.user
+    success_page = 'internal/internal_noncritical_transactions.html'
+    transactions = InternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    return render(request, success_page, {'transactions': transactions})
+
+# Internal Critical Transactions Page
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def internal_critical_transactions(request):
+    user = request.user
+    success_page = 'internal/internal_critical_transactions.html'
+    transactions = InternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    return render(request, success_page, {'transactions': transactions})
+
+# Internal Noncritical Transactions Page
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def internal_noncritical_transactions(request):
+    user = request.user
+    list = get_user_det(user)
+    success_page = 'internal/internal_noncritical_transactions.html'
+    transactions = InternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions})
 
 # View Noncritical Transactions
 @never_cache
@@ -71,76 +162,66 @@ def noncritical_transactions(request):
     else:
         return HttpResponseRedirect(reverse('internal:error'))
 
-# View Critical Transactions
-@never_cache
-@login_required
-@user_passes_test(is_system_manager)
-def critical_transactions(request):
-    user = request.user
-    list = get_user_det(user)
-    if is_regular_employee(user) or is_administrator(user):
-        return render(request, 'internal/index.html')
-    elif is_system_manager(user):
-        transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-        top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-        if top_critical_transaction is None:
-            return render(request, 'internal/critical_transactions.html', {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions})
-        elif top_noncritical_transaction is None:
-            can_resolve = True
-        elif top_critical_transaction.time_created > top_noncritical_transaction.time_created:
-            can_resolve = False
-        else:
-            can_resolve = True
-        return render(request, 'internal/critical_transactions.html', {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'can_resolve': can_resolve})
-    else:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-# View External User Account Page
+# View External User Checking Account Page
 @never_cache
 @login_required
 @user_passes_test(is_internal_user)
-def view_external_account(request, external_user_id):
+def view_external_user_checking_account(request, external_user_id):
     user = request.user
-    list = get_user_det(user)
-    permission_codename = 'internal.can_view_external_user_page_' + external_user_id
-    permission = Permission.objects.get(codename='can_view_external_user_page_' + external_user_id)
-    if user.has_perm(permission_codename):
-        external_user = User.objects.get(id=int(external_user_id))
-        if is_individual_customer(external_user) and not has_no_account(external_user):
-            return_value = render(request, 'internal/view_external_account.html', {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'int_user_type': INDIVIDUAL_CUSTOMER, 'int_first_name': external_user.individualcustomer.first_name, 'int_last_name': external_user.individualcustomer.last_name, 'checkingaccount': external_user.individualcustomer.checking_account, 'savingsaccount': external_user.individualcustomer.savings_account, 'creditcard': external_user.individualcustomer.credit_card})
-        elif is_merchant_organization(external_user) and not has_no_account(external_user):
-            return_value = render(request, 'internal/view_external_account.html', {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'int_user_type': MERCHANT_ORGANIZATION, 'int_first_name': external_user.merchantorganization.first_name, 'int_last_name': external_user.merchantorganization.last_name, 'checkingaccount': external_user.merchantorganization.checking_account, 'savingsaccount': external_user.merchantorganization.savings_account, 'creditcard': external_user.merchantorganization.credit_card})
-        else:
-            return_value = render(request, 'internal/view_external_account.html', {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'error_message': 'User is not an external user to be viewed'})
-        user.user_permissions.remove(permission)
-        user.save()
-        return return_value
+    page_to_view = PAGE_TO_VIEW_CHECKING_ACCOUNT
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        checking_account = get_external_user_account(user=external_user, account_type=ACCOUNT_TYPE_CHECKING)
+        return render(request, success_page, {"user": external_user, "checking_account": checking_account})
     else:
-        return HttpResponseRedirect(reverse('internal:index'))
+        return HttpResponseRedirect(reverse(error_redirect))
 
-# External User Account Request Page
+# View External User Profile Page
 @never_cache
 @login_required
 @user_passes_test(is_internal_user)
-def external_user_account_access_request(request):
+def view_external_user_profile(request, external_user_id):
     user = request.user
-    list = get_user_det(user)
-    return render (request, 'internal/external_user_account_access_request.html',{'user_type': list[2], 'first_name': list[0],'last_name':list[1] })
+    page_to_view = PAGE_TO_VIEW_PROFILE
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        profile = get_any_user_profile(username=external_user.username)
+        return render(request, success_page, {"user": external_user, "profile": profile})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
-
-# Internal Noncritical Transactions Page
+# View External User Savings Account Page
 @never_cache
 @login_required
-@user_passes_test(can_resolve_internal_noncritical_transaction)
-def internal_noncritical_transactions(request):
+@user_passes_test(is_internal_user)
+def view_external_user_savings_account(request, external_user_id):
     user = request.user
-    list = get_user_det(user)
-    success_page = 'internal/internal_noncritical_transactions.html'
-    transactions = InternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions})
+    page_to_view = PAGE_TO_VIEW_SAVINGS_ACCOUNT
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        savings_account = get_external_user_account(user=external_user, account_type=ACCOUNT_TYPE_SAVINGS)
+        return render(request, success_page, {"user": external_user, "savings_account": savings_account})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
+""" Validate Webpages """
 # Approve Criticial Transactions
+
 @never_cache
 @login_required
 @user_passes_test(is_system_manager)
@@ -181,7 +262,7 @@ def validate_critical_transaction_denial(request, transaction_id):
 # Request External User Transaction Access
 @never_cache
 @login_required
-@user_passes_test(can_resolve_internal_noncritical_transaction)
+@user_passes_test(can_resolve_internal_transaction)
 def validate_external_noncritical_transaction_access_request_approval(request, transaction_id):
     user = request.user
     list = get_user_det(user)
@@ -211,7 +292,7 @@ def validate_external_noncritical_transaction_access_request_approval(request, t
 # Request External User Transaction Access
 @never_cache
 @login_required
-@user_passes_test(can_resolve_internal_noncritical_transaction)
+@user_passes_test(can_resolve_internal_transaction)
 def validate_external_noncritical_transaction_access_request_denial(request, transaction_id):
     user = request.user
     list = get_user_det(user)
@@ -228,30 +309,71 @@ def validate_external_noncritical_transaction_access_request_denial(request, tra
 @never_cache
 @login_required
 @user_passes_test(is_internal_user)
-def validate_external_account_access_request(request):
+def validate_external_user_access_request(request):
     user = request.user
+    error_redirect = "internal:error"
     external_user_id = request.POST['external_user_id']
+    page_to_view = request.POST['page_to_view']
+    if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+        success_redirect = "internal:edit_external_user_profile"
+    else:
+        success_redirect = "internal:view_external_user_" + page_to_view
+    pending_approval_redirect = "internal:index"
     try:
         external_user = User.objects.get(id=int(external_user_id))
     except:
-        return HttpResponseRedirect(reverse('internal:error'))
-    if is_regular_employee(user):
-        content_type = ContentType.objects.get_for_model(RegularEmployee)
-    elif is_system_manager(user):
-        content_type = ContentType.objects.get_for_model(SystemManager)
-    elif is_administrator(user):
-        content_type = ContentType.objects.get_for_model(Administrator)
+        return HttpResponseRedirect(reverse(error_redirect))
+    access_granted = does_user_have_external_user_permission(user=user, external_user=external_user, page_to_view=page_to_view)
+    if access_granted:
+        return HttpResponseRedirect(reverse(success_redirect, kwargs={'external_user_id': external_user.id}))
+    elif is_regular_employee(user) and not access_granted:
+        return HttpResponseRedirect(reverse(pending_approval_redirect))
     else:
-        return HttpResponseRedirect(reverse('internal:error'))
-    permission_codename = 'can_view_external_user_page_' + external_user_id
-    permission_name = "Can view external user " + external_user_id + "'s page"
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# Validate Internal Critical Transactions Reqeust
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def validate_internal_critical_transaction_access_request_approval(request, transaction_id):
+    user = request.user
+    success_redirect = "internal:internal_critical_transactions"
+    error_redirect = "internal:error"
     try:
-        permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+        internal_transaction = InternalCriticalTransaction.objects.get(id=int(transaction_id))
+        initiator = internal_transaction.initiator
     except:
-        permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
-    user.user_permissions.add(permission)
-    user.save()
-    return HttpResponseRedirect(reverse('internal:index'))
+        return HttpResponseRedirect(reverse(error_redirect))
+    if is_regular_employee(initiator):
+        content_type = ContentType.objects.get_for_model(RegularEmployee)
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if commit_transaction(transaction=internal_transaction, user=user):
+        return HttpResponseRedirect(reverse(success_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# Validate Internal Critical Transactions Reqeust
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def validate_internal_critical_transaction_access_request_denial(request, transaction_id):
+    user = request.user
+    success_redirect = "internal:internal_critical_transactions"
+    error_redirect = "internal:error"
+    try:
+        internal_transaction = InternalCriticalTransaction.objects.get(id=int(transaction_id))
+        initiator = internal_transaction.initiator
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if is_regular_employee(initiator):
+        content_type = ContentType.objects.get_for_model(RegularEmployee)
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if deny_transaction(transaction=internal_transaction, user=user):
+        return HttpResponseRedirect(reverse(success_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # Validate Internal Noncritical Transactions Reqeust
 @never_cache
@@ -312,3 +434,43 @@ def validate_noncritical_transaction_denial(request, transaction_id):
         return HttpResponseRedirect(reverse(success_page_reverse))
     else:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Denied transaction not commmited"})
+
+# Validate Profile Edit Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def validate_profile_edit(request, external_user_id):
+    user = request.user
+    success_redirect = 'internal:index'
+    error_redirect = 'internal:error'
+    username = request.POST['username']
+    profile = get_any_user_profile(username=username)
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    street_address = request.POST['street_address']
+    city = request.POST['city']
+    state = request.POST['state']
+    zipcode = request.POST['zipcode']
+    if is_system_manager(user):
+        if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+            return HttpResponseRedirect(reverse(success_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    elif is_regular_employee(user):
+        try:
+            permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        if user.has_perm(permission_codename):
+            if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+                user.user_permissions.remove(permission)
+                user.save()
+                return HttpResponseRedirect(reverse(success_redirect))
+            else:
+                return HttpResponseRedirect(reverse(error_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))

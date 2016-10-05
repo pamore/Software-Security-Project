@@ -1,28 +1,108 @@
 from django.utils import timezone
 from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.core.mail import EmailMessage, send_mail
 from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
 from django.contrib.auth.models import User, Permission
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required, user_passes_test
-from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
+from external.models import CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, IndividualCustomer, MerchantOrganization, SavingsAccount
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
 from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
 from global_templates.constants import *
 from templated_email import send_templated_mail
-from django.core.mail import EmailMessage, send_mail
-
-import string
 import random
+import re
+import string
 
-def can_view_noncritical_transaction(user):
-    if is_regular_employee(user) or is_system_manager(user):
+def add_edit_external_user_profile_permission(user):
+    if is_external_user(user):
+        try:
+            if is_individual_customer(user):
+                content_type = ContentType.objects.get_for_model(IndividualCustomer)
+            else:
+                content_type = ContentType.objects.get_for_model(MerchantOrganization)
+            permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+            permission_name = "Can external user " + str(user.id) + " edit their profile"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    else:
+        return False
+
+def add_internal_edit_external_user_profile_permission(user, external_user):
+    if is_regular_employee(user):
+        try:
+            content_type = ContentType.objects.get_for_model(RegularEmployee)
+            permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user.id)
+            permission_name = "Can internal user" + str(user.id) + " edit external user " + str(external_user.id) + "'s profile"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    elif is_system_manager(user):
         return True
     else:
         return False
 
-def can_resolve_internal_noncritical_transaction(user):
+def add_view_external_user_permission(user, external_user, page_to_view):
+    if is_regular_employee(user):
+        try:
+            content_type = ContentType.objects.get_for_model(RegularEmployee)
+            permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
+            permission_name = "Can view external user " + str(external_user.id) + "'s"+ page_to_view + " page"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    elif is_system_manager(user):
+        return True
+    else:
+        return False
+
+def can_edit_external_user_page(user, external_user_id, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                external_user = User.objects.get(id=int(external_user_id))
+                if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+                    verify = True
+        except:
+            pass
+    elif is_system_manager(user):
+        if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+            verify = True
+    return verify
+
+def can_resolve_internal_transaction(user):
     if is_administrator(user) or is_system_manager(user):
         return True
     else:
@@ -47,6 +127,33 @@ def can_resolve_noncritical_transaction(user, transaction_id):
     else:
         return False
 
+def can_view_external_user_page(user, external_user_id, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user_id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                external_user = User.objects.get(id=int(external_user_id))
+                if page_to_view == PAGE_TO_VIEW_PROFILE or (page_to_view == PAGE_TO_VIEW_SAVINGS_ACCOUNT and has_savings_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CHECKING_ACCOUNT and has_checking_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CREDIT_CARD and has_credit_card(external_user)):
+                    verify = True
+                    user.user_permissions.remove(permission)
+                    user.save()
+        except:
+            pass
+    elif is_system_manager(user):
+        external_user = User.objects.get(id=int(external_user_id))
+        if page_to_view == PAGE_TO_VIEW_PROFILE or (page_to_view == PAGE_TO_VIEW_SAVINGS_ACCOUNT and has_savings_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CHECKING_ACCOUNT and has_checking_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CREDIT_CARD and has_credit_card(external_user)):
+            verify = True
+    return verify
+
+def can_view_noncritical_transaction(user):
+    if is_regular_employee(user) or is_system_manager(user):
+        return True
+    else:
+        return False
+
 def commit_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
@@ -57,9 +164,15 @@ def commit_transaction(transaction, user):
         result = commit_transaction_transfer(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
         result = commit_transaction_internal_noncritical(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+        result = commit_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST:
+        result = commit_transaction_external_user_profile_edit_request(transaction=transaction, user=user)
     else:
         result = False
     if result:
+        pass # remove to test email
+        """
         recipients = get_all_emails(transaction.participants.all())
         #send_notification_transaction(subject=TRANSACTION_SUBJECT_APPROVED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_APPROVED, email_template=None, recipients=recipients)
         send_templated_mail(
@@ -75,7 +188,7 @@ def commit_transaction(transaction, user):
             # headers={'My-Custom-Header':'Custom Value'},
             # template_prefix="my_emails/",
             # template_suffix="email",
-        )
+        )"""
     return result
 
 def commit_transaction_credit_or_debit(transaction, user):
@@ -85,14 +198,14 @@ def commit_transaction_credit_or_debit(transaction, user):
         amount = float(data['amount'])
         account = data['account']
         if type_of_transaction == TRANSACTION_TYPE_CREDIT:
-            check = max(float(account.active_balance), float(account.current_balance)) + amount
+            check = float(account.current_balance) + amount
             new_amount = float(account.current_balance) + amount
             if validate_amount(check) and validate_amount(amount):
                 account.current_balance = new_amount
             else:
                 return False
         elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
-            check = min(float(account.active_balance), float(account.current_balance)) - amount
+            check = float(account.current_balance) - amount
             new_amount = float(account.current_balance) - amount
             if validate_amount(check) and validate_amount(amount):
                 account.current_balance = new_amount
@@ -106,10 +219,42 @@ def commit_transaction_credit_or_debit(transaction, user):
     except:
         return False
 
+def commit_transaction_external_user_profile_edit_request(transaction, user):
+    try:
+        initiator = transaction.initiator
+        if add_edit_external_user_profile_permission(user=initiator):
+            save_transaction(transaction=transaction, user=user)
+            return True
+        else:
+            return False
+    except:
+        return False
+
 def commit_transaction_internal_noncritical(transaction, user):
     try:
         save_transaction(transaction=transaction, user=user)
         return True
+    except:
+        return False
+
+def commit_transaction_internal_transcaction_for_access(transaction, user):
+    try:
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=transaction.type_of_transaction)
+        initiator = transaction.initiator
+        external_user = data['external_user']
+        page_to_view = data['page_to_view']
+        if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+            if add_internal_edit_external_user_profile_permission(user=initiator, external_user=external_user):
+                save_transaction(transaction=transaction, user=user)
+                return True
+            else:
+                return False
+        else:
+            if add_view_external_user_permission(user=initiator, external_user=external_user, page_to_view=page_to_view):
+                save_transaction(transaction=transaction, user=user)
+                return True
+            else:
+                return False
     except:
         return False
 
@@ -122,8 +267,8 @@ def commit_transaction_payment(transaction, user):
         receiver = data['receiver']
         sender_account = data['sender_account']
         receiver_account = data['receiver_account']
-        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
-        receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
+        sender_check = float(sender_account.current_balance) - amount
+        receiver_check =  float(receiver_account.current_balance) + amount
         sender_new_balance = float(sender_account.current_balance) - amount
         receiver_new_balance = float(receiver_account.current_balance) + amount
         if type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
@@ -150,8 +295,8 @@ def commit_transaction_transfer(transaction, user):
         receiver = data['receiver']
         sender_account = data['sender_account']
         receiver_account = data['receiver_account']
-        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
-        receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
+        sender_check = float(sender_account.current_balance) - amount
+        receiver_check =  float(receiver_account.current_balance) + amount
         sender_new_balance = float(sender_account.current_balance) - amount
         receiver_new_balance = float(receiver_account.current_balance) + amount
         if type_of_transaction == TRANSACTION_TYPE_TRANSFER:
@@ -187,12 +332,37 @@ def create_debit_or_credit_transaction(user, type_of_transaction, userType, acco
     except:
         return False
 
+def create_transaction_external_user_profile_edit_request(user):
+    try:
+        type_of_transaction = TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST
+        description_string = "User ID: " + str(user.id)
+        description_string = description_string + ",Action: requests access to edit their profile"
+        transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
+        transaction.save()
+        return True
+    except:
+        return False
+
 def create_internal_noncritical_transaction(user, external_transaction):
     try:
         type_of_transaction = TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST
-        description_string = "User " + user.regularemployee.first_name + " " + user.regularemployee.last_name
-        description_string = description_string + " requests access to external non-critical transaction " + str(external_transaction.id)
+        description_string = "User: " + user.username
+        description_string = description_string + ",Action: requests access to external non-critical transaction"
+        description_string = description_string + ",Transaction ID: " +  str(external_transaction.id)
         transaction = InternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
+        transaction.save()
+        return True
+    except:
+        return False
+
+def create_internal_transcaction_for_access(user, external_user, page_to_view):
+    try:
+        type_of_transaction = TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST
+        description_string = "User: " + user.username
+        description_string = description_string + ",Action: requests access to external user page"
+        description_string = description_string + ",External User: " +  str(external_user.id)
+        description_string = description_string + ",Page: " +  page_to_view
+        transaction = InternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
         transaction.save()
         return True
     except:
@@ -299,9 +469,15 @@ def deny_transaction(transaction, user):
         result = deny_transaction_transfer(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
         result = deny_transaction_internal_noncritical(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+        result = deny_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
+    elif type_of_transaction == TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST:
+        result = deny_transaction_external_user_profile_edit_request(transaction=transaction, user=user)
     else:
         result = False
     if result:
+        pass # remove to test email
+        """
         recipients = get_all_emails(transaction.participants.all())
         #send_notification_transaction(subject=TRANSACTION_SUBJECT_DENIED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_DENIED, email_template=None, recipients=[get_user_email(transaction.initiator)])
         send_templated_mail(
@@ -317,7 +493,7 @@ def deny_transaction(transaction, user):
             # headers={'My-Custom-Header':'Custom Value'},
             # template_prefix="my_emails/",
             # template_suffix="email",
-        )
+        )"""
     return result
 
 def deny_transaction_credit_or_debit(transaction, user):
@@ -342,7 +518,21 @@ def deny_transaction_credit_or_debit(transaction, user):
     except:
         return False
 
+def deny_transaction_external_user_profile_edit_request(transaction, user):
+    try:
+        save_transaction(transaction=transaction, user=user)
+        return True
+    except:
+        return False
+
 def deny_transaction_internal_noncritical(transaction, user):
+    try:
+        save_transaction(transaction=transaction, user=user)
+        return True
+    except:
+        return False
+
+def deny_transaction_internal_transcaction_for_access(transaction, user):
     try:
         save_transaction(transaction=transaction, user=user)
         return True
@@ -401,98 +591,91 @@ def deny_transaction_transfer(transaction, user):
     except:
         return False
 
-def is_external_user(user):
-    if (hasattr(user, INDIVIDUAL_CUSTOMER_ATTRIBUTE) or hasattr(user, MERCHANT_ORGANIZATION_ATTRIBUTE)) and not (is_internal_user(user)):
-        return True
-    else:
-        return False
+def does_internal_access_transaction_already_exists(user, page_to_view):
+    result = False
+    transactions = InternalCriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED)
+    if transactions.exists():
+        for transaction in transactions:
+            if transaction.type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+                data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=transaction.type_of_transaction)
+                if 'page_to_view' in data:
+                    if data['page_to_view'] == page_to_view:
+                        result =  True
+                        return True
+    return result
 
-def is_internal_user(user):
-    if (hasattr(user, REGULAR_EMPLOYEE_ATTRIBUTE) or hasattr(user, SYSTEM_MANAGER_ATTRIBUTE) or hasattr(user, ADMINISTRATOR_ATTRIBUTE)) and not (is_external_user(user)):
-        return True
-    else:
-        return False
-
-def is_administrator(user):
-    if is_internal_user(user) and hasattr(user, ADMINISTRATOR_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def is_individual_customer(user):
-    if is_external_user(user) and hasattr(user, INDIVIDUAL_CUSTOMER_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def is_merchant_organization(user):
-    if is_external_user(user) and hasattr(user, MERCHANT_ORGANIZATION_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def is_regular_employee(user):
-    if is_internal_user(user) and hasattr(user, REGULAR_EMPLOYEE_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def is_system_manager(user):
-    if is_internal_user(user) and hasattr(user, SYSTEM_MANAGER_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def get_any_user_profile(username, email):
-    profile = None
-    user = None
-
-    if(User.objects.filter(username=username)):
-        user = User.objects.get(username=username)
-
-    if is_individual_customer(user):
-        if user.individualcustomer.email == email:
-            profile = user.individualcustomer
-    elif is_merchant_organization(user):
-        if user.merchantorganization.email == email:
-            profile = user.merchantorganization
-    elif is_regular_employee(user):
-        if user.regularemployee.email == email:
-            profile = user.regularemployee
+def does_user_have_external_user_permission(user, external_user, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+                permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user.id)
+            else:
+                permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
+            permission = Permission.objects.filter(codename=permission_codename).first()
+            permission_codename = 'internal.' + permission_codename
+            if permission is None and not does_internal_access_transaction_already_exists(user=user, page_to_view=page_to_view):
+                if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
+                    verify = False
+            else:
+                if user.has_perm(permission_codename):
+                    verify = True
+                elif not does_internal_access_transaction_already_exists(user=user, page_to_view=page_to_view):
+                    if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
+                        pass
+        except:
+            pass
     elif is_system_manager(user):
-        if user.systemmanager.email == email:
-            profile = user.systemmanager
-    elif is_administrator(user):
-        if user.administrator.email == email:
-            profile = user.administrator
-
-    return profile
-
-def get_external_noncritical_transaction(transaction):
-    transaction_description = transaction.description
-    data = parse_transaction_description(transaction_description=transaction_description, type_of_transaction=TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST)
-    return data['external_transaction']
-
-def get_account_for_external_user(user):
-    account = None
-    if user:
-        if is_individual_customer(user) and has_checking_account(user):
-            account = user.individualcustomer.checking_account
-        elif is_individual_customer(user) and has_savings_account(user):
-            account = user.individualcustomer.savings_account
-        elif is_merchant_organization(user) and has_checking_account(user):
-            account = user.merchantorganization.checking_account
-        elif is_merchant_organization(user) and has_savings_account(user):
-            account = user.merchantorganization.savings_account
-    else:
-        return account
-    return account
+        verify = True
+    return verify
 
 def get_all_emails(queryset):
     emails = []
     for user in queryset:
         emails.append(get_user_email(user))
     return emails
+
+def get_any_user_profile(username, email=None):
+    user = User.objects.get(username=username)
+    profile = None
+    if email == None:
+        if is_individual_customer(user):
+            profile = user.individualcustomer
+        elif is_merchant_organization(user):
+            profile = user.merchantorganization
+        elif is_regular_employee(user):
+            profile = user.regularemployee
+        elif is_system_manager(user):
+            profile = user.systemmanager
+        elif is_administrator(user):
+            profile = user.administrator
+    else:
+        if is_individual_customer(user):
+            if user.individualcustomer.email == email:
+                profile = user.individualcustomer
+        elif is_merchant_organization(user):
+            if user.merchantorganization.email == email:
+                profile = user.merchantorganization
+        elif is_regular_employee(user):
+            if user.regularemployee.email == email:
+                profile = user.regularemployee
+        elif is_system_manager(user):
+            if user.systemmanager.email == email:
+                profile = user.systemmanager
+        elif is_administrator(user):
+            if user.administrator.email == email:
+                profile = user.administrator
+    return profile
+
+def get_external_user_account(user, account_type):
+    account = None
+    if is_external_user(user):
+        profile = get_any_user_profile(username=user.username)
+        if account_type == ACCOUNT_TYPE_CHECKING and has_checking_account(user):
+            account = profile.checking_account
+        elif account_type == ACCOUNT_TYPE_SAVINGS and has_savings_account(user):
+            account = profile.savings_account
+    return account
 
 def get_external_noncritical_transaction(transaction):
     transaction_description = transaction.description
@@ -505,18 +688,27 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
         try:
             user = User.objects.get(individualcustomer__email=email)
         except:
-            user = User.objects.get(merchantorganization__email=email)
+            try:
+                user = User.objects.get(merchantorganization__email=email)
+            except:
+                user = None
     elif routing_ID and account_ID and account_type:
         if account_type == ACCOUNT_TYPE_CHECKING:
             try:
                 user = User.objects.get(individualcustomer__checking_account__id=int(account_ID ), individualcustomer__checking_account__routing_number=int(routing_ID))
             except:
-                user = User.objects.get(merchantorganization__checking_account__id=int(account_ID ), merchantorganization__checking_account__routing_number=int(routing_ID))
+                try:
+                    user = User.objects.get(merchantorganization__checking_account__id=int(account_ID ), merchantorganization__checking_account__routing_number=int(routing_ID))
+                except:
+                    user = None
         elif account_type == ACCOUNT_TYPE_SAVINGS:
             try:
                 user = User.objects.get(individualcustomer__savings_account__id=int(account_ID ), individualcustomer__savings_account__routing_number=int(routing_ID))
             except:
-                user = User.objects.get(merchantorganization__savings_account__id=int(account_ID ), merchantorganization__savings_account__routing_number=int(routing_ID))
+                try:
+                    user = User.objects.get(merchantorganization__savings_account__id=int(account_ID ), merchantorganization__savings_account__routing_number=int(routing_ID))
+                except:
+                    user = None
         else:
             return user
     else:
@@ -558,7 +750,6 @@ def get_new_routing_number():
 
     return int(routing)
 
-#return the user_type, first_name and last_name, for Internal Employees, render this info all pages
 def get_user_det(user):
     list = []
     if is_regular_employee(user):
@@ -588,6 +779,51 @@ def get_user_email(user):
         return user.administrator.email
     else:
         return ""
+
+def has_checking_account(user):
+    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CHECKING_ACCOUNT_ATTRIBUTE):
+        return True
+    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CHECKING_ACCOUNT_ATTRIBUTE):
+        return True
+    else:
+        return False
+
+def has_credit_card(user):
+    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CREDIT_CARD_ATTRIBUTE):
+        return True
+    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CREDIT_CARD_ATTRIBUTE):
+        return True
+    else:
+        return False
+
+def has_no_account(user):
+    if not has_credit_card(user) and not has_checking_account(user) and not has_savings_account(user):
+        True
+    else:
+        return False
+
+def has_permission_to_edit_profile(user):
+    if is_external_user(user):
+        try:
+            permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'external.' + permission_codename
+            if user.has_perm(permission_codename):
+                return True
+            else:
+                return False
+        except:
+            return False
+    else:
+        return False
+
+def has_savings_account(user):
+    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, SAVINGS_ACCOUNT_ATTRIBUTE):
+        return True
+    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, SAVINGS_ACCOUNT_ATTRIBUTE):
+        return True
+    else:
+        return False
 
 def is_external_user(user):
     if (hasattr(user, INDIVIDUAL_CUSTOMER_ATTRIBUTE) or hasattr(user, MERCHANT_ORGANIZATION_ATTRIBUTE)) and not (is_internal_user(user)):
@@ -631,36 +867,6 @@ def is_system_manager(user):
     else:
         return False
 
-def has_checking_account(user):
-    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CHECKING_ACCOUNT_ATTRIBUTE):
-        return True
-    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CHECKING_ACCOUNT_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def has_credit_card(user):
-    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CREDIT_CARD_ATTRIBUTE):
-        return True
-    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, CREDIT_CARD_ATTRIBUTE):
-        return True
-    else:
-        return False
-
-def has_no_account(user):
-    if not has_credit_card(user) and not has_checking_account(user) and not has_savings_account(user):
-        True
-    else:
-        return False
-
-def has_savings_account(user):
-    if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, SAVINGS_ACCOUNT_ATTRIBUTE):
-        return True
-    elif is_external_user(user) and is_merchant_organization(user) and hasattr(user.merchantorganization, SAVINGS_ACCOUNT_ATTRIBUTE):
-        return True
-    else:
-        return False
-
 def otpGenerator(size=6, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
@@ -673,6 +879,8 @@ def parse_transaction_description(transaction_description, type_of_transaction):
         return parse_transaction_description_transfer(transaction_description=transaction_description)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
         return parse_transaction_description_internal_noncritical(transaction_description=transaction_description)
+    elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+        return parse_transaction_description_internal_transaction_for_access(transaction_description=transaction_description)
     else:
         return {}
 
@@ -712,11 +920,29 @@ def parse_transaction_description_credit_or_debit(transaction_description):
 
 def parse_transaction_description_internal_noncritical(transaction_description):
     try:
-        external_transaction_data = [int(value) for value in transaction_description.split() if value.isdigit()]
-        external_transaction_id = external_transaction_data[0]
+        contents = transaction_description.split(',')
+        username = contents[0].split(': ')[1]
+        description = contents[1].split(': ')[1]
+        external_transaction_id = int(contents[2].split(': ')[1])
         external_transaction = ExternalNoncriticalTransaction.objects.get(id=external_transaction_id)
         return {
             'external_transaction': external_transaction,
+        }
+    except:
+        return {}
+
+def parse_transaction_description_internal_transaction_for_access(transaction_description):
+    try:
+        contents = transaction_description.split(',')
+        contents = transaction_description.split(',')
+        username = contents[0].split(': ')[1]
+        description = contents[1].split(': ')[1]
+        external_user_id = int(contents[2].split(': ')[1])
+        page_to_view = contents[3].split(': ')[1]
+        external_user = User.objects.get(id=external_user_id)
+        return {
+            'external_user': external_user,
+            'page_to_view' : page_to_view,
         }
     except:
         return {}
@@ -791,12 +1017,20 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
     if request.POST.get('email_address'):
         email_address = request.POST['email_address']
         sender = get_external_user(email=email_address)
-        sender_account = get_account_for_external_user(user=sender)
+        if sender is None:
+            return HttpResponseRedirect(reverse(error_redirect))
+        sender_account = get_external_user_account(user=sender, account_type=sender_user_type)
+        if sender_account is None:
+            return HttpResponseRedirect(reverse(error_redirect))
     else:
         sender_account_ID = request.POST['account_number']
         sender_routing_ID = request.POST['route_number']
         sender = get_external_user(account_ID=sender_account_ID, routing_ID=sender_routing_ID, account_type=sender_account_type)
-        sender_account = get_account_for_external_user(user=sender)
+        if sender is None:
+            return HttpResponseRedirect(reverse(error_redirect))
+        sender_account = get_external_user_account(user=sender, account_type=sender_user_type)
+        if sender_account is None:
+            return HttpResponseRedirect(reverse(error_redirect))
     if sender_account_type == ACCOUNT_TYPE_CHECKING or sender_account_type == ACCOUNT_TYPE_SAVINGS:
         if is_individual_customer(sender):
             sender_user_type = INDIVIDUAL_CUSTOMER
@@ -819,7 +1053,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
     receiver_starting_balance = receiver_account.active_balance
     receiver_user_type = MERCHANT_ORGANIZATION
     receiver_new_balance = float(receiver_starting_balance) + amount
-    if validate_amount(sender_check) and validate_amount(receiver_check):
+    if validate_amount(sender_check) and validate_amount(receiver_check) and not sender.id == receiver.id:
         sender_account.active_balance = sender_new_balance
         receiver_account.active_balance = receiver_new_balance
         sender_account.save()
@@ -847,12 +1081,20 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     if request.POST.get('email_address'):
         email_address = request.POST['email_address']
         receiver = get_external_user(email=email_address)
-        receiver_account = get_account_for_external_user(user=receiver)
+        if receiver is None:
+            return HttpResponseRedirect(reverse(error_redirect))
+        receiver_account = get_external_user_account(user=receiver, account_type=receiver_account_type)
+        if receiver_account is None:
+            return HttpResponseRedirect(reverse(error_redirect))
     else:
         receiver_account_ID = request.POST['account_number']
         receiver_routing_ID = request.POST['route_number']
         receiver = get_external_user(account_ID=receiver_account_ID, routing_ID=receiver_routing_ID, account_type=receiver_account_type)
-        receiver_account = get_account_for_external_user(user=receiver)
+        if receiver is None:
+            return HttpResponseRedirect(reverse(error_redirect))
+        receiver_account = get_external_user_account(user=receiver, account_type=receiver_account_type)
+        if receiver_account is None:
+            return HttpResponseRedirect(reverse(error_redirect))
     if receiver_account_type == ACCOUNT_TYPE_CHECKING or receiver_account_type == ACCOUNT_TYPE_SAVINGS:
         if is_individual_customer(receiver):
             receiver_user_type = INDIVIDUAL_CUSTOMER
@@ -884,7 +1126,7 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     sender_check = min(float(user_account.active_balance), float(user_account.current_balance)) - amount
     sender_starting_balance = user_account.active_balance
     sender_new_balance = float(sender_starting_balance) - amount
-    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance):
+    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance) and not user.id == receiver.id:
         user_account.active_balance = sender_new_balance
         receiver_account.active_balance = receiver_new_balance
         user_account.save()
@@ -936,6 +1178,70 @@ def validate_amount(amount):
         return False
     else:
         return True
+
+def validate_city(city):
+    validated = False
+    if len(city) <= 100 or len(city) >= 4:
+        if re.search('^([a-zA-Z0-9]| )+$', city):
+            validated = True
+            #print('Valid city')
+    return validated
+
+def validate_email(email):
+    validated = False
+    if len(email) <= 100 or len(email) >= 3:
+        parts = email.strip('\r').strip('\n').split('@')
+        if len(parts) == 2:
+            local = parts[0]
+            domain = parts[1]
+            if re.search("^([a-zA-Z0-9]|!|#|\$|%|&|'|\*|\+|-|\/|=|\?|\^\_|`|{|\||}|~|\.|,)+$", local):
+                if re.search("^([a-zA-Z0-9]|\.|-)+$", domain):
+                    validated = True
+    return validated
+
+def validate_name(name):
+    validated = False
+    if len(name) <= 100 or len(name) >= 2:
+        if re.search('^[a-zA-Z]+$', name):
+            #print('Valid name')
+            validated = True
+    return validated
+
+def validate_profile_change(profile, first_name, last_name, street_address, city, state, zipcode):
+    if validate_name(name=first_name) and validate_name(name=last_name) and validate_street_address(street_address=street_address) and validate_city(city=city) and validate_state(state=state) and validate_zipcode(zipcode=zipcode):
+        profile.first_name = first_name
+        profile.last_name = last_name
+        profile.street_address = street_address
+        profile.city = city
+        profile.state = state
+        profile.zipcode = zipcode
+        profile.save()
+        return True
+    else:
+        return False
+
+def validate_state(state):
+    validated = False
+    if state in STATES:
+        #print('Valid state')
+        validated = True
+    return validated
+
+def validate_street_address(street_address):
+    validated = False
+    if len(street_address) <= 100 or len(street_address) >= 4:
+        if re.search('^([a-zA-Z0-9]| )+$', street_address):
+            validated = True
+            #print('Valid street address')
+    return validated
+
+def validate_zipcode(zipcode):
+    validated = False
+    if len(zipcode) == 5:
+        if re.search('^[0-9]+$', zipcode):
+            #print('Valid zipcode')
+            validated = True
+    return validated
 
 def validate_user_type(user, user_type):
     if is_individual_customer(user) and user_type == INDIVIDUAL_CUSTOMER:

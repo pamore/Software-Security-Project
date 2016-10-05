@@ -1,18 +1,17 @@
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Permission
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
+from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, create_transaction_external_user_profile_edit_request, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_permission_to_edit_profile, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
+from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, STATES, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 
-# Create your views here.
-
+""" Render Functions for Web Pages """
 # External User Home Page
 @never_cache
 @login_required
@@ -232,6 +231,30 @@ def payment_on_behalf_email_savings(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
+# User Profile View Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def profile(request):
+    user = request.user
+    profile = get_any_user_profile(username=user.username)
+    return render(request, 'external/profile.html', {'profile': profile})
+
+# User Profile Edit Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def profile_edit(request):
+    user = request.user
+    profile = get_any_user_profile(username=user.username)
+    if has_permission_to_edit_profile(user):
+        return render(request, 'external/profile_edit.html', {'profile': profile, 'STATES': STATES})
+    else:
+        if create_transaction_external_user_profile_edit_request(user):
+            return render(request, 'external/profile.html', {'profile': profile, 'message': "Awaiting Internal Employee Approval for Account Edit"})
+        else:
+            return HttpResponseRedirect(reverse("external:error"))
+
 # Transfer Checking Page
 @never_cache
 @login_required
@@ -292,6 +315,7 @@ def transfer_email_savings(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
+""" Validator Functions for Web Pages """
 # Validate Credit Checking Transaction
 @never_cache
 @login_required
@@ -364,7 +388,6 @@ def payment_savings_validate(request):
     success_redirect = 'external:savings_account'
     return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
-
 # Validate Payment Checking Transaction
 @never_cache
 @login_required
@@ -388,6 +411,37 @@ def payment_on_behalf_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate Profile Edit Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def profile_edit_validate(request):
+    user = request.user
+    success_redirect = 'external:profile'
+    error_redirect = 'external:profile_edit'
+    profile = get_any_user_profile(username=user.username)
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    street_address = request.POST['street_address']
+    city = request.POST['city']
+    state = request.POST['state']
+    zipcode = request.POST['zipcode']
+    try:
+        permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+        permission = Permission.objects.get(codename=permission_codename)
+        permission_codename = 'external.' + permission_codename
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if user.has_perm(permission_codename):
+        if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+            user.user_permissions.remove(permission)
+            user.save()
+            return HttpResponseRedirect(reverse(success_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # Validate Transfer Checking Transaction
 @never_cache

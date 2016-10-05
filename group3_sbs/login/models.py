@@ -15,7 +15,7 @@ class UserProfile(models.Model):
     street_address = models.CharField(validators=[MinLengthValidator(4)], max_length=100)
     city = models.CharField(validators=[MinLengthValidator(2)], max_length=100)
     state = models.CharField(validators=[MinLengthValidator(2)], max_length=2)
-    zipcode = models.IntegerField(validators=[MinValueValidator(5), MaxValueValidator(5)])
+    zipcode = models.CharField(validators=[MinLengthValidator(5)], max_length=5)
     session_key = models.CharField(max_length=100)
     otp_pass = models.CharField(validators=[MinLengthValidator(13)], max_length=13, default="")
     otp_timestamp = models.IntegerField(validators=[MinValueValidator(0)], default=0)

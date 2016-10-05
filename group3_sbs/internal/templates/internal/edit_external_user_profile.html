@@ -1,0 +1,45 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Edit {{external_user.username}}'s Profile</h1>
+  </div>
+</div>
+<div class="row">
+  <div class="col-md-12">
+    <form action="{% url 'internal:validate_profile_edit' external_user_id=external_user.id %}" method="post">
+    {% csrf_token %}
+    <input type="text" class="form-control" name="username" value="{{external_user.username}}" readonly>
+    <label for="first_name">First Name</label>
+    <input type="text" class="form-control" name="first_name" value="{{profile.first_name}}" required />
+    <label for="last_name">Last Name</label>
+    <input type="text" class="form-control" name="last_name" value="{{profile.last_name}}" required />
+    <label for="street_address">Street Address</label>
+    <input type="text" class="form-control" name="street_address" value="{{profile.street_address}}" required />
+    <label for="city">City</label>
+    <input type="text" class="form-control" name="city" value="{{profile.city}}" required />
+    <label for="STATES">State</label>
+    <select class="form-control" name="state">
+      {% for state in STATES %}
+      <option value="{{state}}" {% if profile.state == state %}selected="selected"{% endif %}>{{state}}</option>
+      {% endfor %}
+    </select>
+    <label for="zipcode">Zipcode</label>
+    <input type="text" class="form-control" name="zipcode" value="{{profile.zipcode}}" maxlength="5" required />
+    <input type="submit" class="btn btn-primary" value="Submit" />
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -147,7 +147,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'group3_sbs',
         'USER': 'root',
-        'PASSWORD': 'cse545',
+        'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '3306',
     }

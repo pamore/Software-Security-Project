@@ -3,9 +3,8 @@
 {% load static %}
 
 {% block stylesheets %}
-<!-- Add Stylesheets here -->
+<link rel="stylesheet" type="text/css" href="{% static 'external/style.css' %}" /
 {% endblock %}
-
 
 {% block navigation %}
 <!-- Add Navigation here -->
@@ -13,4 +12,5 @@
 
 {% block content %}
 <h1>You did something wrong</h1>
+<div class="error-image">&nbsp;</div>
 {% endblock %}

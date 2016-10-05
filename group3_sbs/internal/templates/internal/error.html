@@ -13,4 +13,7 @@
 
 {% block content %}
 <h1>You did something wrong</h1>
+{% if error_message %}
+<p>{{error_message}}</p>
+{% endif %}
 {% endblock %}

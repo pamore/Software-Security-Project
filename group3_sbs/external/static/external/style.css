@@ -1,0 +1,8 @@
+div.error-image {
+  background-image: url("images/why.png");
+  padding: 400px;
+  width: 400 px;
+  height:400 px;
+  background-size: 400px;
+  background-repeat: no-repeat;
+}
