@@ -585,6 +585,19 @@ def deny_transaction_transfer(transaction, user):
     except:
         return False
 
+def does_internal_access_transaction_already_exists(user, page_to_view):
+    result = False
+    transactions = InternalCriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED)
+    if transactions.exists():
+        for transaction in transactions:
+            if transaction.type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
+                data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=transaction.type_of_transaction)
+                if 'page_to_view' in data:
+                    if data['page_to_view'] == page_to_view:
+                        result =  True
+                        return True
+    return result
+
 def does_user_have_external_user_permission(user, external_user, page_to_view):
     verify = False
     if is_regular_employee(user):
@@ -595,15 +608,15 @@ def does_user_have_external_user_permission(user, external_user, page_to_view):
                 permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
             permission = Permission.objects.filter(codename=permission_codename).first()
             permission_codename = 'internal.' + permission_codename
-            if permission is None:
+            if permission is None and not does_internal_access_transaction_already_exists(user=user, page_to_view=page_to_view):
                 if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
                     verify = False
             else:
                 if user.has_perm(permission_codename):
                     verify = True
-                else:
+                elif not does_internal_access_transaction_already_exists(user=user, page_to_view=page_to_view):
                     if create_internal_transcaction_for_access(user=user, external_user=external_user, page_to_view=page_to_view):
-                        verify = False
+                        pass
         except:
             pass
     elif is_system_manager(user):
