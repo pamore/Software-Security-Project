@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
 from group3_sbs.settings import *
-from global_templates.common_functions import validate_user_type
+from global_templates.common_functions import validate_user_type, get_any_user_profile
 
 # Create your views here
 
@@ -55,9 +55,24 @@ def loggedin(request):
     if (hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator')) and (hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization')):
         user.delete()
         return HttpResponseRedirect(reverse('login:signin'))
-    elif hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
-        return HttpResponseRedirect(reverse('internal:index'))
-    elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
-        return HttpResponseRedirect(reverse('external:index'))
     else:
-        return HttpResponseRedirect(reverse('login:signout'))
+        # if there is a cookie for the device
+        #   get the user profile
+        #   check to see if the cookie stored on the device is in the list of trusted device keys
+        #   if the device is trusted
+        #       proceed to log in
+        #   else
+        #       send the user an OTP for verifying the device
+        #       redirect the user to an OTP device verification page
+        # else
+        #   send the user an OTP for verifying the device
+        #   redirect the user to an OTP device verification page 
+        user_email = get_user_email(user)
+        profile = get_any_user_profile(user.username, user_email)
+
+        if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
+            return HttpResponseRedirect(reverse('internal:index'))
+        elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
+            return HttpResponseRedirect(reverse('external:index'))
+        else:
+            return HttpResponseRedirect(reverse('login:signout'))
