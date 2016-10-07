@@ -57,3 +57,11 @@ class ExternalNoncriticalTransaction(Transaction):
 
 class ExternalCriticalTransaction(Transaction):
     pass
+
+class MerchantPaymentRequest(models.Model):
+    merchantCheckingsAccountNum = models.IntegerField()
+    accountType = models.CharField(max_length=30)
+    clientAccountNum = models.IntegerField()
+    clientRoutingNum = models.IntegerField()
+    requestAmount = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=6, decimal_places=2)
+

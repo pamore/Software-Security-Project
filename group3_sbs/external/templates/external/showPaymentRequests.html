@@ -1,0 +1,79 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Payments waiting for approval</h1>
+  </div>
+</div>
+<br />
+<h4> Checking Account Approvals</h4>
+<table class="table">
+<tr>
+    <td>Transaction ID</td>
+    <td>Request Amount</td>
+    <td>Merchant Checking Account Num</td>
+    <td></td>
+    <td></td>
+</tr>
+{% for currentRequest in checkingRequests %}
+    <tr>
+
+    <td>{{currentRequest.id}}</td>
+    <td>{{currentRequest.requestAmount}}</td>
+    <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
+    <form name="forms" action="{% url 'external:update_approvals' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" value={{ currentRequest.id }} name="id"/>
+    <td><input type="submit" class="btn btn-default" value="Approve" /></td>
+    </form>
+    <form name="forms" action="{% url 'external:reject_approvals' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" value={{ currentRequest.id }} name="id"/>
+    <td><input type="submit" class="btn btn-default" value="Reject" /></td>
+    </form>
+    </tr>
+
+{% endfor %}
+</table >
+<h4> Saving Account Approvals</h4>
+<table class="table">
+<tr>
+    <td>Transaction ID</td>
+    <td>Request Amount</td>
+    <td>Merchant Checking Account Num</td>
+    <td></td>
+    <td></td>
+</tr>
+{% for currentRequest in savingRequests %}
+    <tr>
+    <td>{{currentRequest.id}}</td>
+    <td>{{currentRequest.requestAmount}}</td>
+    <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
+    </tr>
+    <form name="forms" action="{% url 'external:update_approvals' %}" method="post">
+    {% csrf_token %}
+    <input type="hidden" value={{ currentRequest.id }} name="id"/>
+    <td><input type="submit" class="btn btn-default" value="Approve" /></td>
+    </form>
+    {% csrf_token %}
+    <form name="forms" action="{% url 'external:reject_approvals' %}" method="post">
+    <input type="hidden" value={{ currentRequest.id }} name="id"/>
+    <td><input type="submit" class="btn btn-default" value="Reject" /></td>
+    </form>
+    </tr>
+</table>
+{% endfor %}
+
+{% endblock %}
