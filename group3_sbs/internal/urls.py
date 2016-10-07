@@ -14,5 +14,4 @@ urlpatterns = [
     url(r'^external_user/profile/(?P<external_user_id>[1-9][0-9]*)/view/$', views.view_external_account, name='view_external_account'),
     url(r'^external_user/profile/request_access/$', views.external_user_account_access_request, name='external_user_account_access_request'),
     url(r'^external_user/profile/request_access/validate/$', views.validate_external_account_access_request, name='validate_external_account_access_request'),
-
 ]

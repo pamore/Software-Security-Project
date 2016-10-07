@@ -351,5 +351,42 @@ def addPaymentRequestToDB(request):
 @login_required
 @user_passes_test(is_external_user)
 def showPaymentRequests(request):
-    fullTable = MerchantPaymentRequest.objects.all()
-    return render(request, 'external/showPaymentRequests.html',{'requests':fullTable})
+    user = request.user
+    checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(clientAccountNum=user.individualcustomer.checking_account_id)
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(clientAccountNum=user.individualcustomer.savings_account_id)
+    return render(request, 'external/showPaymentRequests.html',{'checkingRequests':checkingRequests,'savingRequests':savingRequests})
+
+# Update Approvals
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def update_approvals(request):
+    user = request.user
+    #make transfer
+    #add this to transactions of the user
+    string_transaction_id = str(request.POST['id'])
+    transaction_id = int(string_transaction_id)
+    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
+    transaction.delete()
+    checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
+        clientAccountNum=user.individualcustomer.checking_account_id)
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
+        clientAccountNum=user.individualcustomer.savings_account_id)
+    return render(request, 'external/showPaymentRequests.html',
+                  {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
+
+# Delete Approvals
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def reject_approvals(request):
+    user = request.user
+    #add this to transactions of the merchant as failed ones
+    transaction = MerchantPaymentRequest.objects.all().filter(request.POST['id'])
+    transaction.delete()
+    checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
+        clientAccountNum=user.individualcustomer.checking_account_id)
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
+        clientAccountNum=user.individualcustomer.savings_account_id)
+    return render(request, 'external/showPaymentRequests.html',
+                  {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
