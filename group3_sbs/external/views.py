@@ -528,14 +528,16 @@ def update_approvals(request):
     return render(request, 'external/showPaymentRequests.html',
                   {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
 
-# Delete Approvals
+# Reject Approvals
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
 def reject_approvals(request):
     user = request.user
     #add this to transactions of the merchant as failed ones
-    transaction = MerchantPaymentRequest.objects.all().filter(request.POST['id'])
+    string_transaction_id = str(request.POST['id'])
+    transaction_id = int(string_transaction_id)
+    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
     transaction.delete()
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
