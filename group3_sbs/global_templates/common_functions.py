@@ -142,7 +142,7 @@ def can_view_external_user_page(user, external_user_id, page_to_view):
                     user.save()
         except:
             pass
-    elif is_system_manager(user):
+    elif is_system_manager(user) or is_administrator(user):
         external_user = User.objects.get(id=int(external_user_id))
         if page_to_view == PAGE_TO_VIEW_PROFILE or (page_to_view == PAGE_TO_VIEW_SAVINGS_ACCOUNT and has_savings_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CHECKING_ACCOUNT and has_checking_account(external_user)) or (page_to_view == PAGE_TO_VIEW_CREDIT_CARD and has_credit_card(external_user)):
             verify = True
@@ -362,7 +362,7 @@ def create_internal_transcaction_for_access(user, external_user, page_to_view):
         description_string = description_string + ",Action: requests access to external user page"
         description_string = description_string + ",External User: " +  str(external_user.id)
         description_string = description_string + ",Page: " +  page_to_view
-        transaction = InternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
+        transaction = InternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
         transaction.save()
         return True
     except:
@@ -593,7 +593,7 @@ def deny_transaction_transfer(transaction, user):
 
 def does_internal_access_transaction_already_exists(user, page_to_view):
     result = False
-    transactions = InternalCriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED)
+    transactions = InternalNoncriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED, type_of_transaction=TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST)
     if transactions.exists():
         for transaction in transactions:
             if transaction.type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
@@ -625,7 +625,7 @@ def does_user_have_external_user_permission(user, external_user, page_to_view):
                         pass
         except:
             pass
-    elif is_system_manager(user):
+    elif is_system_manager(user) or is_administrator(user):
         verify = True
     return verify
 
@@ -636,8 +636,11 @@ def get_all_emails(queryset):
     return emails
 
 def get_any_user_profile(username, email=None):
-    user = User.objects.get(username=username)
     profile = None
+    try:
+        user = User.objects.get(username=username)
+    except:
+        return profile
     if email == None:
         if is_individual_customer(user):
             profile = user.individualcustomer
@@ -716,7 +719,7 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
     return user
 
 def get_new_credit_card_number():
-    size=16
+    size = CREDIT_CARD_NUMBER_LENGTH
     chars = string.digits
     #
     ccnumber = ''
@@ -732,7 +735,7 @@ def get_new_credit_card_number():
     return ccnumber
 
 def get_new_routing_number():
-    size=6
+    size = ROUTING_NUMBER_LENGTH - 1
     firstchar = '123456789'
     chars = string.digits
 
@@ -1173,15 +1176,78 @@ def send_notification_transaction(subject, message, transaction, status, email_t
 def transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     return payment_or_transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
+def validate_account_info(user_type, username, email, first_name, last_name, address, city, state, zipcode, personal_code):
+    validate = False
+    if validate_user_type_category(user_type=user_type):
+        if validate_username(username=username) and validate_email(email=email) and validate_name(name=first_name) and validate_name(name=last_name) and validate_street_address(street_address=address) and validate_city(city=city) and validate_state(state=state) and validate_zipcode(zipcode=zipcode):
+            if user_type == INDIVIDUAL_CUSTOMER:
+                if validate_ssn(ssn=personal_code):
+                    validate = True
+            elif user_type == MERCHANT_ORGANIZATION:
+                if validate_business_code(business_code=personal_code):
+                    validate = True
+    return validate
+
+def validate_account_number(account_number):
+    validated = False
+    try:
+        number_string = str(account_number)
+        number_string = number_string.zfill(ACCOUNT_NUMBER_LENGTH)
+        if len(number_string) == ACCOUNT_NUMBER_LENGTH:
+            if re.search('^[0-9]+$', number_string):
+                #print('Valid name')
+                validated = True
+    except:
+        pass
+    return validated
+
+def validate_credit_card_number(credit_card_number):
+    validated = False
+    try:
+        number_string = str(credit_card_number)
+        number_string = number_string.zfill(CREDIT_CARD_NUMBER_LENGTH)
+        if len(number_string) == CREDIT_CARD_NUMBER_LENGTH:
+            if re.search('^[0-9]+$', number_string):
+                #print('Valid name')
+                validated = True
+    except:
+        pass
+    return validated
+
+def validate_routing_number(routing_number):
+    validated = False
+    try:
+        number_string = str(routing_number)
+        number_string = number_string.zfill(ROUTING_NUMBER_LENGTH)
+        if len(number_string) == ROUTING_NUMBER_LENGTH:
+            if re.search('^[0-9]+$', number_string):
+                #print('Valid name')
+                validated = True
+    except:
+        pass
+    return validated
+
 def validate_amount(amount):
     if amount > MAX_BALANCE or amount < MIN_BALANCE:
         return False
     else:
         return True
 
+def validate_business_code(business_code):
+    validate = False
+    if len(business_code) == BUSINESS_CODE_LENGTH:
+        if re.search('^[0-9]+$', business_code):
+            try:
+                merchant = MerchantOrganization.objects.filter(business_code=business_code)
+                if not merchant.exists():
+                    validate = True
+            except:
+                pass
+    return validate
+
 def validate_city(city):
     validated = False
-    if len(city) <= 100 or len(city) >= 4:
+    if len(city) <= CITY_LENGTH_MAX and len(city) >= CITY_LENGTH_MIN:
         if re.search('^([a-zA-Z0-9]| )+$', city):
             validated = True
             #print('Valid city')
@@ -1189,7 +1255,7 @@ def validate_city(city):
 
 def validate_email(email):
     validated = False
-    if len(email) <= 100 or len(email) >= 3:
+    if len(email) <= EMAIL_LENGTH_MAX and len(email) >= EMAIL_LENGTH_MIN:
         parts = email.strip('\r').strip('\n').split('@')
         if len(parts) == 2:
             local = parts[0]
@@ -1201,9 +1267,27 @@ def validate_email(email):
 
 def validate_name(name):
     validated = False
-    if len(name) <= 100 or len(name) >= 2:
+    if len(name) <= NAME_LENGTH_MAX and len(name) >= NAME_LENGTH_MIN:
         if re.search('^[a-zA-Z]+$', name):
             #print('Valid name')
+            validated = True
+    return validated
+
+def validate_first_name_save(profile, first_name):
+    validated = False
+    if len(first_name) <= NAME_LENGTH_MAX and len(first_name) >= NAME_LENGTH_MIN:
+        if re.search('^[a-zA-Z]+$', first_name):
+            #print('Valid name')
+            validated = True
+            profile.first_name = first_name
+            profile.save()
+    return validated
+
+def validate_password(password):
+    validated = False
+    #print(password)
+    if len(password) <= PASSWORD_LENGTH_MAX and len(password) >= PASSWORD_LENGTH_MIN:
+        if re.search(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(~|`|!|@|#|\$|%|\^|&|\*|\(|\)|_|-|\+|=|{|}|\[|\]|\||\\|;|:|\'|\"|,|<|\.|>|\?|\/))([a-zA-Z0-9]|~|`|!|@|#|\$|%|\^|&|\*|\(|\)|_|-|\+|=|{|}|\[|\]|\||\\|;|:|\'|\"|,|<|\.|>|\?|\/)+$', password):
             validated = True
     return validated
 
@@ -1220,6 +1304,18 @@ def validate_profile_change(profile, first_name, last_name, street_address, city
     else:
         return False
 
+def validate_ssn(ssn):
+    validate = False
+    if len(ssn) == SSN_LENGTH:
+        if re.search('^[0-9]+$', ssn):
+            try:
+                customer = IndividualCustomer.objects.filter(ssn=ssn)
+                if not customer.exists():
+                    validate = True
+            except:
+                pass
+    return validate
+
 def validate_state(state):
     validated = False
     if state in STATES:
@@ -1229,18 +1325,10 @@ def validate_state(state):
 
 def validate_street_address(street_address):
     validated = False
-    if len(street_address) <= 100 or len(street_address) >= 4:
+    if len(street_address) <= STREET_ADDRESS_LENGTH_MAX and len(street_address) >= STREET_ADDRESS_LENGTH_MIN:
         if re.search('^([a-zA-Z0-9]| )+$', street_address):
             validated = True
             #print('Valid street address')
-    return validated
-
-def validate_zipcode(zipcode):
-    validated = False
-    if len(zipcode) == 5:
-        if re.search('^[0-9]+$', zipcode):
-            #print('Valid zipcode')
-            validated = True
     return validated
 
 def validate_user_type(user, user_type):
@@ -1256,3 +1344,24 @@ def validate_user_type(user, user_type):
         return True
     else:
         return False
+
+def validate_user_type_category(user_type):
+    if user_type == INDIVIDUAL_CUSTOMER or user_type == MERCHANT_ORGANIZATION or user_type == REGULAR_EMPLOYEE or user_type == SYSTEM_MANAGER or user_type == ADMINISTRATOR:
+        return True
+    else:
+        return False
+
+def validate_username(username):
+    validated = False
+    if len(username) <= USERNAME_ADDRESS_LENGTH_MAX and len(username) >= USERNAME_ADDRESS_LENGTH_MIN:
+        if re.search('^([a-zA-Z0-9]|_|@|\+|-|\.)+$', username):
+            validated = True
+    return validated
+
+def validate_zipcode(zipcode):
+    validated = False
+    if len(zipcode) == ZIPCODE_LENGTH:
+        if re.search('^[0-9]+$', zipcode):
+            #print('Valid zipcode')
+            validated = True
+    return validated

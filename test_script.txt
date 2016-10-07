@@ -6,15 +6,15 @@ from global_templates.constants import *
 from external.models import *
 from internal.models import *
 
-user1 = User.objects.create_user(username="john", password="cucukachoo")
+user1 = User.objects.create_user(username="johnlennon", password="Cucukachoo1!")
 user1.save()
-user2 = User.objects.create_user(username="garrett", password="youaretheman")
+user2 = User.objects.create_user(username="garrettgutierrez", password="Youaretheman1!")
 user2.save()
-user3 = User.objects.create_user(username="paul", password="iamthewalrus")
+user3 = User.objects.create_user(username="paulmccartney", password="Iamthewalrus1!")
 user3.save()
-user4 = User.objects.create_user(username="ringo", password="dontpassmeby")
+user4 = User.objects.create_user(username="ringostarr", password="Dontpassmeby1!")
 user4.save()
-user5 = User.objects.create_user(username="george", password="mysweetlord")
+user5 = User.objects.create_user(username="georgeharrison", password="Mysweetlord1!")
 user5.save()
 
 checkingaccount1 = CheckingAccount.objects.create(interest_rate=0.03, routing_number=1, current_balance=0.00, active_balance=0.00)

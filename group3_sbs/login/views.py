@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
 from group3_sbs.settings import *
-from global_templates.common_functions import validate_user_type
+from global_templates.common_functions import validate_password, validate_user_type, validate_username
 
 # Create your views here
 
@@ -30,8 +30,13 @@ def signin(request):
 @watch_login
 def loginValidate(request):
     try:
-        user = authenticate(username=request.POST['username'], password=request.POST['password'])
-        if user is not None and validate_user_type(user, request.POST['user_type']):
+        username = request.POST['username']
+        password = request.POST['password']
+        reCaptcha = request.POST['g-recaptcha-response']
+        user = authenticate(username=username, password=password)
+        if not reCaptcha:
+            raise Exception('Are you a bot? Please fill out Recapchta.')
+        if user is not None and validate_user_type(user, request.POST['user_type']) and validate_username(username=username) and validate_password(password=password):
             login(request, user)
             return HttpResponseRedirect(reverse('login:loggedin'))
         else:

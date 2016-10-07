@@ -24,7 +24,6 @@
         <th>First Name</th>
         <td>{{profile.first_name}}</td>
       </tr>
-      {% if admin_privilege %}
       <tr>
         <th>Last Name</th>
         <td>{{profile.last_name}}</td>
@@ -38,15 +37,9 @@
         <td>{{profile.street_address}}, {{profile.city}}, {{profile.state}} {{profile.zipcode}}</td>
       </tr>
       <tr>
-        <th>Social Security Number</th>
-        <td>{{profile.ssn}}</td>
-      </tr>
-      {% else %}
-      <tr>
         <th>Email</th>
         <td>{{profile.email}}</td>
       </tr>
-      {% endif %}
     </tbody>
     <tfoot>
     </tfoot>
