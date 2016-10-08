@@ -6,9 +6,10 @@ from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
-from global_templates.constants import *
+from .transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
+from .constants import *
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
+# from external.models import *
 
 def can_view_noncritical_transaction(user):
     if is_regular_employee(user) or is_system_manager(user):

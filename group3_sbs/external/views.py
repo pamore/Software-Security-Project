@@ -10,7 +10,7 @@ from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, validate_amount
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_CREDIT
-from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
+# from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
 
 # Create your views here.
 
@@ -191,3 +191,39 @@ def debit_savings_validate(request):
     else:
         return render(request, error_redirect)
     return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_payload=success_payload, success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate Debit Savings Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def checking_statement(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants= user,account_type="Checking").order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user, account_type="Checking").order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/checking_statement.html',
+                  {'transactions': transactions})
+
+# Validate Debit Savings Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def savings_statement(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participant_id = user.id, account_type="Savings").order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participant_id=user.id, account_type="Savings").order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/savings_statement.html',
+                  {'transactions': transactions})

@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from django.core.validators import MaxValueValidator, MinValueValidator, MaxLengthValidator, MinLengthValidator
 from django.contrib.auth.models import User
 from django.db import models
 
@@ -7,6 +8,8 @@ from django.db import models
 class Transaction(models.Model):
 
     # Attributes
+    amount = models.DecimalField(validators=[MinValueValidator(0.00)], max_digits=9, decimal_places=2, null=True)
+    account_type =models.CharField(max_length=200, null=True)
     status = models.CharField(max_length=200)
     time_created = models.DateTimeField(auto_now_add=True)
     type_of_transaction = models.CharField(max_length=200)
