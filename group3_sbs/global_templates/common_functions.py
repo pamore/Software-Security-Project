@@ -906,9 +906,9 @@ def parse_transaction_description_credit_or_debit(transaction_description):
         ending_balance = contents[8].split(': ')[1]
         external_user = User.objects.get(id=int(user_id))
         if account_type == ACCOUNT_TYPE_CHECKING:
-            account = CheckingAccount.objects.get(id=account_id)
+            account = CheckingAccount.objects.select_for_update().get(id=account_id)
         elif account_type == ACCOUNT_TYPE_SAVINGS:
-            account = SavingsAccount.objects.get(id=account_id)
+            account = SavingsAccount.objects.select_for_update().get(id=account_id)
         else:
             raise Exception
         return {
@@ -932,7 +932,7 @@ def parse_transaction_description_internal_noncritical(transaction_description):
         username = contents[0].split(': ')[1]
         description = contents[1].split(': ')[1]
         external_transaction_id = int(contents[2].split(': ')[1])
-        external_transaction = ExternalNoncriticalTransaction.objects.get(id=external_transaction_id)
+        external_transaction = ExternalNoncriticalTransaction.objects.select_for_update().get(id=external_transaction_id)
         return {
             'external_transaction': external_transaction,
         }
@@ -977,15 +977,15 @@ def parse_transaction_description_transfer(transaction_description):
         sender = User.objects.get(id=int(sender_id))
         receiver = User.objects.get(id=int(receiver_id))
         if sender_account_type == ACCOUNT_TYPE_CHECKING:
-            sender_account = CheckingAccount.objects.get(id=int(sender_account_id))
+            sender_account = CheckingAccount.objects.select_for_update().get(id=int(sender_account_id))
         elif sender_account_type == ACCOUNT_TYPE_SAVINGS:
-            sender_account = SavingsAccount.objects.get(id=int(sender_account_id))
+            sender_account = SavingsAccount.objects.select_for_update().get(id=int(sender_account_id))
         else:
             raise Exception
         if receiver_account_type == ACCOUNT_TYPE_CHECKING:
-            receiver_account = CheckingAccount.objects.get(id=int(receiver_account_id))
+            receiver_account = CheckingAccount.objects.select_for_update().get(id=int(receiver_account_id))
         elif receiver_account_type == ACCOUNT_TYPE_SAVINGS:
-            receiver_account = SavingsAccount.objects.get(id=int(receiver_account_id))
+            receiver_account = SavingsAccount.objects.select_for_update().get(id=int(receiver_account_id))
         else:
             raise Exception
         return {

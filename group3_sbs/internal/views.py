@@ -12,6 +12,7 @@ from internal.models import Administrator, RegularEmployee, SystemManager, Inter
 from global_templates.common_functions import add_view_external_user_permission, can_edit_external_user_page, can_view_noncritical_transaction, can_resolve_internal_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, does_user_have_external_user_permission, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, get_user_det, is_administrator, is_external_user, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account, validate_first_name_save, validate_profile_change
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, PAGE_TO_VIEW_CREDIT_CARD, PAGE_TO_VIEW_CHECKING_ACCOUNT, PAGE_TO_VIEW_EDIT_PROFILE, PAGE_TO_VIEW_PROFILE, PAGE_TO_VIEW_SAVINGS_ACCOUNT, REGULAR_EMPLOYEE, SYSTEM_MANAGER, STATES, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
 import os
+from django.db import transaction
 
 """
                         Render Web Pages
@@ -323,13 +324,14 @@ def view_internal_user_profile(request, internal_user_id):
 @never_cache
 @login_required
 @user_passes_test(is_system_manager)
+@transaction.atomic
 def validate_critical_transaction_approval(request, transaction_id):
     user = request.user
     list = get_user_det(user)
     success_page = 'internal/critical_transactions.html'
     success_page_reverse = 'internal:critical_transactions'
     try:
-        top_critical_transaction = ExternalCriticalTransaction.objects.get(id=transaction_id)
+        top_critical_transaction = ExternalCriticalTransaction.objects.select_for_update().get(id=transaction_id)
     except:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Transaction does not exist"})
     transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
@@ -342,13 +344,14 @@ def validate_critical_transaction_approval(request, transaction_id):
 @never_cache
 @login_required
 @user_passes_test(is_system_manager)
+@transaction.atomic
 def validate_critical_transaction_denial(request, transaction_id):
     user = request.user
     list = get_user_det(user)
     success_page = 'internal/critical_transactions.html'
     success_page_reverse = 'internal:critical_transactions'
     try:
-        top_critical_transaction = ExternalCriticalTransaction.objects.get(id=transaction_id)
+        top_critical_transaction = ExternalCriticalTransaction.objects.select_for_update().get(id=transaction_id)
     except:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Transaction does not exist"})
     transactions = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
@@ -361,11 +364,12 @@ def validate_critical_transaction_denial(request, transaction_id):
 @never_cache
 @login_required
 @user_passes_test(can_resolve_internal_transaction)
+@transaction.atomic
 def validate_external_noncritical_transaction_access_request_approval(request, transaction_id):
     user = request.user
     list = get_user_det(user)
     try:
-        internal_transaction = InternalNoncriticalTransaction.objects.get(id=int(transaction_id))
+        internal_transaction = InternalNoncriticalTransaction.objects.select_for_update().get(id=int(transaction_id))
         external_transaction = get_external_noncritical_transaction(internal_transaction)
         initiator = internal_transaction.initiator
     except:
@@ -391,11 +395,12 @@ def validate_external_noncritical_transaction_access_request_approval(request, t
 @never_cache
 @login_required
 @user_passes_test(can_resolve_internal_transaction)
+@transaction.atomic
 def validate_external_noncritical_transaction_access_request_denial(request, transaction_id):
     user = request.user
     list = get_user_det(user)
     try:
-        transaction = InternalNoncriticalTransaction.objects.get(id=transaction_id)
+        transaction = InternalNoncriticalTransaction.objects.select_for_update().get(id=transaction_id)
         if deny_transaction(transaction=transaction, user=user):
             return HttpResponseRedirect(reverse('internal:internal_noncritical_transactions'))
         else:
@@ -437,12 +442,13 @@ def validate_external_user_access_request(request):
 @never_cache
 @login_required
 @user_passes_test(is_administrator)
+@transaction.atomic
 def validate_internal_critical_transaction_access_request_approval(request, transaction_id):
     user = request.user
     success_redirect = "internal:internal_critical_transactions"
     error_redirect = "internal:error"
     try:
-        internal_transaction = InternalCriticalTransaction.objects.get(id=int(transaction_id))
+        internal_transaction = InternalCriticalTransaction.objects.select_for_update().get(id=int(transaction_id))
         initiator = internal_transaction.initiator
     except:
         return HttpResponseRedirect(reverse(error_redirect))
@@ -459,12 +465,13 @@ def validate_internal_critical_transaction_access_request_approval(request, tran
 @never_cache
 @login_required
 @user_passes_test(is_administrator)
+@transaction.atomic
 def validate_internal_critical_transaction_access_request_denial(request, transaction_id):
     user = request.user
     success_redirect = "internal:internal_critical_transactions"
     error_redirect = "internal:error"
     try:
-        internal_transaction = InternalCriticalTransaction.objects.get(id=int(transaction_id))
+        internal_transaction = InternalCriticalTransaction.objects.select_for_update().get(id=int(transaction_id))
         initiator = internal_transaction.initiator
     except:
         return HttpResponseRedirect(reverse(error_redirect))
@@ -481,6 +488,7 @@ def validate_internal_critical_transaction_access_request_denial(request, transa
 @never_cache
 @login_required
 @user_passes_test(is_regular_employee)
+@transaction.atomic
 def validate_internal_noncritical_transaction_request(request, transaction_id):
     user = request.user
     try:
@@ -520,13 +528,14 @@ def validate_internal_user_access_request(request):
 @never_cache
 @login_required
 @user_passes_test(can_view_noncritical_transaction)
+@transaction.atomic
 def validate_noncritical_transaction_approval(request, transaction_id):
     user = request.user
     list = get_user_det(user)
     success_page = 'internal/noncritical_transactions.html'
     success_page_reverse = 'internal:noncritical_transactions'
     try:
-        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.get(id=transaction_id)
+        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.select_for_update().get(id=transaction_id)
     except:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Transaction does not exist"})
     transactions = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
@@ -541,13 +550,14 @@ def validate_noncritical_transaction_approval(request, transaction_id):
 @never_cache
 @login_required
 @user_passes_test(can_view_noncritical_transaction)
+@transaction.atomic
 def validate_noncritical_transaction_denial(request, transaction_id):
     user = request.user
     list = get_user_det(user)
     success_page = 'internal/noncritical_transactions.html'
     success_page_reverse = 'internal:noncritical_transactions'
     try:
-        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.get(id=transaction_id)
+        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.select_for_update().get(id=transaction_id)
     except:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Transaction does not exist"})
     transactions = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
