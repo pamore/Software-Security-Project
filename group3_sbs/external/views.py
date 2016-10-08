@@ -1,3 +1,4 @@
+import logging
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -10,7 +11,7 @@ from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, create_transaction_external_user_profile_edit_request, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_permission_to_edit_profile, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, STATES, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
-from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest
+from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest, IndividualCustomer
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 
@@ -488,15 +489,70 @@ def request_payment(request):
 @user_passes_test(is_external_user)
 def addPaymentRequestToDB(request):
     user = request.user
-    payment_amount = request.POST['payment_amount']
-    accountType = request.POST['account_type']
-    clientAccountNum = request.POST['account_number']
-    clientRoutingNum = request.POST['route_number']
-    merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
-    paymentRequest = MerchantPaymentRequest.objects.create(merchantCheckingsAccountNum = merchantCheckingsAccountNum,accountType = accountType, clientAccountNum=clientAccountNum, clientRoutingNum = clientAccountNum,requestAmount=payment_amount)
-    paymentRequest.save()
-    return render(request, 'external/requestPayment.html',
-                  {'checking_account': user.merchantorganization.checking_account})
+    flag = "null"
+    payment_amount1 = int(str(request.POST['payment_amount']))
+    accountType = str(request.POST['account_type'])
+    clientAccountNum = int(str(request.POST['account_number']))
+    clientRoutingNum = long(str(request.POST['route_number']))
+    clientAccountRecord = None
+    log = logging.getLogger('logging.FileHandler')
+    if(accountType == 'Checking'):
+        client_CA_rowset = CheckingAccount.objects.all().filter(id=clientAccountNum)
+        rowset_length = len(client_CA_rowset)
+        client_IC_object = IndividualCustomer.objects.all().filter(checking_account_id=clientAccountNum)
+        condition1 = (len(client_IC_object) > 0)
+        condition2 = (len(client_CA_rowset) > 0)
+        condition3 = False
+        if condition2:
+            client_CA_object = client_CA_rowset[0]
+            condition3 = (client_CA_object.routing_number == clientRoutingNum)
+        if (condition1 and condition2 and condition3):
+            merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+            paymentRequest = MerchantPaymentRequest.objects.create(merchantCheckingsAccountNum=merchantCheckingsAccountNum,
+                                                               accountType=accountType,
+                                                               clientAccountNum=clientAccountNum,
+                                                               clientRoutingNum=clientAccountNum,
+                                                               requestAmount=payment_amount1)
+            paymentRequest.save()
+            flag = "request saved successfully"
+            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
+            return render(request, 'external/requestPayment.html',
+                      {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+        else:
+            flag="invalid customer account details"
+            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
+            return render(request, 'external/requestPayment.html',
+              {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+
+    if(accountType == 'Savings'):
+        client_SA_rowset = SavingsAccount.objects.all().filter(id=clientAccountNum)
+        rowset_length = len(client_SA_rowset)
+        client_IC_object = IndividualCustomer.objects.all().filter(savings_account_id=clientAccountNum)
+        condition1 = (len(client_IC_object)>0)
+        condition2 = (len(client_SA_rowset)>0)
+        condition3 = False
+        if condition2:
+            client_SA_object = client_SA_rowset[0]
+            condition3 = (client_SA_object.routing_number == clientRoutingNum)
+        if (condition1 and condition2 and condition3 ):
+            merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+            paymentRequest = MerchantPaymentRequest.objects.create(
+                merchantCheckingsAccountNum=merchantCheckingsAccountNum,
+                accountType=accountType,
+                clientAccountNum=clientAccountNum,
+                clientRoutingNum=clientAccountNum,
+                requestAmount=payment_amount1)
+            paymentRequest.save()
+            flag = "request saved successfully"
+            log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
+            return render(request, 'external/requestPayment.html',
+                          {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+        else:
+            flag = "invalid customer account details"
+            log.info("Request from merchant " + str(
+                user.merchantorganization.checking_account_id) + " Reject invalid details")
+            return render(request, 'external/requestPayment.html',
+                          {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
 
 # Show payment Requests
@@ -523,7 +579,7 @@ def update_approvals(request):
     transaction.delete()
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
-    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
     return render(request, 'external/showPaymentRequests.html',
                   {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
