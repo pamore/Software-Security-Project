@@ -15,7 +15,6 @@
 {% block content %}
 <h1>Password Reset</h1>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-
 <form action="{% url 'reset:resetUser' %}" method="post">
 {% csrf_token %}
 <label for="username">Username</label>

@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number
-from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION
+from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number, validate_account_info, validate_email, validate_password, validate_username
+from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
 
 # Create your views here.
@@ -37,25 +37,28 @@ def createUser(request):
     if DEBUG: print("The createUser function has been called\n")
 
     try:
-        existing_user = get_any_user_profile(request.POST['username'],request.POST['email'])
-        init_user = User.objects.filter(username=request.POST['username'])
+        username = request.POST['username']
+        email = request.POST['email']
+        if not validate_email(email=email) or not validate_username(username=username):
+            return render(request, 'create/create.html', {'error_message': "Username is unavailable.",})
+        existing_user = get_any_user_profile(username, email)
+        init_user = User.objects.filter(username=username)
         reCaptcha = request.POST['g-recaptcha-response']
-
         if(reCaptcha):
             if(existing_user):
                 # if the user already fully exists (e.g. has a full profile)
                 #   return error that username is unavailable
                 if DEBUG: print("The full user profile already exists\n")
-                return render(request, 'create/create.html', {'error_message': "Username is unavailable.",})
+                return render(request, 'create/create.html', {'error_message': "Username not correct. Try another.",})
 
             elif(init_user):
                 # else if the username exists may have a pre-liminary account created (e.g. only a User type)
-                init_email = User.objects.filter(username=request.POST['username'],email=request.POST['email'])
+                init_email = User.objects.filter(username=username,email=email)
                 if(init_email):
                     #   if email matches User email
                     #       resend their password/OTP and tell them to check email
                     #       re-direct them to final account creation
-                    init_email = User.objects.get(username=request.POST['username'],email=request.POST['email'])
+                    init_email = User.objects.get(username=username,email=email)
                     if DEBUG: print("The init user email exists in the system\n")
                     check = send_mail(
                     'Group 3 SBS New Account',
@@ -88,7 +91,7 @@ def createUser(request):
                 #   send email with new account information
                 #   redirect the user
                 if DEBUG: print("Create temporary user account object\n")
-                new_user = User.objects.create_user(username=request.POST['username'],email=request.POST['email'],first_name=otpGenerator(size=13))
+                new_user = User.objects.create_user(username=username,email=email,first_name=otpGenerator(size=OTP_LENGTH))
                 new_user.save()
                 if DEBUG: print("Initial account created and saved\n")
                 check = send_mail(
@@ -129,10 +132,21 @@ def confirmAccount(request):
     #   redirect the user to the account creation page and display message to create a new account
 
     try:
-        existing_user = get_any_user_profile(request.POST['username'],request.POST['email'])
-        init_user = User.objects.filter(username=request.POST['username'])
+        user_type = request.POST['user_type']
+        username = request.POST['username']
+        email = request.POST['email']
+        newPassword =  request.POST['newPassword']
+        confirmPassword = request.POST['confirmPassword']
+        firstname = request.POST['firstname']
+        lastname = request.POST['lastname']
+        address = request.POST['address']
+        city = request.POST['city']
+        state = request.POST['state']
+        zipcode = request.POST['zipcode']
+        personalcode = request.POST['personalcode']
+        existing_user = get_any_user_profile(username,email)
+        init_user = User.objects.filter(username=username)
         reCaptcha = request.POST['g-recaptcha-response']
-
         if DEBUG: print("Checking the reCaptcha\n")
         if(reCaptcha):
             if DEBUG: print("reCaptcha has been entered\n")
@@ -145,16 +159,17 @@ def confirmAccount(request):
             elif(init_user):
                 # else if the username exists may have a pre-liminary account created (e.g. only a User type)
                 if DEBUG: print("Filter for the init user\n")
-                init_email = User.objects.filter(username=request.POST['username'],email=request.POST['email'],first_name=request.POST['otpPassword'])
+                if not validate_account_info(user_type=user_type, username=username, email=email, first_name=firstname, last_name=lastname, address=address, city=city, state=state,zipcode=zipcode, personal_code=personalcode):
+                    return render(request, 'create/confirmAccount.html', {'error_message': "User information not correct.",})
+                init_email = User.objects.filter(username=username,email=email,first_name=request.POST['otpPassword'])
                 if(init_email):
                     if DEBUG: print("Located the init user\n")
-                    if(request.POST['newPassword'] == request.POST['confirmPassword']):
+                    if(newPassword == confirmPassword):
                         if DEBUG: print("The new password and confirm new password match\n")
-
-                        newUser = User.objects.get(username=request.POST['username'],email=request.POST['email'])
-
+                        if not validate_password(newPassword) or not validate_password(confirmPassword):
+                            return render(request, 'create/confirmAccount.html', {'error_message': "Passsword incorrectly formatted.",})
+                        newUser = User.objects.get(username=username,email=email)
                         if DEBUG: print("Save new user\n")
-
                         new_routing = get_new_routing_number()
                         if DEBUG: print("New routing number is %d\n"%(new_routing))
                         checkingaccount = CheckingAccount.objects.create(
@@ -184,18 +199,18 @@ def confirmAccount(request):
                         if DEBUG: print("Create and save credit card\n")
 
                         new_account = None
-                        if(request.POST['user_type'] == INDIVIDUAL_CUSTOMER):
+                        if(user_type == INDIVIDUAL_CUSTOMER):
                             if DEBUG: print("Individual account type\n")
                             individualcustomer = IndividualCustomer.objects.create(
-                                                first_name=request.POST['firstname'],
-                                                last_name=request.POST['lastname'],
-                                                email=request.POST['email'],
-                                                street_address=request.POST['address'],
-                                                city=request.POST['city'],
-                                                state=request.POST['state'],
-                                                zipcode=request.POST['zipcode'],
+                                                first_name=firstname,
+                                                last_name=lastname,
+                                                email=email,
+                                                street_address=address,
+                                                city=city,
+                                                state=state,
+                                                zipcode=zipcode,
                                                 session_key="None",
-                                                ssn=request.POST['personalcode'],
+                                                ssn=personalcode,
                                                 checking_account_id=checkingaccount.id,
                                                 savings_account_id=savingsaccount.id,
                                                 credit_card_id=creditcard.id,
@@ -207,15 +222,15 @@ def confirmAccount(request):
                             #(request.POST['user_type'] == MERCHANT_ORGANIZATION):
                             if DEBUG: print("Merchant account type\n")
                             merchantcustomer = MerchantOrganization.objects.create(
-                                                first_name=request.POST['firstname'],
-                                                last_name=request.POST['lastname'],
-                                                email=request.POST['email'],
-                                                street_address=request.POST['address'],
-                                                city=request.POST['city'],
-                                                state=request.POST['state'],
-                                                zipcode=request.POST['zipcode'],
+                                                first_name=firstname,
+                                                last_name=lastname,
+                                                email=email,
+                                                street_address=address,
+                                                city=city,
+                                                state=state,
+                                                zipcode=zipcode,
                                                 session_key="None",
-                                                business_code=request.POST['personalcode'],
+                                                business_code=personalcode,
                                                 checking_account_id=checkingaccount.id,
                                                 savings_account_id=savingsaccount.id,
                                                 credit_card_id=creditcard.id,
@@ -224,7 +239,7 @@ def confirmAccount(request):
                             if DEBUG: print("Create and save merch. account type\n")
                             new_account = merchantcustomer
 
-                        newUser.set_password(request.POST['newPassword'])
+                        newUser.set_password(newPassword)
                         newUser.email = ""
                         newUser.first_name = ""
                         newUser.save()
@@ -263,4 +278,3 @@ def confirmAccount(request):
     except:
         if DEBUG: print("Threw an exception, did not complete try-block")
         return render(request, 'create/confirmAccount.html')
-

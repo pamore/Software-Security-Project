@@ -11,9 +11,13 @@ https://docs.djangoproject.com/en/1.10/ref/settings/
 """
 
 import os
+import json
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+with open('/var/sbs_config.json') as data_file:
+    CONFIG = json.load(data_file)
 
 
 # Quick-start development settings - unsuitable for production
@@ -193,6 +197,7 @@ USE_TZ = False
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 
+
 # Axes Login settings
 # https://django-axes.readthedocs.io/en/latest/configuration.html
 
@@ -211,6 +216,8 @@ AXES_LOCKOUT_URL = None
 AXES_USERNAME_FORM_FIELD = 'username'
 AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
 AXES_NEVER_LOCKOUT_WHITELIST = False
+
+
 
 # Session settings
 # https://docs.djangoproject.com/en/1.10/topics/http/sessions/

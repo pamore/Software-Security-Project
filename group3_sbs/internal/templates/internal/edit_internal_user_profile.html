@@ -14,17 +14,16 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>Edit {{external_user.username}}'s Profile</h1>
+    <h1>Edit {{internal_user.username}}'s Profile</h1>
   </div>
 </div>
 <div class="row">
   <div class="col-md-12">
-    <form action="{% url 'internal:validate_profile_edit' external_user_id=external_user.id %}" method="post">
+    <form action="{% url 'internal:validate_internal_profile_edit' internal_user_id=internal_user.id %}" method="post">
     {% csrf_token %}
-    <input type="text" class="form-control" name="username" value="{{external_user.username}}" readonly>
+    <input type="text" class="form-control" name="username" value="{{internal_user.username}}" readonly>
     <label for="first_name">First Name</label>
     <input type="text" class="form-control" name="first_name" value="{{profile.first_name}}" required />
-    <!--
     <label for="last_name">Last Name</label>
     <input type="text" class="form-control" name="last_name" value="{{profile.last_name}}" required />
     <label for="street_address">Street Address</label>
@@ -39,7 +38,6 @@
     </select>
     <label for="zipcode">Zipcode</label>
     <input type="text" class="form-control" name="zipcode" value="{{profile.zipcode}}" maxlength="5" required />
-    -->
     <input type="submit" class="btn btn-primary" value="Submit" />
     </form>
   </div>

@@ -41,7 +41,15 @@ $('#icon5').click(function () { $('#keyboard5').getkeyboard().reveal(); });
 {% block content %}
 <h1>Enter Password Reset Confirmation</h1>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-
+<ul>
+  <li>Your password must contain at least 8 characters</li>
+  <li>Your password must contain at least 1 lowercase English character</li>
+  <li>Your password must contain at least 1 uppercase English character</li>
+  <li>Your password must contain at least 1 digit 0 through 9</li>
+  <li>Your password must contain at least 1 special character from the following set: ~ ` ! @ # $ % ^ & * ( ) _ - + = { } [ ] | \ ; : ‘” , < . > ? / </li>
+  <li>Your password cannot be too similar to your other personal information</li>
+  <li>Your password cannot be a commonly used password</li>
+</ul>
 <form action="{% url 'reset:otpUserReset' %}" method="post">
 {% csrf_token %}
 <label for="username">Username</label>

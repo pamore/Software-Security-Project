@@ -56,7 +56,7 @@ $('#icon').click(function () {
               <div class="panel-heading text-center"> <h4>   Login </h4>
            </div>
            <div class="panel-body">
-
+        {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 				<form action="{% url 'login:loginValidate' %}" method="post">
 					{% csrf_token %}
 					<!-- <label for="username">Username</label>-->
@@ -87,8 +87,6 @@ $('#icon').click(function () {
 				    <a class="nav-link" href="{% url 'reset:reset' %}">Forgot Password?<span class="sr-only">(current)</span></a>
 				    <br></br>
 				    <a class="nav-link" href="{% url 'create:create' %}">Create New Account<span class="sr-only">(current)</span></a>
-
-					{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
 					{% endblock %}
 
 				</form>

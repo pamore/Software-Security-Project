@@ -8,8 +8,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
 from group3_sbs.settings import *
-from global_templates.constants import EXPIRATION
-from global_templates.common_functions import validate_user_type, get_user_email, get_any_user_profile, get_user_trusted_keys, trustedDeviceKeyGenerator, otpGenerator
+from global_templates.constants import OTP_EXPIRATION_DATE
+from global_templates.common_functions import validate_password, validate_user_type, validate_username, get_user_email, get_any_user_profile, get_user_trusted_keys, trustedDeviceKeyGenerator, otpGenerator
 from django.core.mail import send_mail
 import datetime
 import time
@@ -29,7 +29,7 @@ TRUSTED_DEVICE_MESSAGE =  "Hello Group3SBS User,\n\r" +\
                           "\n\r"
 
 def send_device_verify_otp(request, profile):
-    if((profile.otp_timestamp + EXPIRATION) >= int(time.time())):
+    if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
         #
         # if user's otpRequested and otpTimestamp < 15 minutes
         #   do not send another OTP until the 15 minutes expires
@@ -98,8 +98,13 @@ def signin(request):
 @watch_login
 def loginValidate(request):
     try:
-        user = authenticate(username=request.POST['username'], password=request.POST['password'])
-        if user is not None and validate_user_type(user, request.POST['user_type']):
+        username = request.POST['username']
+        password = request.POST['password']
+        reCaptcha = request.POST['g-recaptcha-response']
+        user = authenticate(username=username, password=password)
+        if not reCaptcha:
+            raise Exception('Are you a bot? Please fill out Recapchta.')
+        if user is not None and validate_user_type(user, request.POST['user_type']) and validate_username(username=username) and validate_password(password=password):
             login(request, user)
             return HttpResponseRedirect(reverse('login:loggedin'))
         else:
@@ -174,7 +179,7 @@ def deviceVerify(request):
             if DEBUG: print("The username, email, and captcha have been verified\n")
             otpPassword = request.POST['otpPassword']
             if DEBUG: print("OTP code is '%s'\n"%(otpPassword))
-            if((profile.otp_timestamp + EXPIRATION) >= int(time.time())):
+            if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
                 if(profile.otp_pass == otpPassword):
                     if DEBUG: print("Confirmed the user OTP key")
                     trusted_keys = get_user_trusted_keys(profile)
@@ -198,7 +203,7 @@ def deviceVerify(request):
                     if DEBUG: print("Serialized keys '%s'"%(serial_keys))
 
                     profile.trusted_device_keys = serial_keys
-                    profile.otp_timestamp = time.time() - EXPIRATION
+                    profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
                     profile.save()
 
                     if DEBUG: print("Update user profile keys and OTP")

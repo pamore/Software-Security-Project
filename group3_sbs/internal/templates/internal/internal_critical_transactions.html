@@ -23,7 +23,7 @@
 
 <div class="row">
   <div class="col-md-12">
-    <h1>List of all regular employee  requests for external access</h1>
+    <h1>List of Internal Critical Transactions</h1>
   </div>
   <table class="table">
     <thead>
@@ -53,7 +53,14 @@
         <td>Unresolved</td>
         <td>Unresolved</td>
         {% endif %}
-        <td><a class="btn btn-success" href="{% url 'internal:validate_internal_critical_transaction_access_request_approval' transaction_id=transaction.id %}">Approve</a> <a class="btn btn-warning" href="{% url 'internal:validate_internal_critical_transaction_access_request_denial' transaction_id=transaction.id %}">Deny</a></td>
+        <td>
+          <form action="{% url 'internal:validate_internal_critical_transaction_access_request_approval' transaction_id=transaction.id %}" method="post">
+            {% csrf_token %}<input type="submit" class="btn btn-primary" value="Approve" />
+          </form>
+          <form action="{% url 'internal:validate_internal_critical_transaction_access_request_denial' transaction_id=transaction.id %}" method="post">
+            {% csrf_token %}<input type="submit" class="btn btn-warning" value="Deny" />
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>

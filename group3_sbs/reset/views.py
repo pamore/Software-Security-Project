@@ -1,8 +1,9 @@
+from axes.decorators import watch_login
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from global_templates.common_functions import get_any_user_profile, otpGenerator
-from global_templates.constants import EXPIRATION
+from global_templates.common_functions import get_any_user_profile, otpGenerator, validate_email, validate_password, validate_username
+from global_templates.constants import OTP_EXPIRATION_DATE, OTP_LENGTH
 import time
 
 # Create your views here.
@@ -35,7 +36,7 @@ def resetUser(request):
         if(user_otp and reCaptcha):
             if DEBUG: print("The username, email, and captcha have been verified\n")
 
-            if((user_otp.otp_timestamp + EXPIRATION) >= int(time.time())):
+            if((user_otp.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
                 #
                 # if user's otpRequested and otpTimestamp < 15 minutes
                 #   do not send another OTP until the 15 minutes expires
@@ -64,7 +65,7 @@ def resetUser(request):
                 #   set the value of the user's generated OTP
                 #
                 if DEBUG: print("Generate an OTP code\n")
-                user_otp.otp_pass = otpGenerator(size=13)
+                user_otp.otp_pass = otpGenerator(size=OTP_LENGTH)
                 user_otp.otp_timestamp = int(time.time())
                 user_otp.save()
                 if DEBUG: print("OTP pass and timestamp set and saved\n")
@@ -94,12 +95,17 @@ def resetUser(request):
 
 
 # OTP Page
+@watch_login
 def otpUserReset(request):
     if DEBUG: print("The otpUserReset function has been called\n")
 
     try:
-        user_otp = get_any_user_profile(request.POST['username'],request.POST['email'])
+        username = request.POST['username']
+        email = request.POST['email']
         reCaptcha = request.POST['g-recaptcha-response']
+        if not validate_email(email=email) or not validate_username(username=username):
+            return render(request, 'reset/otpReset.html', {'error_message': "Incorrect username and email format",}, status=401)
+        user_otp = get_any_user_profile(username, email)
         if(user_otp and reCaptcha):
             if DEBUG: print("The username, email, and captcha have been verified\n")
             otpPassword = request.POST['otpPassword']
@@ -109,28 +115,29 @@ def otpUserReset(request):
             conPass = request.POST['confirmPassword']
             if DEBUG: print("New password is '%s'\n"%(newPass))
             if DEBUG: print("Confirm password is '%s'\n"%(conPass))
-            if(newPass == conPass):
+            if newPass == conPass:
+                if not validate_password(newPass) or not validate_password(conPass):
+                    return render(request, 'reset/otpReset.html', {'error_message': "New password does not meet requirements",}, status=401)
                 #
                 # if user's otpRequested is False or otpTimestamp > 15 minutes
                 #   This OTP is expired, inform the user to re-submit their password reset request
-                if((user_otp.otp_timestamp + EXPIRATION) >= int(time.time())):
+                if((user_otp.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
                     if(user_otp.otp_pass == otpPassword):
                         if DEBUG: print("Successfully reset the user password")
                         user_otp.user.set_password(newPass)
                         user_otp.user.save()
-                        user_otp.otp_timestamp = time.time() - EXPIRATION
+                        user_otp.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
                         user_otp.save()
                         return render(request, 'reset/otpReset.html', {'error_message': "Succesfully reset account password!",})
                     else:
-                        return render(request, 'reset/otpReset.html', {'error_message': "Incorrect OTP password",})
+                        return render(request, 'reset/otpReset.html', {'error_message': "Incorrect OTP password",}, status=401)
                 else:
-                    return render(request, 'reset/reset.html', {'error_message': "OTP password is expired, re-submit password reset request",})
+                    return render(request, 'reset/reset.html', {'error_message': "OTP password is expired, re-submit password reset request",}, status=401)
             else:
-                return render(request, 'reset/otpReset.html', {'error_message': "New password does not match confirm password",})
+                return render(request, 'reset/otpReset.html', {'error_message': "New password does not match confirm password",}, status=401)
         else:
-            return render(request, 'reset/otpReset.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",})
+            return render(request, 'reset/otpReset.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",}, status=401)
 
-        return render(request, 'reset/otpReset.html', {'error_message': "Error occurred with submission",})
+        return render(request, 'reset/otpReset.html', {'error_message': "Error occurred with submission",}, status=401)
     except:
-        return render(request, 'reset/otpReset.html')
-
+        return render(request, 'reset/otpReset.html', status=401)
