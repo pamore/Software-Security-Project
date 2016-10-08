@@ -141,6 +141,13 @@ def loggedin(request):
         #   send the user an OTP for verifying the device
         #   redirect the user to an OTP device verification page 
 
+        if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
+            return HttpResponseRedirect(reverse('internal:index'))
+        elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
+            return HttpResponseRedirect(reverse('external:index'))
+        else:
+            return HttpResponseRedirect(reverse('login:signout'))
+
         user_email = get_user_email(user)
         profile = get_any_user_profile(user.username, user_email)
         print("Current cookies:")
