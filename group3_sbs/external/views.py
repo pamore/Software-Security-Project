@@ -1,3 +1,4 @@
+import logging
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -494,6 +495,7 @@ def addPaymentRequestToDB(request):
     clientAccountNum = int(str(request.POST['account_number']))
     clientRoutingNum = long(str(request.POST['route_number']))
     clientAccountRecord = None
+    log = logging.getLogger('logging.FileHandler')
     if(accountType == 'Checking'):
         client_CA_rowset = CheckingAccount.objects.all().filter(id=clientAccountNum)
         rowset_length = len(client_CA_rowset)
@@ -513,10 +515,12 @@ def addPaymentRequestToDB(request):
                                                                requestAmount=payment_amount1)
             paymentRequest.save()
             flag = "request saved successfully"
+            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
             return render(request, 'external/requestPayment.html',
                       {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
         else:
             flag="invalid customer account details"
+            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
             return render(request, 'external/requestPayment.html',
               {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
@@ -540,10 +544,13 @@ def addPaymentRequestToDB(request):
                 requestAmount=payment_amount1)
             paymentRequest.save()
             flag = "request saved successfully"
+            log.error("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
         else:
             flag = "invalid customer account details"
+            log.info("Request from merchant " + str(
+                user.merchantorganization.checking_account_id) + " Reject invalid details")
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
