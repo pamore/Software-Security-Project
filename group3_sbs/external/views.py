@@ -13,7 +13,8 @@ from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVIN
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
-
+import M2Crypto
+from M2Crypto import RSA, EVP
 
 # Create your views here.
 
@@ -30,6 +31,13 @@ def index(request):
         return render(request, 'external/index.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+# Certificate Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def certificate(request):
+    return render(request, 'external/certificate.html')
 
 # External Error Page
 @never_cache
@@ -322,6 +330,36 @@ def transfer_email_savings(request):
         return HttpResponseRedirect(reverse('external:error'))
 
 """ Validator Functions for Web Pages """
+
+# Add a certificate
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def add_certificate(request):
+    user = request.user
+    certificate = request.POST['certificate']
+    profile = get_any_user_profile(username=user.username)
+    profile.certificate = str(certificate)
+    profile.save()
+    return HttpResponseRedirect(reverse('external:certificate'))
+
+# Encrypt a message with certificate public key
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def certificate_encrypt(request):
+    user = request.user
+    message = request.POST['message']
+    profile = get_any_user_profile(username=user.username)
+    cert = profile.certificate
+    cert = str(cert)
+    certificate = M2Crypto.X509.load_cert_string(cert)
+    public_key = certificate.get_pubkey()
+    rsa_public_key = public_key.get_rsa()
+    signed = rsa_public_key.public_encrypt(message, M2Crypto.RSA.pkcs1_oaep_padding)
+    signed = unicode(signed, errors='replace')
+    return render(request, 'external/certificate.html', {'encrypted_message': signed})
+
 # Validate Credit Checking Transaction
 @never_cache
 @login_required
