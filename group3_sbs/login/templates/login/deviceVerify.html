@@ -1,0 +1,64 @@
+{% extends "global_templates/sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="{% static 'login/style.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/jquery-ui.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/keyboard.css' %}" />
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-autocomplete.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-typing.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.js' %}"></script>
+<script src="{% static 'global_templates/keyboard/jquery.mousewheel.js' %}"> </script>
+
+<script type="text/javascript">
+$( document ).ready(function() {
+
+$('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+
+// Open keyboard by clicking on icon
+$('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
+$('#icon2').click(function () { $('#keyboard2').getkeyboard().reveal(); });
+$('#icon3').click(function () { $('#keyboard3').getkeyboard().reveal(); });
+
+});
+</script>
+
+{% endblock %}
+
+
+{% block navigation %}
+<li class="nav-item active">
+  <a class="nav-link" href="{% url 'login:signin' %}">Sign-in<span class="sr-only">(current)</span></a>
+</li>
+{% endblock %}
+{% block content %}
+<h1>New Device Verification</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<form action="{% url 'login:deviceVerify' %}" method="post">
+{% csrf_token %}
+<p>You are attempting to login from an unrecognized device, please check your email for a confirmation code to verify your device before login.</p>
+<label for="username">Username</label>
+<div class="form-group"> <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" required />
+	    <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="username" value="" required /> -->
+<label for="email">Email</label>
+<div class="form-group"> <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" required />
+	    <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="email" class="form-control" name="email" value="" required /> -->
+<label for="password">Confirmation Code (OTP)</label>
+<div class="form-group"> <input type="password" id="keyboard3" class="form-control" name="otpPassword" value="" placeholder="OTP Password" required />
+	    <img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="password" class="form-control" name="otpPassword" value="" required /> -->
+<br></br>
+<div class="g-recaptcha" data-sitekey="6LeHWAcUAAAAAL_TtxsIcRhoC3IrD6yKdJNp0E2N"></div>
+<br></br>
+<input type="submit" class="btn btn-default" value="Submit Reset" />
+</form>
+{% endblock %}

@@ -2,12 +2,10 @@ from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from global_templates.common_functions import get_any_user_profile, otpGenerator
+from global_templates.constants import EXPIRATION
 import time
 
 # Create your views here.
-
-# 15 minute expiration time for OTP
-EXPIRATION = 15 * 60
 
 OTP_MESSAGE = "Hello Group3SBS User,\n\r" +\
               "You have recently requested to reset your account password from our reset page.\n\r" +\
@@ -41,7 +39,23 @@ def resetUser(request):
                 #
                 # if user's otpRequested and otpTimestamp < 15 minutes
                 #   do not send another OTP until the 15 minutes expires
-                if DEBUG: print("The current OTP is still valid, do not re-send an OTP until it is expired\n")
+                if DEBUG: print("The current OTP is still valid, re-send current OTP until it is expired\n")
+                check = send_mail(
+                'Group 3 SBS Password OTP',
+                OTP_MESSAGE%(user_otp.otp_pass),
+                'group3sbs@gmail.com',
+                [user_otp.email],
+                fail_silently=False,
+                )
+                if DEBUG: print("Check is %d\n"%(check))
+                while(check == 0):
+                    check = send_mail(
+                    'Group 3 SBS Password OTP',
+                    OTP_MESSAGE%(user_otp.otp_pass),
+                    'group3sbs@gmail.com',
+                    [user_otp.email],
+                    fail_silently=False,
+                    )
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP recently sent, please check email",})
             else:
                 # else e.g.  user's otpRequested and otpTimestamp > 15 minutes or otpRequested is False
@@ -69,7 +83,7 @@ def resetUser(request):
                     'group3sbs@gmail.com',
                     [user_otp.email],
                     fail_silently=False,
-                    )   
+                    )
                 if DEBUG: print("Password reset OTP code has been sent\n")
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP sent, please check email",})
         else:

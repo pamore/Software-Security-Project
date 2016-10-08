@@ -62,3 +62,6 @@ TRANSACTION_TYPE_PAYMENT = "payment"
 TRANSACTION_TYPE_PAYMENT_ON_BEHALF = "payment on behalf"
 TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST = "transaction access request"
 TRANSACTION_TYPE_TRANSFER = "transfer"
+
+# 15 minute expiration time for OTP
+EXPIRATION = 15 * 60
