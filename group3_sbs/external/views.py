@@ -544,7 +544,7 @@ def addPaymentRequestToDB(request):
                 requestAmount=payment_amount1)
             paymentRequest.save()
             flag = "request saved successfully"
-            log.error("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
+            log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
         else:
@@ -579,7 +579,7 @@ def update_approvals(request):
     transaction.delete()
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
-    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
     return render(request, 'external/showPaymentRequests.html',
                   {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
