@@ -16,6 +16,7 @@ from templated_email import send_templated_mail
 import random
 import re
 import string
+import thread
 
 def add_edit_external_user_profile_permission(user):
     if is_external_user(user):
@@ -171,24 +172,26 @@ def commit_transaction(transaction, user):
     else:
         result = False
     if result:
-        pass # remove to test email
-        """
-        recipients = get_all_emails(transaction.participants.all())
-        #send_notification_transaction(subject=TRANSACTION_SUBJECT_APPROVED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_APPROVED, email_template=None, recipients=recipients)
-        send_templated_mail(
-            template_name='transaction_approval',
-            from_email='group3sbs@gmail.com',
-            recipient_list=recipients,
-            context={
-                'username':"user_name",
-            },
-            # Optional:
-            # cc=['cc@example.com'],
-            # bcc=['bcc@example.com'],
-            # headers={'My-Custom-Header':'Custom Value'},
-            # template_prefix="my_emails/",
-            # template_suffix="email",
-        )"""
+        #pass # remove to test email
+        try:
+            recipients = get_all_emails(transaction.participants.all())
+            #send_notification_transaction(subject=TRANSACTION_SUBJECT_APPROVED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_APPROVED, email_template=None, recipients=recipients)
+            thread.start_new_thread(send_templated_mail(
+                template_name='transaction_approval',
+                from_email='group3sbs@gmail.com',
+                recipient_list=recipients,
+                context={
+                    'username':"user_name",
+                },
+                # Optional:
+                # cc=['cc@example.com'],
+                # bcc=['bcc@example.com'],
+                # headers={'My-Custom-Header':'Custom Value'},
+                # template_prefix="my_emails/",
+                # template_suffix="email",
+            ), ())
+        except:
+            pass
     return result
 
 def commit_transaction_credit_or_debit(transaction, user):
@@ -476,24 +479,26 @@ def deny_transaction(transaction, user):
     else:
         result = False
     if result:
-        pass # remove to test email
-        """
-        recipients = get_all_emails(transaction.participants.all())
-        #send_notification_transaction(subject=TRANSACTION_SUBJECT_DENIED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_DENIED, email_template=None, recipients=[get_user_email(transaction.initiator)])
-        send_templated_mail(
-            template_name='transaction_denial',
-            from_email='group3sbs@gmail.com',
-            recipient_list=recipients,
-            context={
-                'username':"user_name",
-            },
-            # Optional:
-            # cc=['cc@example.com'],
-            # bcc=['bcc@example.com'],
-            # headers={'My-Custom-Header':'Custom Value'},
-            # template_prefix="my_emails/",
-            # template_suffix="email",
-        )"""
+        #pass # remove to test email
+        try:
+            recipients = get_all_emails(transaction.participants.all())
+            #send_notification_transaction(subject=TRANSACTION_SUBJECT_DENIED, message=TRANSACTION_MESSAGE, transaction=transaction, status=TRANSACTION_STATUS_DENIED, email_template=None, recipients=[get_user_email(transaction.initiator)])
+            thread.start_new_thread(send_templated_mail(
+                template_name='transaction_denial',
+                from_email='group3sbs@gmail.com',
+                recipient_list=recipients,
+                context={
+                    'username':"user_name",
+                },
+                # Optional:
+                # cc=['cc@example.com'],
+                # bcc=['bcc@example.com'],
+                # headers={'My-Custom-Header':'Custom Value'},
+                # template_prefix="my_emails/",
+                # template_suffix="email",
+            ), ())
+        except:
+            pass
     return result
 
 def deny_transaction_credit_or_debit(transaction, user):
