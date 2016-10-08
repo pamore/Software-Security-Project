@@ -1028,6 +1028,8 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
     else:
         sender_account_ID = request.POST['account_number']
         sender_routing_ID = request.POST['route_number']
+        if not validate_account_number(account_number=sender_account_ID) or not validate_routing_number(routing_number=sender_routing_ID):
+            return HttpResponseRedirect(reverse(error_redirect))
         sender = get_external_user(account_ID=sender_account_ID, routing_ID=sender_routing_ID, account_type=sender_account_type)
         if sender is None:
             return HttpResponseRedirect(reverse(error_redirect))
@@ -1092,6 +1094,8 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     else:
         receiver_account_ID = request.POST['account_number']
         receiver_routing_ID = request.POST['route_number']
+        if not validate_account_number(account_number=receiver_account_ID) or not validate_routing_number(routing_number=receiver_routing_ID):
+            return HttpResponseRedirect(reverse(error_redirect))
         receiver = get_external_user(account_ID=receiver_account_ID, routing_ID=receiver_routing_ID, account_type=receiver_account_type)
         if receiver is None:
             return HttpResponseRedirect(reverse(error_redirect))
@@ -1214,19 +1218,6 @@ def validate_credit_card_number(credit_card_number):
         pass
     return validated
 
-def validate_routing_number(routing_number):
-    validated = False
-    try:
-        number_string = str(routing_number)
-        number_string = number_string.zfill(ROUTING_NUMBER_LENGTH)
-        if len(number_string) == ROUTING_NUMBER_LENGTH:
-            if re.search('^[0-9]+$', number_string):
-                #print('Valid name')
-                validated = True
-    except:
-        pass
-    return validated
-
 def validate_amount(amount):
     if amount > MAX_BALANCE or amount < MIN_BALANCE:
         return False
@@ -1303,6 +1294,19 @@ def validate_profile_change(profile, first_name, last_name, street_address, city
         return True
     else:
         return False
+
+def validate_routing_number(routing_number):
+    validated = False
+    try:
+        number_string = str(routing_number)
+        number_string = number_string.zfill(ROUTING_NUMBER_LENGTH)
+        if len(number_string) == ROUTING_NUMBER_LENGTH:
+            if re.search('^[0-9]+$', number_string):
+                #print('Valid name')
+                validated = True
+    except:
+        pass
+    return validated
 
 def validate_ssn(ssn):
     validate = False

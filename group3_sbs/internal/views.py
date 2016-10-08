@@ -11,6 +11,7 @@ from external.models import ExternalNoncriticalTransaction, ExternalCriticalTran
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
 from global_templates.common_functions import add_view_external_user_permission, can_edit_external_user_page, can_view_noncritical_transaction, can_resolve_internal_transaction, can_resolve_noncritical_transaction, can_view_external_user_page, create_internal_noncritical_transaction, commit_transaction, deny_transaction, does_user_have_external_user_permission, get_any_user_profile, get_external_noncritical_transaction, get_external_user_account, get_user_det, is_administrator, is_external_user, is_individual_customer, is_internal_user, is_merchant_organization, is_regular_employee, is_system_manager, has_no_account, validate_first_name_save, validate_profile_change
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, ADMINISTRATOR, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, PAGE_TO_VIEW_CREDIT_CARD, PAGE_TO_VIEW_CHECKING_ACCOUNT, PAGE_TO_VIEW_EDIT_PROFILE, PAGE_TO_VIEW_PROFILE, PAGE_TO_VIEW_SAVINGS_ACCOUNT, REGULAR_EMPLOYEE, SYSTEM_MANAGER, STATES, TRANSACTION_STATUS_RESOLVED, TRANSACTION_STATUS_UNRESOLVED
+import os
 
 """
                         Render Web Pages
@@ -29,6 +30,49 @@ def index(request):
     elif is_administrator(user):
         return render(request, 'internal/index.html', {'user_type': ADMINISTRATOR, 'first_name': user.administrator.first_name, 'last_name': user.administrator.last_name})
     else:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# External Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_external_log(request):
+    try:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        f = open(dir_path+'/../log/external_log.log', 'r')
+        lines = f.readlines()
+        f.close()
+        return render(request, 'internal/log.html', {'content': lines})
+    except Exception as m:
+        print(m)
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Internal Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_internal_log(request):
+    try:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        f = open(dir_path+'/../log/internal_log.log', 'r')
+        lines = f.readlines()
+        f.close()
+        return render(request, 'internal/log.html', {'content': lines})
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Server Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_server_log(request):
+    try:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        f = open(dir_path+'/../log/server_log.log', 'r')
+        lines = f.readlines()
+        f.close
+        return render(request, 'internal/log.html', {'content': lines})
+    except:
         return HttpResponseRedirect(reverse('internal:error'))
 
 # Internal User Error Page

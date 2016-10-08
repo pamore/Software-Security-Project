@@ -72,6 +72,12 @@
                    <font color="#FF7F50"> Access Internal User Page</font>
                               <a href="{% url 'internal:internal_user_access_request' %}"> &nbsp &nbsp &nbsp View Internal User Page </a>
                 </li>
+                <li>
+                   <font color="#FF7F50"> View Log Page</font>
+                              <a href="{% url 'internal:view_external_log' %}"> &nbsp &nbsp &nbsp View External Log </a>
+                              <a href="{% url 'internal:view_internal_log' %}"> &nbsp &nbsp &nbsp View Internal Log </a>
+                              <a href="{% url 'internal:view_server_log' %}"> &nbsp &nbsp &nbsp View Server Log </a>
+                </li>
                 {% endif %}
             </ul>
         </div>
