@@ -50,7 +50,7 @@ class IndividualCustomer(ExternalEmployee):
     ssn = models.CharField(validators=[MinLengthValidator(9)], max_length=9, unique=True)
 
 class MerchantOrganization(ExternalEmployee):
-    business_code = models.CharField(validators=[MinLengthValidator(2)], max_length=100, unique=True)
+    business_code = models.CharField(validators=[MinLengthValidator(9)], max_length=9, unique=True)
 
 class ExternalNoncriticalTransaction(Transaction):
     pass

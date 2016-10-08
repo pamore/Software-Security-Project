@@ -42,7 +42,6 @@
    Regular Emp: Non-Critical Transactions , External User Profile
 
    -->
-
     <!--Side Navigation Bar Added Start -->
       <div id="wrapper">
         <!-- Sidebar wrapper-->
@@ -51,23 +50,35 @@
                 <li class="sidebar-brand">
                 Menu Options
                 </li>
-
-
                 <li>
                      <font color="#FF7F50"> Access Transactions </font>
                               {% if request.user.systemmanager %}
                               <a href="{% url 'internal:critical_transactions' %}"> &nbsp &nbsp &nbsp External Critical </a>
                               {% endif%}
+                              {% if not request.user.administrator %}
                               <a href="{% url 'internal:noncritical_transactions' %}"> &nbsp &nbsp &nbsp External Non-Critical</a>
-                              {% if request.user.systemmanager %}
+                              {% endif %}
+                              {% if request.user.systemmanager or request.user.administrator %}
                               <a href="{% url 'internal:internal_critical_transactions' %}"> &nbsp &nbsp &nbsp Internal Critical </a>
                               <a href="{% url 'internal:internal_noncritical_transactions' %}"> &nbsp &nbsp &nbsp Internal Non-Critical </a>
-                              {% endif%}
+                              {% endif %}
                 </li>
                 <li>
                    <font color="#FF7F50"> View External User Page</font>
                               <a href="{% url 'internal:external_user_access_request' %}"> &nbsp &nbsp &nbsp View External User Page </a>
                 </li>
+                {% if request.user.administrator %}
+                <li>
+                   <font color="#FF7F50"> Access Internal User Page</font>
+                              <a href="{% url 'internal:internal_user_access_request' %}"> &nbsp &nbsp &nbsp View Internal User Page </a>
+                </li>
+                <li>
+                   <font color="#FF7F50"> View Log Page</font>
+                              <a href="{% url 'internal:view_external_log' %}"> &nbsp &nbsp &nbsp View External Log </a>
+                              <a href="{% url 'internal:view_internal_log' %}"> &nbsp &nbsp &nbsp View Internal Log </a>
+                              <a href="{% url 'internal:view_server_log' %}"> &nbsp &nbsp &nbsp View Server Log </a>
+                </li>
+                {% endif %}
             </ul>
         </div>
        <!-- Side Bar Content -->
