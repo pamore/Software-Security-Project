@@ -23,7 +23,7 @@ TRUSTED_DEVICE_MESSAGE =  "Hello Group3SBS User,\n\r" +\
                           "to verify you trust this device for future logins. This confirmation code has an expiration time of\n\r" +\
                           "15 minutes, after which you will need to attempt logging in again to re-start device verification.\n\r" +\
                           "\n\r" +\
-                          "Your confirmation code is: '%s'\n\r" +\
+                          "Your confirmation code is: %s\n\r" +\
                           "\n\r" +\
                           "Please continue to verify the device by entering the above confirmation code.\n\r" +\
                           "\n\r"

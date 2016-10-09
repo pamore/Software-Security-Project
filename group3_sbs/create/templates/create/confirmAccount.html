@@ -63,7 +63,7 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
   <li>Your password cannot be too similar to your other personal information</li>
   <li>Your password cannot be a commonly used password</li>
 </ul>
-<form action="{% url 'create:confirmAccount' %}" method="post">
+<form action="{% url 'create:confirmAccount' %}" method="post" id="createUserForm">
 {% csrf_token %}
 <label for="username">Username</label>
 <div class="form-group"> <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" required />
@@ -111,8 +111,12 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 </div>
 <!-- <input type="text" class="form-control" name="city" value="" required /> -->
 <label for="state">State</label>
-<div class="form-group"> <input type="text" id="keyboard10" class="form-control" name="state" value="" placeholder="State" required />
-	    <img id="icon10" src="{% static 'global_templates/images/keyboard.png' %}"/>
+<div class="form-group">
+      <select class="form-control" name="state">
+        {% for state in STATES %}
+        <option value="{{state}}">{{state}}</option>
+        {% endfor %}
+      </select>
 </div>
 <!-- <input type="text" class="form-control" name="state" value="" required /> -->
 <label for="zipcode">Zip Code</label>
@@ -125,8 +129,14 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 	    <img id="icon12" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="personalcode" value="" required /> -->
+<label for="personalcode">Optional: Certificate</label>
+<div class="form-group">
+      <textarea class="form form-control" name="certificate" form="createUserForm"></textarea>
+	    <img id="icon12" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
 
 <br></br>
+<label>Select User Type</label>
 <label class="radio-inline"><input type="radio" name="user_type" value="Individual Customer" checked="checked" required >Individual Customer</label>
 <label class="radio-inline"><input type="radio" name="user_type" value="Merchant / Organization" required >Merchant / Organization</label>
 <br></br>

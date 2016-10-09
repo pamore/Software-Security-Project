@@ -30,8 +30,11 @@
             <a class="nav-link" href="{% url 'login:signout' %}">Sign-out</a>
           </li>
           <li class="nav-item">
-              Welcome {{first_name}} {{last_name}}
-               {{user_type}}
+            {% if request.user.individualcustomer %}
+              Welcome {{request.user.individualcustomer.first_name}} {{request.user.individualcustomer.last_name}} Individual Customer
+            {% elif request.user.merchantorganization %}
+            Welcome {{request.user.merchantorganization.first_name}} {{request.user.merchantorganization.last_name}} Merchant / Organization
+            {% endif %}
           </li>
 
         </ul>
@@ -83,33 +86,22 @@
                       <a href="{% url 'external:credit_card' %}" color="#FF7F50">&nbsp &nbsp &nbsp Credit Card</a>
                 </li>
 
-                {% if user_type == "Merchant / Organization" %}
-                <li>
-                  <font color="#FF7F50">Payment on Behalf of Customer</font>
-                  <a href="{% url 'external:payment_on_behalf_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
-                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
-                  <a href="{% url 'external:request_payment' %}">Request Payments</a>
-                </li>
-                <li>
-                  <font color="#FF7F50">Payment on Behalf of Customer Email</font>
-                  <a href="{% url 'external:payment_on_behalf_email_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
-                  <a href="{% url 'external:payment_on_behalf_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
-                </li>
-                {% endif %}
-                {% if user_type == 'Individual Customer'%}
-                <li>
-                    <font color="#FF7F50">View Payment Requests</font>
-                    <a  href="{% url 'external:showPaymentRequests' %}">&nbsp &nbsp &nbsp Payment Requests</a>
-                </li>
-                {% endif %}
-
-                <li>
-                    <font color="#FF7F50"> View/Download Transactions</font>
-                              <a href=""> &nbsp &nbsp &nbsp Checking/Savings</a>
-                              <a href=""> &nbsp &nbsp &nbsp Credit Card </a>
-                </li>
-
-
+            {% if request.user.individualcustomer %}
+            <li>
+                <font color="#FF7F50">Payments on Behalf Requests</font>
+                <a  href="{% url 'external:showPaymentRequests' %}"> &nbsp &nbsp &nbsp View Request</a>
+            </li>
+            {% elif request.user.merchantorganization %}
+            <li>
+                <font color="#FF7F50">Payments on Behalf Requests</font>
+                  <a href="{% url 'external:request_payment' %}"> &nbsp &nbsp &nbsp Make Request</a>
+            </li>
+            {% endif %}
+            <li>
+                <font color="#FF7F50"> View/Download Transactions </font>
+                  <a href="{% url 'external:all_statements' %}"> &nbsp &nbsp &nbsp Checking / Savings  </a>
+                  <a href=""> &nbsp &nbsp &nbsp Credit Card </a>
+            </li>
                  <li>
                     -------
                  <li>

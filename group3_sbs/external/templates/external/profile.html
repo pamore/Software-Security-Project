@@ -43,6 +43,12 @@
         <th>Social Security Number</th>
         <td>{{profile.ssn}}</td>
       </tr>
+      {% if profile.certificate %}
+      <tr>
+        <th>Certificate</th>
+        <td>{{profile.certificate}}</td>
+      </tr>
+      {% endif %}
     </tbody>
     <tfoot>
     </tfoot>

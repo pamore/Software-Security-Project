@@ -9,15 +9,11 @@ from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, create_transaction_external_user_profile_edit_request, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_permission_to_edit_profile, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, STATES, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest, IndividualCustomer
-from global_templates.common_functions import add_external_user_make_critical_transaction, create_debit_or_credit_transaction, credit_or_debit_validate, critical_challenge_response_redirect_page, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_pki_needed, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, otpGenerator, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_email, validate_username
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH, OTP_EXPIRATION_DATE, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
-import M2Crypto
+from global_templates.common_functions import *
+from global_templates.constants import *
 from M2Crypto import RSA, EVP
-import time
+import M2Crypto, time
 
 # Create your views here.
 
@@ -197,6 +193,7 @@ def payment_email_savings(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
+"""
 # Payment on Behalf Checking Page
 @never_cache
 @login_required
@@ -240,6 +237,8 @@ def payment_on_behalf_email_savings(request):
         return render(request, 'external/payment_on_behalf_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+"""
 
 # User Profile View Page
 @never_cache
@@ -335,13 +334,12 @@ def add_certificate(request):
     user = request.user
     certificate = request.POST['certificate']
     profile = get_any_user_profile(username=user.username)
-    profile.certificate = str(certificate)
+    if not validate_certificate(certificate) or not validate_certificate(profile.certificate):
+        profile.certificate = None
+    else:
+        profile.certificate = str(certificate)
     profile.save()
     return HttpResponseRedirect(reverse('external:certificate'))
-
-"""        if (profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time()):
-            pass
-        else:"""
 
 # Render Page for Critical Challenge Response
 @never_cache
@@ -353,9 +351,10 @@ def critical_challenge_response(request, account_type, type_of_transaction):
     error_redirect = 'external:error'
     try:
         profile = get_any_user_profile(username=user.username)
-        profile.otp_pass = otpGenerator(size=OTP_LENGTH)
-        profile.otp_timestamp = int(time.time())
-        profile.save()
+        if (profile.otp_timestamp + OTP_EXPIRATION_DATE) < int(time.time()):
+            profile.otp_pass = otpGenerator(size=OTP_LENGTH)
+            profile.otp_timestamp = int(time.time())
+            profile.save()
     except:
         return HttpResponseRedirect(reverse(error_redirect))
     try:
@@ -372,7 +371,7 @@ def critical_challenge_response(request, account_type, type_of_transaction):
         mail.attach('otp.bin', signed, 'application/x-binary')
         mail.send()
     except:
-        pass
+        return HttpResponseRedirect(reverse(error_redirect))
     return render(request, success_redirect, {'account_type': account_type, 'type_of_transaction': type_of_transaction})
 
 # Validate PKI OTP Critical Challenge Response
@@ -399,11 +398,11 @@ def critical_challenge_response_validate(request, account_type, type_of_transact
                 else:
                     return HttpResponseRedirect(reverse(error_redirect))
             else:
-                return render(request, 'external/critical_challenge_response.html', {'account_type': account_type, 'type_of_transaction': type_of_transaction})
+                return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
         else:
             return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
-        return HttpResponseRedirect(reverse(error_redirect))
+        return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
 
 # Validate Credit Checking Transaction
 @never_cache
@@ -602,12 +601,15 @@ def request_payment(request):
 def addPaymentRequestToDB(request):
     user = request.user
     flag = "null"
-    payment_amount1 = int(str(request.POST['payment_amount']))
+    payment_amount1 = float(request.POST['amount'])
     accountType = str(request.POST['account_type'])
+    type_of_transaction = TRANSACTION_TYPE_PAYMENT_ON_BEHALF
     clientAccountNum = int(str(request.POST['account_number']))
     clientRoutingNum = long(str(request.POST['route_number']))
     clientAccountRecord = None
     log = logging.getLogger('logging.FileHandler')
+    if is_pki_needed(request=request, account_type=accountType, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': accountType, 'type_of_transaction': type_of_transaction}))
     if(accountType == 'Checking'):
         client_CA_rowset = CheckingAccount.objects.all().filter(id=clientAccountNum)
         rowset_length = len(client_CA_rowset)
@@ -628,8 +630,7 @@ def addPaymentRequestToDB(request):
             paymentRequest.save()
             flag = "request saved successfully"
             log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
-            return render(request, 'external/requestPayment.html',
-                      {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+            return HttpResponseRedirect(reverse('external:checking_account'))
         else:
             flag="invalid customer account details"
             log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
@@ -657,8 +658,7 @@ def addPaymentRequestToDB(request):
             paymentRequest.save()
             flag = "request saved successfully"
             log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
-            return render(request, 'external/requestPayment.html',
-                          {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+            return HttpResponseRedirect(reverse('external:checking_account'))
         else:
             flag = "invalid customer account details"
             log.info("Request from merchant " + str(
@@ -686,14 +686,15 @@ def update_approvals(request):
     #add this to transactions of the user
     string_transaction_id = str(request.POST['id'])
     transaction_id = int(string_transaction_id)
-    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
+    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id).first()
+    if not payment_merchant_request_validate(request=request, merchant_request=transaction):
+        return HttpResponseRedirect(reverse('external:error'))
     transaction.delete()
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
-    return render(request, 'external/showPaymentRequests.html',
-                  {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
+    return HttpResponseRedirect(reverse('external:showPaymentRequests'))
 
 # Reject Approvals
 @never_cache
@@ -710,8 +711,7 @@ def reject_approvals(request):
         clientAccountNum=user.individualcustomer.checking_account_id)
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
-    return render(request, 'external/showPaymentRequests.html',
-                  {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
+    return HttpResponseRedirect(reverse('external:showPaymentRequests'))
 
 # View Bank Statements
 @never_cache

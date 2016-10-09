@@ -15,39 +15,16 @@
 <div class="row">
   <div class="col-md-12">
     <h1>Request Payments</h1>
-    <h2> Payments requested will only be credited to checking account</h2>
   </div>
 </div>
-<!--
-{% if checking_account %}
-<table class="table">
-  <thead>
-    <tr>
-      <th>Account Number</th>
-      <th>Routing Number</th>
-      <th>Current Balance</th>
-      <th>Active Balance</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>{{checking_account.id}}</td>
-      <td>{{checking_account.routing_number}}</td>
-      <td>${{checking_account.current_balance}}</td>
-      <td>${{checking_account.active_balance}}</td>
-    </tr>
-  </tbody>
-  <tfoot>
-  </tfoot>
-</table>
--->
-<br />
 
+{% if checking_account %}
+<br />
 <form action="{% url 'external:add_merchantPaymentRequest_toDB' %}" method="post">
 {% csrf_token %}
-<label for="payment_amount">Please enter the request Amount </label>
-<input type="number" class="form-control" name="payment_amount" value="0.00" min="1.00" max="15000" required />
-<label class="radio-inline"><input type="radio" name="account_type" value="Checking" required />Checking</label>
+<label for="amount">Please enter the request Amount </label>
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="9999999.99" required />
+<label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked=checked required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
 <label for="account_number">Please enter your customer account number</label>
