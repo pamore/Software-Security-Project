@@ -6,7 +6,7 @@ from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATIO
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
 
 # Create your views here.
-DEBUG = True
+DEBUG = False
 
 NEW_ACCOUNT_MESSAGE = "Hello New User,\n\r" +\
                       "You have recently requested a new Group3SBS account.\n\r" +\

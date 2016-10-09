@@ -19,6 +19,7 @@ class UserProfile(models.Model):
     session_key = models.CharField(max_length=100)
     otp_pass = models.CharField(validators=[MinLengthValidator(13)], max_length=13, default="")
     otp_timestamp = models.IntegerField(validators=[MinValueValidator(0)], default=0)
+    trusted_device_keys = models.CharField(max_length=110, default="")
 
     # Inner class to define meta attributes about class
     class Meta:

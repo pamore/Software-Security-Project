@@ -45,4 +45,5 @@ urlpatterns = [
     url(r'^profile/edit/$', views.profile_edit, name='profile_edit'),
     url(r'^profile/edit/validate/$', views.profile_edit_validate, name='profile_edit_validate'),
     url(r'^profile/view/$', views.profile, name='profile'),
+    url(r'^account/view/statements/$', views.all_statements, name='all_states'),
 ]

@@ -788,6 +788,12 @@ def get_user_email(user):
     else:
         return ""
 
+def get_user_trusted_keys(user):
+    if(user.trusted_device_keys == ''):
+        return None
+    else:
+        return user.trusted_device_keys.split(';')[:-1]
+
 def has_checking_account(user):
     if is_external_user(user) and is_individual_customer(user) and hasattr(user.individualcustomer, CHECKING_ACCOUNT_ATTRIBUTE):
         return True
@@ -877,6 +883,9 @@ def is_system_manager(user):
 
 def otpGenerator(size=6, chars=string.ascii_letters + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
+
+def trustedDeviceKeyGenerator(size=10, chars=string.ascii_letters + string.digits):
+    return otpGenerator(size, chars)
 
 def parse_transaction_description(transaction_description, type_of_transaction):
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:

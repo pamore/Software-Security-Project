@@ -8,4 +8,5 @@ urlpatterns = [
     url(r'^loggedin/$', views.loggedin, name='loggedin'),
     url(r'^validate/$', views.loginValidate, name='loginValidate'),
     url(r'^locked_out/$', views.lock_out, name='lock_out'),
+    url(r'^deviceVerify/$', views.deviceVerify, name='deviceVerify'),
 ]

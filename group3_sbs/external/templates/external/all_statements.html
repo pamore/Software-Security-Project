@@ -1,0 +1,61 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add stylesheets or javascript here !-->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Navigation here !-->
+{% endblock %}
+
+{% block content %}
+
+{% if error_message %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>{{error_message}}</h1>
+  </div>
+{% endif %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h1>Bank Statement</h1>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Initiator</th>
+        <th>Description</th>
+        <th>Time Created</th>
+        <th>Status</th>
+        <th>Resolver</th>
+        <th>Time Resolved</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{transaction.type_of_transaction}}</td>
+        <td>{{transaction.initiator.username}}</td>
+        <td>{{transaction.description}}</td>
+        <td>{{transaction.time_created}}</td>
+        <td>{{transaction.status}}</td>
+        {% if transaction.resolver %}
+        <td>{{transaction.resolver.username}}</td>
+        <td>{{transaction.time_resolved}}</td>
+        {% else %}
+        <td>Unresolved</td>
+        <td>Unresolved</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}

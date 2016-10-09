@@ -8,9 +8,6 @@ import time
 
 # Create your views here.
 
-# 15 minute expiration time for OTP
-EXPIRATION = OTP_EXPIRATION_DATE
-
 OTP_MESSAGE = "Hello Group3SBS User,\n\r" +\
               "You have recently requested to reset your account password from our reset page.\n\r" +\
               "To continue with resetting your account password please use the provided confirmation code\n\r" +\
@@ -39,11 +36,27 @@ def resetUser(request):
         if(user_otp and reCaptcha):
             if DEBUG: print("The username, email, and captcha have been verified\n")
 
-            if((user_otp.otp_timestamp + EXPIRATION) >= int(time.time())):
+            if((user_otp.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
                 #
                 # if user's otpRequested and otpTimestamp < 15 minutes
                 #   do not send another OTP until the 15 minutes expires
-                if DEBUG: print("The current OTP is still valid, do not re-send an OTP until it is expired\n")
+                if DEBUG: print("The current OTP is still valid, re-send current OTP until it is expired\n")
+                check = send_mail(
+                'Group 3 SBS Password OTP',
+                OTP_MESSAGE%(user_otp.otp_pass),
+                'group3sbs@gmail.com',
+                [user_otp.email],
+                fail_silently=False,
+                )
+                if DEBUG: print("Check is %d\n"%(check))
+                while(check == 0):
+                    check = send_mail(
+                    'Group 3 SBS Password OTP',
+                    OTP_MESSAGE%(user_otp.otp_pass),
+                    'group3sbs@gmail.com',
+                    [user_otp.email],
+                    fail_silently=False,
+                    )
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP recently sent, please check email",})
             else:
                 # else e.g.  user's otpRequested and otpTimestamp > 15 minutes or otpRequested is False
@@ -108,12 +121,12 @@ def otpUserReset(request):
                 #
                 # if user's otpRequested is False or otpTimestamp > 15 minutes
                 #   This OTP is expired, inform the user to re-submit their password reset request
-                if((user_otp.otp_timestamp + EXPIRATION) >= int(time.time())):
+                if((user_otp.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
                     if(user_otp.otp_pass == otpPassword):
                         if DEBUG: print("Successfully reset the user password")
                         user_otp.user.set_password(newPass)
                         user_otp.user.save()
-                        user_otp.otp_timestamp = time.time() - EXPIRATION
+                        user_otp.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
                         user_otp.save()
                         return render(request, 'reset/otpReset.html', {'error_message': "Succesfully reset account password!",})
                     else:
