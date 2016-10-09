@@ -139,7 +139,7 @@ def loggedin(request):
         #       redirect the user to an OTP device verification page
         # else
         #   send the user an OTP for verifying the device
-        #   redirect the user to an OTP device verification page 
+        #   redirect the user to an OTP device verification page
 
         if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
             return HttpResponseRedirect(reverse('internal:index'))

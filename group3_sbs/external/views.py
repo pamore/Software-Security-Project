@@ -601,3 +601,21 @@ def reject_approvals(request):
         clientAccountNum=user.individualcustomer.savings_account_id)
     return render(request, 'external/showPaymentRequests.html',
                   {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
+
+# Validate Debit Savings Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def all_statements(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/all_statements.html',
+                  {'transactions': transactions})

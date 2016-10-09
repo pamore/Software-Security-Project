@@ -42,5 +42,6 @@ urlpatterns = [
     url(r'^account/addPaymentRequestToDB/$', views.addPaymentRequestToDB, name='add_merchantPaymentRequest_toDB'),
     url(r'^account/showPaymentRequests/$', views.showPaymentRequests, name='showPaymentRequests'),
     url(r'^account/update_approvals/$', views.update_approvals, name='update_approvals'),
-    url(r'^account/reject_approvals/$', views.reject_approvals, name='reject_approvals')
+    url(r'^account/reject_approvals/$', views.reject_approvals, name='reject_approvals'),
+    url(r'^account/view/statements/$', views.all_statements, name='all_states'),
 ]
