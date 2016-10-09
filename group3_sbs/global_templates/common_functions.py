@@ -719,6 +719,25 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
                     user = None
         else:
             return user
+    elif account_ID and account_type:
+        if account_type == ACCOUNT_TYPE_CHECKING:
+            try:
+                user = User.objects.get(individualcustomer__checking_account__id=int(account_ID ))
+            except:
+                try:
+                    user = User.objects.get(merchantorganization__checking_account__id=int(account_ID ))
+                except:
+                    user = None
+        elif account_type == ACCOUNT_TYPE_SAVINGS:
+            try:
+                user = User.objects.get(individualcustomer__savings_account__id=int(account_ID ))
+            except:
+                try:
+                    user = User.objects.get(merchantorganization__savings_account__id=int(account_ID ))
+                except:
+                    user = None
+        else:
+            return user
     else:
         return user
     return user
@@ -1023,6 +1042,61 @@ def parse_transaction_description_transfer(transaction_description):
 def payment_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     return payment_or_transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
+def payment_merchant_request_validate(request, merchant_request):
+    sender = request.user
+    receiver_account_ID = merchant_request.merchantCheckingsAccountNum
+    receiver_account_type = ACCOUNT_TYPE_CHECKING
+    sender_account_type = merchant_request.accountType
+    sender_account_ID = merchant_request.clientAccountNum
+    sender_routing_ID = merchant_request.clientRoutingNum
+    amount = float(merchant_request.requestAmount)
+    if not validate_account_number(account_number=sender_account_ID) or not validate_account_number(account_number=receiver_account_ID) or not validate_routing_number(routing_number=sender_routing_ID) :
+        return False
+    sender1 = get_external_user(account_ID=sender_account_ID, account_type=sender_account_type)
+    if sender1 is None or sender1 != sender:
+        return False
+    sender_account = get_external_user_account(user=sender, account_type=sender_account_type)
+    if sender_account is None:
+        return False
+    if sender_account_type == ACCOUNT_TYPE_CHECKING or sender_account_type == ACCOUNT_TYPE_SAVINGS:
+        if is_individual_customer(sender):
+            sender_user_type = INDIVIDUAL_CUSTOMER
+        else:
+            return False
+        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
+        sender_starting_balance = sender_account.active_balance
+        sender_new_balance = float(sender_starting_balance) - amount
+    else:
+        return False
+    if not validate_amount(amount):
+        return False
+    receiver = get_external_user(account_ID=receiver_account_ID, account_type=receiver_account_type)
+    if receiver is None:
+        return False
+    receiver_account = get_external_user_account(user=receiver, account_type=receiver_account_type)
+    if receiver_account is None:
+        return False
+    if is_merchant_organization(receiver):# and receiver_account_type == ACCOUNT_TYPE_CHECKING:
+        receiver_user_type = MERCHANT_ORGANIZATION
+    else:
+        return False
+    receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
+    receiver_starting_balance = receiver_account.active_balance
+    receiver_new_balance = float(receiver_starting_balance) + amount
+    if validate_amount(sender_check) and validate_amount(receiver_check) and not sender.id == receiver.id:
+        sender_account.active_balance = sender_new_balance
+        receiver_account.active_balance = receiver_new_balance
+        sender_account.save()
+        receiver_account.save()
+        create_payment_on_behalf_transaction(sender=sender, senderType=sender_user_type, senderID=sender.id, senderAccountType=sender_account_type, senderAccountID=sender_account.id, senderRoutingID=sender_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
+        return True
+    else:
+        print(sender_check)
+        print(receiver_check)
+        print(sender.id)
+        print(receiver.id)
+        return False
+
 def payment_on_behalf_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     receiver = request.user
     receiver_account_type = account_type
@@ -1036,7 +1110,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
         sender = get_external_user(email=email_address)
         if sender is None:
             return HttpResponseRedirect(reverse(error_redirect))
-        sender_account = get_external_user_account(user=sender, account_type=sender_user_type)
+        sender_account = get_external_user_account(user=sender, account_type=sender_account_type)
         if sender_account is None:
             return HttpResponseRedirect(reverse(error_redirect))
     else:
@@ -1047,7 +1121,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
         sender = get_external_user(account_ID=sender_account_ID, routing_ID=sender_routing_ID, account_type=sender_account_type)
         if sender is None:
             return HttpResponseRedirect(reverse(error_redirect))
-        sender_account = get_external_user_account(user=sender, account_type=sender_user_type)
+        sender_account = get_external_user_account(user=sender, account_type=sender_account_type)
         if sender_account is None:
             return HttpResponseRedirect(reverse(error_redirect))
     if sender_account_type == ACCOUNT_TYPE_CHECKING or sender_account_type == ACCOUNT_TYPE_SAVINGS:
@@ -1086,6 +1160,8 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
             receiver_account.save()
             return HttpResponseRedirect(reverse(error_redirect))
         return HttpResponseRedirect(reverse(success_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 def payment_or_transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     user = request.user
@@ -1162,6 +1238,8 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
             user_account.save()
             receiver_account.save()
             return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
     return HttpResponseRedirect(reverse(success_redirect))
 
 def save_transaction(transaction, user):

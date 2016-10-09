@@ -12,7 +12,7 @@ from external.models import SavingsAccount, CheckingAccount, CreditCard, Externa
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, create_transaction_external_user_profile_edit_request, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_permission_to_edit_profile, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, STATES, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest, IndividualCustomer
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount
+from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_merchant_request_validate, payment_on_behalf_validate, transfer_validate, validate_amount
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 
 
@@ -194,6 +194,7 @@ def payment_email_savings(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
+"""
 # Payment on Behalf Checking Page
 @never_cache
 @login_required
@@ -237,6 +238,8 @@ def payment_on_behalf_email_savings(request):
         return render(request, 'external/payment_on_behalf_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+"""
 
 # User Profile View Page
 @never_cache
@@ -490,7 +493,7 @@ def request_payment(request):
 def addPaymentRequestToDB(request):
     user = request.user
     flag = "null"
-    payment_amount1 = int(str(request.POST['payment_amount']))
+    payment_amount1 = float(request.POST['payment_amount'])
     accountType = str(request.POST['account_type'])
     clientAccountNum = int(str(request.POST['account_number']))
     clientRoutingNum = long(str(request.POST['route_number']))
@@ -516,8 +519,7 @@ def addPaymentRequestToDB(request):
             paymentRequest.save()
             flag = "request saved successfully"
             log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
-            return render(request, 'external/requestPayment.html',
-                      {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+            return HttpResponseRedirect(reverse('external:checking_account'))
         else:
             flag="invalid customer account details"
             log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
@@ -545,15 +547,13 @@ def addPaymentRequestToDB(request):
             paymentRequest.save()
             flag = "request saved successfully"
             log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
-            return render(request, 'external/requestPayment.html',
-                          {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+            return HttpResponseRedirect(reverse('external:checking_account'))
         else:
             flag = "invalid customer account details"
             log.info("Request from merchant " + str(
                 user.merchantorganization.checking_account_id) + " Reject invalid details")
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
-
 
 # Show payment Requests
 @never_cache
@@ -575,14 +575,15 @@ def update_approvals(request):
     #add this to transactions of the user
     string_transaction_id = str(request.POST['id'])
     transaction_id = int(string_transaction_id)
-    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
+    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id).first()
+    if not payment_merchant_request_validate(request=request, merchant_request=transaction):
+        return HttpResponseRedirect(reverse('external:error'))
     transaction.delete()
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
-    return render(request, 'external/showPaymentRequests.html',
-                  {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
+    return HttpResponseRedirect(reverse('external:showPaymentRequests'))
 
 # Reject Approvals
 @never_cache

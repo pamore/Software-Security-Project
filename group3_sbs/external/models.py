@@ -63,5 +63,4 @@ class MerchantPaymentRequest(models.Model):
     accountType = models.CharField(max_length=30)
     clientAccountNum = models.IntegerField()
     clientRoutingNum = models.IntegerField()
-    requestAmount = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=6, decimal_places=2)
-
+    requestAmount = models.DecimalField(validators=[MinValueValidator(0.00)], max_digits=9, decimal_places=2)

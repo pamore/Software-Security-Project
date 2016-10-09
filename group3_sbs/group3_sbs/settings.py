@@ -17,6 +17,7 @@ import json
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 with open('./var/sbs_config.json') as data_file:
+#with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
 
 
@@ -151,7 +152,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'group3_sbs',
         'USER': 'root',
-        'PASSWORD': '',
+        'PASSWORD': CONFIG['database_password'],
         'HOST': 'localhost',
         'PORT': '3306',
     }

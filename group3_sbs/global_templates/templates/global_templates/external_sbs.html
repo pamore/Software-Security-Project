@@ -83,37 +83,22 @@
                       <a href="{% url 'external:credit_card' %}" color="#FF7F50">&nbsp &nbsp &nbsp Credit Card</a>
                 </li>
 
-                {% if user_type == "Merchant / Organization" %}
-                <li>
-                  <font color="#FF7F50">Payment on Behalf of Customer</font>
-                  <a href="{% url 'external:payment_on_behalf_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
-                  <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
-                </li>
-                <li>
-                  <font color="#FF7F50">Payment on Behalf of Customer Email</font>
-                  <a href="{% url 'external:payment_on_behalf_email_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
-                  <a href="{% url 'external:payment_on_behalf_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
-                </li>
-                {% endif %}
-
-            {% if user_type == 'Individual Customer'%}
+            {% if request.user.individualcustomer %}
             <li>
-                <a  href="{% url 'external:showPaymentRequests' %}">  Approve Payment Requests</a>
+                <font color="#FF7F50">Payments on Behalf Requests</font>
+                <a  href="{% url 'external:showPaymentRequests' %}"> &nbsp &nbsp &nbsp View Request</a>
+            </li>
+            {% elif request.user.merchantorganization %}
+            <li>
+                <font color="#FF7F50">Payments on Behalf Requests</font>
+                  <a href="{% url 'external:request_payment' %}"> &nbsp &nbsp &nbsp Make Request</a>
             </li>
             {% endif %}
-
-            {% if user_type != 'Individual Customer'%}
             <li>
-                <a href="{% url 'external:request_payment' %}">Request Payments</a>
+                <font color="#FF7F50"> View/Download Transactions </font>
+                  <a href="{% url 'external:all_statements' %}"> &nbsp &nbsp &nbsp Checking / Savings  </a>
+                  <a href=""> &nbsp &nbsp &nbsp Credit Card </a>
             </li>
-            {% endif %}
-
-
-                <li>
-                    <font color="#FF7F50"> View/Download Transactions(p) </font>
-                              <a href=""> &nbsp &nbsp &nbsp Savings/Checking Transactions  </a>
-                              <a href=""> &nbsp &nbsp &nbsp Credit Card </a>
-                </li>
 
 
                  <li>
