@@ -88,6 +88,7 @@
                   <font color="#FF7F50">Payment on Behalf of Customer</font>
                   <a href="{% url 'external:payment_on_behalf_checking' %}"> &nbsp &nbsp &nbsp Checking Account</a>
                   <a href="{% url 'external:payment_on_behalf_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
+                  <a href="{% url 'external:request_payment' %}">Request Payments</a>
                 </li>
                 <li>
                   <font color="#FF7F50">Payment on Behalf of Customer Email</font>
@@ -95,22 +96,16 @@
                   <a href="{% url 'external:payment_on_behalf_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
                 </li>
                 {% endif %}
-            {% if user_type == 'Individual Customer'%}
-            <li>
-                <a  href="{% url 'external:showPaymentRequests' %}">  Approve Payment Requests</a>
-            </li>
-            {% endif %}
-
-            {% if user_type != 'Individual Customer'%}
-            <li>
-                <a href="{% url 'external:request_payment' %}">Request Payments</a>
-            </li>
-            {% endif %}
-
+                {% if user_type == 'Individual Customer'%}
+                <li>
+                    <font color="#FF7F50">View Payment Requests</font>
+                    <a  href="{% url 'external:showPaymentRequests' %}">&nbsp &nbsp &nbsp Payment Requests</a>
+                </li>
+                {% endif %}
 
                 <li>
-                    <font color="#FF7F50"> View/Download Transactions(p) </font>
-                              <a href=""> &nbsp &nbsp &nbsp Savings/Checking Transactions  </a>
+                    <font color="#FF7F50"> View/Download Transactions</font>
+                              <a href=""> &nbsp &nbsp &nbsp Checking/Savings</a>
                               <a href=""> &nbsp &nbsp &nbsp Credit Card </a>
                 </li>
 

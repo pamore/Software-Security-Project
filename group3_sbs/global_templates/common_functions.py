@@ -41,6 +41,29 @@ def add_edit_external_user_profile_permission(user):
     else:
         return False
 
+def add_external_user_make_critical_transaction(user, account_type, type_of_transaction):
+    if is_external_user(user):
+        try:
+            if is_individual_customer(user):
+                content_type = ContentType.objects.get_for_model(IndividualCustomer)
+            else:
+                content_type = ContentType.objects.get_for_model(MerchantOrganization)
+            permission_codename = 'can_external_user_' + str(user.id) + '_make_critical_' + type_of_transaction + "_transaction_for_" + account_type
+            permission_name = "Can external user " + str(user.id) + " make critical " + type_of_transaction + " transaction for " + account_type + " account"
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    else:
+        return False
+
 def add_internal_edit_external_user_profile_permission(user, external_user):
     if is_regular_employee(user):
         try:
@@ -419,9 +442,9 @@ def create_transfer_transaction(sender, senderType, senderID, senderAccountType,
 def credit_or_debit_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     user = request.user
     if type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        amount = float(request.POST['credit_amount'])
+        amount = float(request.POST['amount'])
     if type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        amount = float(request.POST['debit_amount'])
+        amount = float(request.POST['amount'])
     if not validate_amount(amount):
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING:
@@ -461,6 +484,30 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
     else:
         return HttpResponseRedirect(reverse(error_redirect))
     return HttpResponseRedirect(reverse(success_redirect))
+
+def critical_challenge_response_redirect_page(account_type, type_of_transaction):
+    redirect = None
+    if account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        redirect = "external:credit_checking"
+    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        redirect = "external:credit_savings"
+    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        redirect = "external:debit_checking"
+    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        redirect = "external:debit_savings"
+    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        redirect = "external:payment_checking"
+    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        redirect = "external:payment_savings"
+    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
+        redirect = "external:payment_on_behalf_checking"
+    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
+        redirect = "external:payment_on_behalf_savings"
+    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        redirect = "external:transfer_checking"
+    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        redirect = "external:transfer_savings"
+    return redirect
 
 def deny_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
@@ -869,6 +916,30 @@ def is_merchant_organization(user):
     else:
         return False
 
+def is_pki_needed(request, account_type, type_of_transaction):
+    try:
+        user = request.user
+        amount = float(request.POST['amount'])
+        if validate_amount(amount):
+            permission_codename = 'can_external_user_' + str(user.id) + '_make_critical_' + type_of_transaction + "_transaction_for_" + account_type
+            permission = Permission.objects.filter(codename=permission_codename).first()
+            permission_codename = 'external.' + permission_codename
+            if amount > NONCRITICAL_TRANSACTION_LIMIT and (permission is None or not user.has_perm(permission_codename)):
+                profile = get_any_user_profile(username=user.username)
+                if not profile.certificate is None:
+                    return True
+                else:
+                    return False
+            else:
+                if user.has_perm(permission_codename):
+                    user.user_permissions.remove(permission)
+                    user.save()
+                return False
+        else:
+            return False
+    except:
+        return False
+
 def is_regular_employee(user):
     if is_internal_user(user) and hasattr(user, REGULAR_EMPLOYEE_ATTRIBUTE):
         return True
@@ -1028,7 +1099,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
     receiver_account_type = account_type
     sender_account_type = request.POST['account_type']
     if type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
-        amount = float(request.POST['payment_on_behalf_amount'])
+        amount = float(request.POST['amount'])
     else:
         return HttpResponseRedirect(reverse(error_redirect))
     if request.POST.get('email_address'):
@@ -1092,9 +1163,9 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     sender_account_type = account_type
     receiver_account_type = request.POST['account_type']
     if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
-        amount = float(request.POST['payment_amount'])
+        amount = float(request.POST['amount'])
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
-        amount = float(request.POST['transfer_amount'])
+        amount = float(request.POST['amount'])
     else:
         return HttpResponseRedirect(reverse(error_redirect))
     if request.POST.get('email_address'):

@@ -1,0 +1,30 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Please decrypt the OTP with your private key</h1>
+    <form action="{% url 'external:critical_challenge_response_validate' account_type=account_type type_of_transaction=type_of_transaction %}" method="post">
+    {% csrf_token %}
+    <label for="username">Username</label>
+    <input type="text" class="form-control" name="username" value="" required />
+    <label for="email">Email</label>
+    <input type="email" class="form-control" name="email" value="" required />
+    <label for="opt">Decrypted OTP</label>
+    <input type="text" class="form-control" name="otp" value="" required />
+    <input type="submit" class="btn btn-primary" value="Submit" />
+    </form>
+  </div>
+</div>
+{% endblock %}

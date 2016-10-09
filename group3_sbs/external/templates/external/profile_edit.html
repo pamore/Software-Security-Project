@@ -55,14 +55,6 @@
     {% endif %}
     <input type="submit" class="form form-control" value="submit"/>
     </form>
-
-    <form action="{% url 'external:certificate_encrypt' %}" id=encryptCertificateForm method="post">
-    {% csrf_token %}
-    <label for="message">Enter a message to encrypt</label>
-    <input type="text" name="message" class="form form-control" value="" />
-    <input name="submit" type="submit" class="form form-control" value="submit"/>
-    </form>
-    <p><strong>Encrypted Message:</strong> {{encrypted_message}}</p>
   </div>
 </div>
 {% endblock %}

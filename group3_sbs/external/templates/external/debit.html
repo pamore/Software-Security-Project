@@ -44,8 +44,8 @@
 
 <form action="{% url 'external:debit_checking_validate' %}" method="post">
 {% csrf_token %}
-<label for="debit_amount">Please enter an amount to debit from account less than or equal to ${{amount_limit}}</label>
-<input type="number" class="form-control" name="debit_amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<label name="amount">Please enter an amount to debit from account less than or equal to ${{amount_limit}}</label>
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <input type="submit" class="btn btn-default" value="Submit" />
 </form>
 
@@ -77,8 +77,8 @@
 
 <form action="{% url 'external:debit_savings_validate' %}" method="post">
 {% csrf_token %}
-<label for="debit_amount">Please enter an amount to debit from account less than or equal to ${{amount_limit}}</label>
-<input type="number" class="form-control" name="debit_amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<label for="amount">Please enter an amount to debit from account less than or equal to ${{amount_limit}}</label>
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <input type="submit" class="btn btn-default" value="Submit" />
 </form>
 

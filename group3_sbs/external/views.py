@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Permission
+from django.core.mail import send_mail, EmailMessage
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template import loader
 from django.shortcuts import render
@@ -12,10 +13,11 @@ from external.models import SavingsAccount, CheckingAccount, CreditCard, Externa
 from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, create_transaction_external_user_profile_edit_request, get_any_user_profile, has_checking_account, has_credit_card, has_no_account, has_permission_to_edit_profile, has_savings_account, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_profile_change
 from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, STATES, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest, IndividualCustomer
-from global_templates.common_functions import create_debit_or_credit_transaction, credit_or_debit_validate, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount
-from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
+from global_templates.common_functions import add_external_user_make_critical_transaction, create_debit_or_credit_transaction, credit_or_debit_validate, critical_challenge_response_redirect_page, is_administrator, is_external_user, is_individual_customer, is_merchant_organization, is_pki_needed, is_regular_employee, is_system_manager, has_checking_account, has_credit_card, has_no_account, has_savings_account, otpGenerator, payment_validate, payment_on_behalf_validate, transfer_validate, validate_amount, validate_email, validate_username
+from global_templates.constants import ACCOUNT_TYPE_CHECKING, ACCOUNT_TYPE_SAVINGS, INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH, OTP_EXPIRATION_DATE, TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_PAYMENT_ON_BEHALF, TRANSACTION_TYPE_TRANSFER
 import M2Crypto
 from M2Crypto import RSA, EVP
+import time
 
 # Create your views here.
 
@@ -337,22 +339,71 @@ def add_certificate(request):
     profile.save()
     return HttpResponseRedirect(reverse('external:certificate'))
 
-# Encrypt a message with certificate public key
+"""        if (profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time()):
+            pass
+        else:"""
+
+# Render Page for Critical Challenge Response
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def certificate_encrypt(request):
+def critical_challenge_response(request, account_type, type_of_transaction):
     user = request.user
-    message = request.POST['message']
-    profile = get_any_user_profile(username=user.username)
-    cert = profile.certificate
-    cert = str(cert)
-    certificate = M2Crypto.X509.load_cert_string(cert)
-    public_key = certificate.get_pubkey()
-    rsa_public_key = public_key.get_rsa()
-    signed = rsa_public_key.public_encrypt(message, M2Crypto.RSA.pkcs1_oaep_padding)
-    signed = unicode(signed, errors='replace')
-    return render(request, 'external/certificate.html', {'encrypted_message': signed})
+    success_redirect = 'external/critical_challenge_response.html'
+    error_redirect = 'external:error'
+    try:
+        profile = get_any_user_profile(username=user.username)
+        profile.otp_pass = otpGenerator(size=OTP_LENGTH)
+        profile.otp_timestamp = int(time.time())
+        profile.save()
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    try:
+        message = 'Hi, ' + user.username + '!\nPlease decrypt the following string using your private key and submit the decrypted value to the site. It is padded with oeap.\n'
+        message = message + 'Use a command like this to extract it. Assuming you have openssl installed and your private_key is called private_key.pem in the PEM format and all files are in the same directory:\n'
+        message = message + "openssl rsautl -oaep -decrypt -in otp.bin -out output.txt -inkey private_key.pem -keyform PEM\necho `cat output.txt`"
+        cert = profile.certificate
+        cert = str(cert)
+        certificate = M2Crypto.X509.load_cert_string(cert)
+        public_key = certificate.get_pubkey()
+        rsa_public_key = public_key.get_rsa()
+        signed = rsa_public_key.public_encrypt(profile.otp_pass, M2Crypto.RSA.pkcs1_oaep_padding)
+        mail = EmailMessage("CSE545 Group3 SBS Critical Challenge Response", message,'group3sbs@gmail.com',[profile.email])
+        mail.attach('otp.bin', signed, 'application/x-binary')
+        mail.send()
+    except:
+        pass
+    return render(request, success_redirect, {'account_type': account_type, 'type_of_transaction': type_of_transaction})
+
+# Validate PKI OTP Critical Challenge Response
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def critical_challenge_response_validate(request, account_type, type_of_transaction):
+    user = request.user
+    username = request.POST['username']
+    email = request.POST['email']
+    otp = request.POST['otp']
+    success_redirect = 'external'
+    error_redirect = 'external:error'
+    reset_otp_redirect = 'external:critical_challenge_response'
+    if validate_username(username=username) and validate_email(email=email) and username == user.username:
+        profile = get_any_user_profile(email=email, username=username)
+        if profile and (profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time()):
+            if profile.otp_pass == otp :
+                profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
+                profile.save()
+                if add_external_user_make_critical_transaction(user=user, account_type=account_type, type_of_transaction=type_of_transaction):
+                    success_redirect = critical_challenge_response_redirect_page(account_type=account_type, type_of_transaction=type_of_transaction)
+                    return HttpResponseRedirect(reverse(success_redirect))
+                else:
+                    return HttpResponseRedirect(reverse(error_redirect))
+            else:
+                return render(request, 'external/critical_challenge_response.html', {'account_type': account_type, 'type_of_transaction': type_of_transaction})
+        else:
+            return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # Validate Credit Checking Transaction
 @never_cache
@@ -364,7 +415,10 @@ def credit_checking_validate(request):
     account_type = ACCOUNT_TYPE_CHECKING
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Credit Savings Transaction
 @never_cache
@@ -376,7 +430,10 @@ def credit_savings_validate(request):
     account_type = ACCOUNT_TYPE_SAVINGS
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Debit Checking Transaction
 @never_cache
@@ -388,7 +445,10 @@ def debit_checking_validate(request):
     account_type = ACCOUNT_TYPE_CHECKING
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Debit Savings Transaction
 @never_cache
@@ -400,7 +460,10 @@ def debit_savings_validate(request):
     account_type = ACCOUNT_TYPE_SAVINGS
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
-    return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Payment Checking Transaction
 @never_cache
@@ -412,7 +475,10 @@ def payment_checking_validate(request):
     account_type = ACCOUNT_TYPE_CHECKING
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
-    return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Payment Savings Transaction
 @never_cache
@@ -424,7 +490,10 @@ def payment_savings_validate(request):
     account_type = ACCOUNT_TYPE_SAVINGS
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
-    return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Payment Checking Transaction
 @never_cache
@@ -436,7 +505,10 @@ def payment_on_behalf_checking_validate(request):
     account_type = ACCOUNT_TYPE_CHECKING
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
-    return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Payment Savings Transaction
 @never_cache
@@ -448,7 +520,10 @@ def payment_on_behalf_savings_validate(request):
     account_type = ACCOUNT_TYPE_SAVINGS
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
-    return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Profile Edit Page
 @never_cache
@@ -491,7 +566,10 @@ def transfer_checking_validate(request):
     account_type = ACCOUNT_TYPE_CHECKING
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
-    return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Transfer Savings Transaction
 @never_cache
@@ -503,7 +581,10 @@ def transfer_savings_validate(request):
     account_type = ACCOUNT_TYPE_SAVINGS
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
-    return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
+    if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Redirect to Request Payment web page
 @never_cache
@@ -585,7 +666,6 @@ def addPaymentRequestToDB(request):
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
-
 # Show payment Requests
 @never_cache
 @login_required
@@ -633,7 +713,7 @@ def reject_approvals(request):
     return render(request, 'external/showPaymentRequests.html',
                   {'checkingRequests': checkingRequests, 'savingRequests': savingRequests})
 
-# Validate Debit Savings Transaction
+# View Bank Statements
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
