@@ -41,7 +41,6 @@ urlpatterns = [
     url(r'^error/$', views.error, name='error'),
     url(r'^profile/certificate/add/$', views.add_certificate, name='add_certificate'),
     url(r'^profile/certificate/encrypt/$', views.certificate_encrypt, name='certificate_encrypt'),
-    url(r'^profile/certificate/view/$', views.certificate, name='certificate'),
     url(r'^profile/edit/$', views.profile_edit, name='profile_edit'),
     url(r'^profile/edit/validate/$', views.profile_edit_validate, name='profile_edit_validate'),
     url(r'^profile/view/$', views.profile, name='profile'),

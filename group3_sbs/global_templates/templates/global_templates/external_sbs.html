@@ -95,10 +95,6 @@
                   <a href="{% url 'external:payment_on_behalf_email_savings' %}"> &nbsp &nbsp &nbsp Savings Account</a>
                 </li>
                 {% endif %}
-                <li>
-                  <font color="#FF7F50">Certificate</font>
-                  <a href="{% url 'external:certificate' %}"> &nbsp &nbsp &nbsp View Certificate</a>
-                </li>
             {% if user_type == 'Individual Customer'%}
             <li>
                 <a  href="{% url 'external:showPaymentRequests' %}">  Approve Payment Requests</a>

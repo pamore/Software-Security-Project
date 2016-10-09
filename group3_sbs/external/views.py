@@ -33,13 +33,6 @@ def index(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
-# Certificate Page
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def certificate(request):
-    return render(request, 'external/certificate.html')
-
 # External Error Page
 @never_cache
 @login_required
