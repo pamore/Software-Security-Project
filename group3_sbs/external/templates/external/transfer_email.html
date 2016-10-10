@@ -44,7 +44,7 @@
 <form action="{% url 'external:transfer_checking_validate' %}" method="post">
 {% csrf_token %}
 <p>Send by Specifying Email Address </p>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<input type="number" class="form-control" name="transfer_amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
@@ -82,7 +82,7 @@
 <form action="{% url 'external:transfer_savings_validate' %}" method="post">
 {% csrf_token %}
 <p>Send by Specifying Email Address </p>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<input type="number" class="form-control" name="transfer_amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />

@@ -12,7 +12,6 @@
 {% endblock %}
 
 {% block content %}
-<!--
 <div class="row">
   <div class="col-md-12">
     <h1>Payment on behalf of an Individual Customer from your {{account_type}} Account</h1>
@@ -45,7 +44,7 @@
 <form action="{% url 'external:payment_on_behalf_checking_validate' %}" method="post">
 {% csrf_token %}
 <p> Send by Specifying Email Address </p>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="9999999.99" required />
+<input type="number" class="form-control" name="payment_on_behalf_amount" value="0.00" min="0.00" max="9999999.99" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
@@ -83,7 +82,7 @@
 <form action="{% url 'external:payment_on_behalf_savings_validate' %}" method="post">
 {% csrf_token %}
 <p> Send by Specifying Email Address </p>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="9999999.99"
+<input type="number" class="form-control" name="payment_on_behalf_amount" value="0.00" min="0.00" max="9999999.99"
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
@@ -93,5 +92,5 @@
 </form>
 
 {% endif %}
--->
+
 {% endblock %}

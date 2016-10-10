@@ -1,4 +1,4 @@
-from global_templates.constants import TRANSACTION_TYPE_CREDIT, TRANSACTION_TYPE_DEBIT, TRANSACTION_TYPE_PAYMENT, TRANSACTION_TYPE_TRANSFER
+from global_templates.constants import *
 
 # Transaction Description Strings
 
@@ -11,13 +11,28 @@ def credit_or_debit_description_helper(transactionType, userType, userID, accoun
     ending_balance = str(ending_balance)
     return 'Transaction Type: {0},User Type: {1},User ID: {2},Account Type: {3},Account ID: {4},Routing ID: {5},Amount: {6},Starting Balance: {7},Ending Balance: {8}'.format(unicode(transactionType,'utf-8'), unicode(userType,'utf-8'), unicode(userID,'utf-8'), unicode(accountType,'utf-8'), unicode(accountID,'utf-8'), unicode(routingID,'utf-8'), unicode(amount,'utf-8'), unicode(starting_balance,'utf-8'), unicode(ending_balance,'utf-8'))
 
+def credit_card_credit_or_debit_description_helper(transactionType, userID, amount, starting_balance):
+    userID = str(userID)
+    amount = str(amount)
+    starting_balance = str(starting_balance)
+    return 'Transaction Type: {0},User ID: {1},Amount: {2},Starting Balance: {3}'.format(unicode(transactionType,'utf-8'), unicode(userID,'utf-8'), unicode(amount,'utf-8'), unicode(starting_balance,'utf-8'))
+
+
 def debit_description(userType, userID, accountType, accountID, routingID, amount, starting_balance, ending_balance):
     transactionType = TRANSACTION_TYPE_DEBIT
     return credit_or_debit_description_helper(transactionType=transactionType, userType=userType, userID=userID, accountType=accountType, accountID=accountID, routingID=routingID, amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
 
 def credit_description(userType, userID, accountType, accountID, routingID, amount, starting_balance, ending_balance):
-    transactionType = TRANSACTION_TYPE_DEBIT
+    transactionType = TRANSACTION_TYPE_CREDIT
     return credit_or_debit_description_helper(transactionType=transactionType, userType=userType, userID=userID, accountType=accountType, accountID=accountID, routingID=routingID, amount=amount, starting_balance=starting_balance, ending_balance=ending_balance)
+
+def credit_card_credit_description(userID,credit_number,amount, starting_balance):
+    transactionType = CREDIT_CARD_TRANSACTION_TYPE_CREDIT
+    return credit_card_credit_or_debit_description_helper(transactionType=transactionType, userID=userID, amount=amount, starting_balance=starting_balance)
+
+def credit_card_debit_description(userID,credit_number,amount, starting_balance):
+    transactionType = CREDIT_CARD_TRANSACTION_TYPE_DEBIT
+    return credit_card_credit_or_debit_description_helper(transactionType=transactionType, userID=userID, amount=amount, starting_balance=starting_balance)
 
 def transfer_or_payment_description_helper(transactionType, senderType, senderID, senderAccountType, senderAccountID, senderRoutingID, receiverType, receiverID, receiverAccountType, receiverAccountID, receiverRoutingID, amount, sender_starting_balance, sender_ending_balance, receiver_starting_balance, receiver_ending_balance):
     transactionType = str(transactionType)

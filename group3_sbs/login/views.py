@@ -23,7 +23,7 @@ TRUSTED_DEVICE_MESSAGE =  "Hello Group3SBS User,\n\r" +\
                           "to verify you trust this device for future logins. This confirmation code has an expiration time of\n\r" +\
                           "15 minutes, after which you will need to attempt logging in again to re-start device verification.\n\r" +\
                           "\n\r" +\
-                          "Your confirmation code is: %s\n\r" +\
+                          "Your confirmation code is: '%s'\n\r" +\
                           "\n\r" +\
                           "Please continue to verify the device by entering the above confirmation code.\n\r" +\
                           "\n\r"
@@ -141,15 +141,14 @@ def loggedin(request):
         #   send the user an OTP for verifying the device
         #   redirect the user to an OTP device verification page
 
+        user_email = get_user_email(user)
+        profile = get_any_user_profile(user.username, user_email)
         if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
             return HttpResponseRedirect(reverse('internal:index'))
         elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
             return HttpResponseRedirect(reverse('external:index'))
         else:
             return HttpResponseRedirect(reverse('login:signout'))
-
-        user_email = get_user_email(user)
-        profile = get_any_user_profile(user.username, user_email)
         print("Current cookies:")
         trusted_key = request.COOKIES.get('trusted_device','')
         if(trusted_key != ''):
@@ -164,13 +163,6 @@ def loggedin(request):
                 if DEBUG: print("The 'trusted_device' cookie is not in the list\n")
                 logout(request)
                 return send_device_verify_otp(request, profile)
-
-            if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
-                return HttpResponseRedirect(reverse('internal:index'))
-            elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
-                return HttpResponseRedirect(reverse('external:index'))
-            else:
-                return HttpResponseRedirect(reverse('login:signout'))
         else:
             if DEBUG: print("The 'trusted_device' cookie is not present\n")
             logout(request)

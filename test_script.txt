@@ -17,34 +17,13 @@ user4.save()
 user5 = User.objects.create_user(username="georgeharrison", password="Mysweetlord1!")
 user5.save()
 
-certificate = """
------BEGIN CERTIFICATE-----
-MIIC5jCCAc4CAQAwDQYJKoZIhvcNAQELBQAwOTELMAkGA1UEBhMCVVMxDTALBgNV
-BAMTBDgwODAxGzAZBgkqhkiG9w0BCQEWDGZha2VAZm9vLmNvbTAeFw0xNjEwMDgx
-OTIyMzhaFw0xNjEwMTgxOTIyMzhaMDkxCzAJBgNVBAYTAlVTMQ0wCwYDVQQDEwQ4
-MDgwMRswGQYJKoZIhvcNAQkBFgxmYWtlQGZvby5jb20wggEiMA0GCSqGSIb3DQEB
-AQUAA4IBDwAwggEKAoIBAQCy4sf17nITF+HwwdqFquMfhXIhbtJ5t7jG7HW/OhDh
-YMwx9o+HJcTOjHVsbboD7vGdNKYFPdqNyJOhU/VraMLAg/PDWx+x6+ze3n11AVUF
-p+9QZlMOYlKMipavqHmpJ1r2O8Ro96DfDYMEbfQFXfLafahWo0EkkPQCzEYSj5S9
-DbwbHeG88QJOZDs7aNsD8+s5eHWDz1w31GstOyrr/1Tvu/ZO+33YFHEh9Y/M8d8p
-IGvtzuM3ifpOgZe/qDnt0rKD266ILgsNaGpUCqoym/5NKqGobtJMcgKZjTudU2Ph
-EVNVDz9hDgyJ94x6Ms6yRdEMkQNjNMt64tCSv2ICHYI9AgMBAAEwDQYJKoZIhvcN
-AQELBQADggEBADKYlMqqsvXX9x5eQEL2JpYwmVcsjNUDSnfKlkBT0AwHXaLJ8s5t
-uViU7kw+vFEwd22gUJpxhyVsU2l0FgG0NRA713IBQto+IE95F6gnGcNPYLxDgy29
-127qphCk6mBsBrTkNUXM5XG+d561hczTLqbbIu/KOm8fyZo7hlIxmvEOG49QHImz
-uFAszbWPWl9P7E4cZ9rNSKSXsSZymNUxlgFiGKp03ncJtD/2TACIiHQHISkZ7cA5
-Agen4idmbTdsYlt/4BZtEI2ZysPvZu274/ThcI3i+NsQaBjjpyry0tqdT4plfnyZ
-xu9ENliivObhiuOeBb5LRQTbM1rUZx6BPjY=
------END CERTIFICATE-----
-"""
-
 checkingaccount1 = CheckingAccount.objects.create(interest_rate=0.03, routing_number=1, current_balance=0.00, active_balance=0.00)
 checkingaccount1.save()
 savingsaccount1 = SavingsAccount.objects.create(interest_rate=0.03, routing_number=1, current_balance=0.00, active_balance=0.00)
 savingsaccount1.save()
 creditcard1 = CreditCard.objects.create(interest_rate=0.03, creditcard_number="0000000000000001", charge_limit=1000.00, remaining_credit=1000.00, late_fee=15.00, days_late=0)
 creditcard1.save()
-individualcustomer = IndividualCustomer.objects.create(first_name="John", last_name="Lennon", email="johnlennon@beatles.com", street_address="1234 Abbey Road", city="Liverpool", state="UK", zipcode="12345", ssn="123456789", session_key="None", checking_account_id=checkingaccount1.id, savings_account_id=savingsaccount1.id, credit_card_id=creditcard1.id, user_id=user1.id, certificate=certificate)
+individualcustomer = IndividualCustomer.objects.create(first_name="John", last_name="Lennon", email="bineetagupta@gmail.com", street_address="1234 Abbey Road", city="Liverpool", state="UK", zipcode="12345", ssn="123456789", session_key="None", checking_account_id=checkingaccount1.id, savings_account_id=savingsaccount1.id, credit_card_id=creditcard1.id, user_id=user1.id)
 individualcustomer.save()
 
 checkingaccount2 = CheckingAccount.objects.create(interest_rate=0.03, routing_number=2, current_balance=0.00, active_balance=0.00)
@@ -53,16 +32,16 @@ savingsaccount2 = SavingsAccount.objects.create(interest_rate=0.03, routing_numb
 savingsaccount2.save()
 creditcard2 = CreditCard.objects.create(interest_rate=0.03, creditcard_number="0000000000000002", charge_limit=1000.00, remaining_credit=1000.00, late_fee=15.00, days_late=0)
 creditcard2.save()
-merchantorganization = MerchantOrganization.objects.create(first_name="Garrett", last_name="Gutierrez", email="gdgutier@asu.edu", street_address="I don't care", city="Tempe", state="AZ", zipcode="85122", business_code="987654321",  session_key="None", checking_account_id=checkingaccount2.id, savings_account_id=savingsaccount2.id, credit_card_id=creditcard2.id, user_id=user2.id, certificate=certificate)
+merchantorganization = MerchantOrganization.objects.create(first_name="Garrett", last_name="Gutierrez", email="bineetagupta@gmail.com", street_address="I don't care", city="Tempe", state="AZ", zipcode="85122", business_code="987654321",  session_key="None", checking_account_id=checkingaccount2.id, savings_account_id=savingsaccount2.id, credit_card_id=creditcard2.id, user_id=user2.id)
 merchantorganization.save()
 
-regularemployee = RegularEmployee.objects.create(first_name="Paul", last_name="McCartney", email="paulmccartney@beatles.com", street_address="Heart of the Country", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user3.id)
+regularemployee = RegularEmployee.objects.create(first_name="Paul", last_name="McCartney", email="bineetagupta@gmail.com", street_address="Heart of the Country", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user3.id)
 regularemployee.save()
 
-systemmanager = SystemManager.objects.create(first_name="Ringo", last_name="Starr", email="ringostarr@beatles.com", street_address="Liverpool8 Factory", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user4.id)
+systemmanager = SystemManager.objects.create(first_name="Ringo", last_name="Starr", email="bineetagupta@gmail.com", street_address="Liverpool8 Factory", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user4.id)
 systemmanager.save()
 
-administrator = Administrator.objects.create(first_name="George", last_name="Harrison", email="georgeharrison@beatles.com", street_address="Dark Horse Way", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user5.id)
+administrator = Administrator.objects.create(first_name="George", last_name="Harrison", email="bineetagupta@gmail.com", street_address="Dark Horse Way", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user5.id)
 administrator.save()
 
 user1 = User.objects.get(username=user1.username)

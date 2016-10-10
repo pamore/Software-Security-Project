@@ -40,7 +40,6 @@ class ExternalEmployee(UserProfile):
     checking_account = models.OneToOneField(CheckingAccount, on_delete=models.CASCADE, blank=True, null=True)
     credit_card = models.OneToOneField(CreditCard, on_delete=models.CASCADE, blank=True, null=True)
     savings_account = models.OneToOneField(SavingsAccount, on_delete=models.CASCADE, blank=True, null=True)
-    certificate = models.TextField(null=True)
 
     # Inner class to define meta attributes about class
     class Meta:
@@ -64,4 +63,5 @@ class MerchantPaymentRequest(models.Model):
     accountType = models.CharField(max_length=30)
     clientAccountNum = models.IntegerField()
     clientRoutingNum = models.IntegerField()
-    requestAmount = models.DecimalField(validators=[MinValueValidator(0.00)], max_digits=9, decimal_places=2)
+    requestAmount = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=6, decimal_places=2)
+

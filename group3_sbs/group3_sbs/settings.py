@@ -16,8 +16,7 @@ import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-#with open('/var/sbs_config.json') as data_file:
-with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
+with open('./var/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
 
 
@@ -152,7 +151,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'group3_sbs',
         'USER': 'root',
-        'PASSWORD': CONFIG['database_password'],
+        'PASSWORD': '3181',
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -202,7 +201,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static/')
 # Axes Login settings
 # https://django-axes.readthedocs.io/en/latest/configuration.html
 
-AXES_LOGIN_FAILURE_LIMIT = 3
+AXES_LOGIN_FAILURE_LIMIT = 30
 AXES_LOCK_OUT_AT_FAILURE = True
 AXES_USE_USER_AGENT = False
 

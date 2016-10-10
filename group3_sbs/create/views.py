@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number, validate_account_info, validate_certificate, validate_email, validate_password, validate_username
-from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH, STATES
+from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number, validate_account_info, validate_email, validate_password, validate_username
+from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
 
 # Create your views here.
@@ -13,10 +13,10 @@ NEW_ACCOUNT_MESSAGE = "Hello New User,\n\r" +\
                       "To continue with creating your account please use the provided confirmation code to continue with your account creation.\n\r" +\
                       "You will be prompted with what account type you would like to create.\n\r" +\
                       "\n\r" +\
-                      "Your requested username is: %s\n\r" +\
+                      "Your requested username is: '%s'\n\r" +\
                       "\n\r" +\
                       "\n\r" +\
-                      "Your confirmation code is: %s\n\r" +\
+                      "Your confirmation code is: '%s'\n\r" +\
                       "\n\r" +\
                       "Please continue to create your account by entering the above confirmation code on the account creation page when prompted.\n\r" +\
                       "\n\r"
@@ -24,7 +24,7 @@ NEW_ACCOUNT_MESSAGE = "Hello New User,\n\r" +\
 CREATED_ACCOUNT_MESSAGE = "Hello %s,\n\r" +\
                           "You have recently created a new Group3SBS account.\n\r" +\
                           "\n\r" +\
-                          "Your account routing number is: %07d\n\r" +\
+                          "Your account routing number is: '%07d'\n\r" +\
                           "\n\r" +\
                           "To continue please login to begin using your new account.\n\r" +\
                           "\n\r"
@@ -111,7 +111,7 @@ def createUser(request):
                     fail_silently=False,
                     )
                 if DEBUG: print("New Account info and OTP code has been sent\n")
-                return render(request, 'create/confirmAccount.html', {'error_message': "New Account email sent, please check email", "STATES" : STATES})
+                return render(request, 'create/confirmAccount.html', {'error_message': "New Account email sent, please check email",})
     except:
         if DEBUG: print("Threw an exception, did not complete try-block")
         return render(request, 'create/create.html')
@@ -144,7 +144,6 @@ def confirmAccount(request):
         state = request.POST['state']
         zipcode = request.POST['zipcode']
         personalcode = request.POST['personalcode']
-        certificate = request.POST.get('certificate')
         existing_user = get_any_user_profile(username,email)
         init_user = User.objects.filter(username=username)
         reCaptcha = request.POST['g-recaptcha-response']
@@ -161,14 +160,14 @@ def confirmAccount(request):
                 # else if the username exists may have a pre-liminary account created (e.g. only a User type)
                 if DEBUG: print("Filter for the init user\n")
                 if not validate_account_info(user_type=user_type, username=username, email=email, first_name=firstname, last_name=lastname, address=address, city=city, state=state,zipcode=zipcode, personal_code=personalcode):
-                    return render(request, 'create/confirmAccount.html', {'error_message': "User information not correct.", "STATES" : STATES})
+                    return render(request, 'create/confirmAccount.html', {'error_message': "User information not correct.",})
                 init_email = User.objects.filter(username=username,email=email,first_name=request.POST['otpPassword'])
                 if(init_email):
                     if DEBUG: print("Located the init user\n")
                     if(newPassword == confirmPassword):
                         if DEBUG: print("The new password and confirm new password match\n")
                         if not validate_password(newPassword) or not validate_password(confirmPassword):
-                            return render(request, 'create/confirmAccount.html', {'error_message': "Passsword incorrectly formatted.", "STATES" : STATES})
+                            return render(request, 'create/confirmAccount.html', {'error_message': "Passsword incorrectly formatted.",})
                         newUser = User.objects.get(username=username,email=email)
                         if DEBUG: print("Save new user\n")
                         new_routing = get_new_routing_number()
@@ -200,10 +199,6 @@ def confirmAccount(request):
                         if DEBUG: print("Create and save credit card\n")
 
                         new_account = None
-                        if not validate_certificate(certificate):
-                            certificate = None
-                        else:
-                            ceriticate = str(certificate)
                         if(user_type == INDIVIDUAL_CUSTOMER):
                             if DEBUG: print("Individual account type\n")
                             individualcustomer = IndividualCustomer.objects.create(
@@ -219,8 +214,7 @@ def confirmAccount(request):
                                                 checking_account_id=checkingaccount.id,
                                                 savings_account_id=savingsaccount.id,
                                                 credit_card_id=creditcard.id,
-                                                user_id=newUser.id,
-                                                certificate=certificate)
+                                                user_id=newUser.id)
                             individualcustomer.save()
                             if DEBUG: print("Create and save ind. account type\n")
                             new_account = individualcustomer
@@ -240,8 +234,7 @@ def confirmAccount(request):
                                                 checking_account_id=checkingaccount.id,
                                                 savings_account_id=savingsaccount.id,
                                                 credit_card_id=creditcard.id,
-                                                user_id=newUser.id,
-                                                certificate=certificate)
+                                                user_id=newUser.id)
                             merchantcustomer.save()
                             if DEBUG: print("Create and save merch. account type\n")
                             new_account = merchantcustomer
@@ -270,18 +263,18 @@ def confirmAccount(request):
                             )
                             if DEBUG: print("Check is %d\n"%(check))
                         if DEBUG: print("New account created email sent\n")
-                        return render(request, 'create/confirmAccount.html', {'error_message': "New account created! Email notification sent.","STATES" : STATES})
+                        return render(request, 'create/confirmAccount.html', {'error_message': "New account created! Email notification sent.",})
                     else:
-                        return render(request, 'create/confirmAccount.html', {'error_message': "New password and confirm password mismatch.","STATES" : STATES})
+                        return render(request, 'create/confirmAccount.html', {'error_message': "New password and confirm password mismatch.",})
                 else:
                     #   else
                     #       return error that new account username/email mismatch
-                    return render(request, 'create/confirmAccount.html', {'error_message': "Username and email account mismatch.","STATES" : STATES})
+                    return render(request, 'create/confirmAccount.html', {'error_message': "Username and email account mismatch.",})
 
             else:
                 if DEBUG: print("No user account present, need to apply for new account first\n")
-                return render(request, 'create/create.html', {'error_message': "Application not found, please re-apply for an account.","STATES" : STATES})
+                return render(request, 'create/create.html', {'error_message': "Application not found, please re-apply for an account.",})
 
     except:
         if DEBUG: print("Threw an exception, did not complete try-block")
-        return render(request, 'create/confirmAccount.html', {"STATES" : STATES})
+        return render(request, 'create/confirmAccount.html')

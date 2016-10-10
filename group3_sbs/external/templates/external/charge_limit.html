@@ -1,0 +1,58 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Increment Charge limit</h1>
+  </div>
+</div>
+
+{% if credit_card %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Credit charge Limit</th>
+      <th>Remaining Credit </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{credit_card.charge_limit}}</td>
+      <td>{{credit_card.remaining_credit}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<form action="{% url 'external:credit_card_credit_charge_limit_validate' %}" method="post">
+{% csrf_token %}
+<label for="debit_amount">Please enter the amount you want your credit card limit to enhance, it has to be less than or equal to $1000 </label>
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="1000" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+
+<form action="{% url 'external:credit_card_debit_charge_limit_validate' %}" method="post">
+{% csrf_token %}
+<label for="debit_amount">Please enter the amount you want your debit from your account </label>
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="1000" required />
+<input type="submit" class="btn btn-default" value="Submit" />
+</form>
+
+{% endif %}
+
+
+{% endblock %}

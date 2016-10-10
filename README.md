@@ -60,16 +60,12 @@
   * pip install MySQL-python
 
 # Install Django
-* sudo pip install django
+* pip install django
 
 # Install Django-Axes
-* sudo pip install django-axes
+* pip install django-axes
   * See https://django-axes.readthedocs.io
   * Make sure to make migrations and then migrate after installing and setting up database scheme.
-
-# Install PKI Dependencies
-* sudo apt-get install python-m2crypto
-  * See http://sheogora.blogspot.com/2012/03/m2crypto-for-python-x509-certificates.html or https://www.heikkitoivonen.net/m2crypto/api/
 
 # How to clone repository
 1. Go to directory where you want you project to live

@@ -10,11 +10,13 @@ from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth.decorators import login_required, user_passes_test
 from external.models import CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, IndividualCustomer, MerchantOrganization, SavingsAccount
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
-from global_templates.transaction_descriptions import debit_description, credit_description, transfer_description, payment_description
+from global_templates.transaction_descriptions import *
 from global_templates.constants import *
-from M2Crypto import RSA, EVP
 from templated_email import send_templated_mail
-import M2Crypto, random, re, string, time, thread
+import random
+import re
+import string
+import thread
 
 def add_edit_external_user_profile_permission(user):
     if is_external_user(user):
@@ -25,29 +27,6 @@ def add_edit_external_user_profile_permission(user):
                 content_type = ContentType.objects.get_for_model(MerchantOrganization)
             permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
             permission_name = "Can external user " + str(user.id) + " edit their profile"
-            try:
-                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
-            except:
-                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
-            if user.has_perm(permission):
-                return True
-            user.user_permissions.add(permission)
-            user.save()
-            return True
-        except:
-            return False
-    else:
-        return False
-
-def add_external_user_make_critical_transaction(user, account_type, type_of_transaction):
-    if is_external_user(user):
-        try:
-            if is_individual_customer(user):
-                content_type = ContentType.objects.get_for_model(IndividualCustomer)
-            else:
-                content_type = ContentType.objects.get_for_model(MerchantOrganization)
-            permission_codename = 'can_external_user_' + str(user.id) + '_make_critical_' + type_of_transaction + "_transaction_for_" + account_type
-            permission_name = "Can external user " + str(user.id) + " make critical " + type_of_transaction + " transaction for " + account_type + " account"
             try:
                 permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
             except:
@@ -190,6 +169,8 @@ def commit_transaction(transaction, user):
         result = commit_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST:
         result = commit_transaction_external_user_profile_edit_request(transaction=transaction, user=user)
+    elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT or type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+        result = commit_transaction_credit_card_credit_or_debit(transaction=transaction, user=user)
     else:
         result = False
     if result:
@@ -233,6 +214,34 @@ def commit_transaction_credit_or_debit(transaction, user):
             new_amount = float(account.current_balance) - amount
             if validate_amount(check) and validate_amount(amount):
                 account.current_balance = new_amount
+            else:
+                return False
+        else:
+            return False
+        save_transaction(transaction=transaction, user=user)
+        account.save()
+        return True
+    except:
+        return False
+
+def commit_transaction_credit_card_credit_or_debit(transaction, user):
+    try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        account = data['credit_card']
+        if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+            check = float(account.remaining_credit) + amount
+            new_amount = float(account.remaining_credit) + amount
+            if validate_amount(check) and validate_amount(amount):
+                account.remaining_credit = new_amount
+            else:
+                return False
+        elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
+            check = float(account.remaining_credit) - amount
+            new_amount = float(account.remaining_credit) - amount
+            if validate_amount(check) and validate_amount(amount):
+                account.remaining_credit = new_amount
             else:
                 return False
         else:
@@ -356,6 +365,26 @@ def create_debit_or_credit_transaction(user, type_of_transaction, userType, acco
     except:
         return False
 
+def create_credit_card_debit_or_credit_transaction(user, type_of_transaction, creditcard_number, amount, starting_balance):
+    try:
+        if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+            description_string = credit_card_credit_description(userID=user.id, credit_number=creditcard_number,amount=amount, starting_balance=starting_balance)
+        elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
+            description_string  = credit_card_debit_description(userID=user.id, credit_number=creditcard_number,amount=amount, starting_balance=starting_balance)
+        else:
+            return False
+        if amount > NONCRITICAL_TRANSACTION_LIMIT:
+            transaction = ExternalCriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
+        else:
+            transaction = ExternalNoncriticalTransaction.objects.create(status=TRANSACTION_STATUS_UNRESOLVED, time_created=timezone.now(), type_of_transaction=type_of_transaction, description=description_string, initiator_id=user.id)
+        transaction.participants.add(user)
+        transaction.save()
+        return True
+    except Exception as m:
+        print(m)
+        return False
+
+
 def create_transaction_external_user_profile_edit_request(user):
     try:
         type_of_transaction = TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST
@@ -440,9 +469,9 @@ def create_transfer_transaction(sender, senderType, senderID, senderAccountType,
 def credit_or_debit_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     user = request.user
     if type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        amount = float(request.POST['amount'])
+        amount = float(request.POST['credit_amount'])
     if type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        amount = float(request.POST['amount'])
+        amount = float(request.POST['debit_amount'])
     if not validate_amount(amount):
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING:
@@ -483,29 +512,44 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
         return HttpResponseRedirect(reverse(error_redirect))
     return HttpResponseRedirect(reverse(success_redirect))
 
-def critical_challenge_response_redirect_page(account_type, type_of_transaction):
-    redirect = None
-    if account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        redirect = "external:credit_checking"
-    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_CREDIT:
-        redirect = "external:credit_savings"
-    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        redirect = "external:debit_checking"
-    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_DEBIT:
-        redirect = "external:debit_savings"
-    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_PAYMENT:
-        redirect = "external:payment_checking"
-    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_PAYMENT:
-        redirect = "external:payment_savings"
-    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
-        redirect = "external:request_payment"
-    #elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
-        #redirect = "external:payment_on_behalf_savings"
-    elif account_type == ACCOUNT_TYPE_CHECKING and type_of_transaction == TRANSACTION_TYPE_TRANSFER:
-        redirect = "external:transfer_checking"
-    elif account_type == ACCOUNT_TYPE_SAVINGS and type_of_transaction == TRANSACTION_TYPE_TRANSFER:
-        redirect = "external:transfer_savings"
-    return redirect
+def credit_card_credit_or_debit_validate(request, type_of_transaction, success_redirect, error_redirect):
+    user = request.user
+    amount = float(request.POST['amount'])
+    if not credit_card_validate_amount(amount) :
+        return HttpResponseRedirect(reverse(error_redirect))
+    if is_individual_customer(user):
+        account =  user.individualcustomer.credit_card
+        user_type = INDIVIDUAL_CUSTOMER
+    elif is_merchant_organization(user):
+        account =  user.merchantorganization.credit_card
+        user_type = MERCHANT_ORGANIZATION
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+        starting_balance = float(account.charge_limit)
+        creditcard_number=account.creditcard_number
+        check = float(starting_balance) + float(amount)
+        new_balance=float(starting_balance) + float(amount)
+        if credit_card_validate_amount(check):
+            account.charge_limit = float(new_balance)
+            account.save()
+            create_credit_card_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, creditcard_number= creditcard_number, amount=amount, starting_balance=starting_balance)
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
+        starting_balance = float(account.charge_limit)
+        creditcard_number=account.creditcard_number
+        new_balance=float(starting_balance) - float(amount)
+        check = float(starting_balance) - float(amount)
+        if credit_card_validate_amount(check):
+            account.charge_limit = float(new_balance)
+            account.save()
+            create_credit_card_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, creditcard_number= creditcard_number, amount=amount, starting_balance=starting_balance)
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    return HttpResponseRedirect(reverse(success_redirect))
 
 def deny_transaction(transaction, user):
     type_of_transaction = transaction.type_of_transaction
@@ -521,6 +565,8 @@ def deny_transaction(transaction, user):
         result = deny_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST:
         result = deny_transaction_external_user_profile_edit_request(transaction=transaction, user=user)
+    elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT or type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+        result = deny_transaction_credit_card_credit_or_debit(transaction=transaction, user=user)
     else:
         result = False
     if result:
@@ -560,6 +606,34 @@ def deny_transaction_credit_or_debit(transaction, user):
             new_amount = float(account.active_balance) + amount
             if validate_amount(new_amount):
                 account.active_balance = new_amount
+        else:
+            return False
+        save_transaction(transaction=transaction, user=user)
+        account.save()
+        return True
+    except:
+        return False
+
+def deny_transaction_credit_card_credit_or_debit(transaction, user):
+    try:
+        type_of_transaction = transaction.type_of_transaction
+        data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=type_of_transaction)
+        amount = float(data['amount'])
+        account = data['credit_card']
+        if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+            check = float(account.charge_limit) - amount
+            new_amount = float(account.charge_limit) - amount
+            if validate_amount(check) and validate_amount(amount):
+                account.charge_limit = new_amount
+            else:
+                return False
+        elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
+            check = float(account.charge_limit) + amount
+            new_amount = float(account.charge_limit) + amount
+            if validate_amount(check) and validate_amount(amount):
+                account.charge_limit = new_amount
+            else:
+                return False
         else:
             return False
         save_transaction(transaction=transaction, user=user)
@@ -764,25 +838,6 @@ def get_external_user(email=None, account_ID=None, routing_ID=None, account_type
                     user = None
         else:
             return user
-    elif account_ID and account_type:
-        if account_type == ACCOUNT_TYPE_CHECKING:
-            try:
-                user = User.objects.get(individualcustomer__checking_account__id=int(account_ID ))
-            except:
-                try:
-                    user = User.objects.get(merchantorganization__checking_account__id=int(account_ID ))
-                except:
-                    user = None
-        elif account_type == ACCOUNT_TYPE_SAVINGS:
-            try:
-                user = User.objects.get(individualcustomer__savings_account__id=int(account_ID ))
-            except:
-                try:
-                    user = User.objects.get(merchantorganization__savings_account__id=int(account_ID ))
-                except:
-                    user = None
-        else:
-            return user
     else:
         return user
     return user
@@ -933,30 +988,6 @@ def is_merchant_organization(user):
     else:
         return False
 
-def is_pki_needed(request, account_type, type_of_transaction):
-    try:
-        user = request.user
-        amount = float(request.POST['amount'])
-        if validate_amount(amount):
-            permission_codename = 'can_external_user_' + str(user.id) + '_make_critical_' + type_of_transaction + "_transaction_for_" + account_type
-            permission = Permission.objects.filter(codename=permission_codename).first()
-            permission_codename = 'external.' + permission_codename
-            if amount > NONCRITICAL_TRANSACTION_LIMIT and (permission is None or not user.has_perm(permission_codename)):
-                profile = get_any_user_profile(username=user.username)
-                if validate_certificate(profile.certificate):
-                    return True
-                else:
-                    return False
-            else:
-                if user.has_perm(permission_codename):
-                    user.user_permissions.remove(permission)
-                    user.save()
-                return False
-        else:
-            return False
-    except:
-        return False
-
 def is_regular_employee(user):
     if is_internal_user(user) and hasattr(user, REGULAR_EMPLOYEE_ATTRIBUTE):
         return True
@@ -986,6 +1017,8 @@ def parse_transaction_description(transaction_description, type_of_transaction):
         return parse_transaction_description_internal_noncritical(transaction_description=transaction_description)
     elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
         return parse_transaction_description_internal_transaction_for_access(transaction_description=transaction_description)
+    elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT or type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+        return parse_transaction_credit_card_credit_or_debit(transaction_description=transaction_description)
     else:
         return {}
 
@@ -1019,6 +1052,30 @@ def parse_transaction_description_credit_or_debit(transaction_description):
             'amount' : amount,
             'starting_balance' : starting_balance,
             'ending_balance' : ending_balance,
+        }
+    except:
+        return {}
+
+def parse_transaction_credit_card_credit_or_debit(transaction_description):
+    try:
+        contents = transaction_description.split(',')
+        transaction_type = contents[0].split(': ')[1]
+        user_id = contents[1].split(': ')[1]
+        amount = contents[2].split(': ')[1]
+        starting_balance = contents[3].split(': ')[1]
+        external_user = User.objects.get(id=int(user_id))
+        profile = get_any_user_profile(username=external_user.username)
+        if hasattr(profile, "credit_card"):
+            credit_card = profile.credit_card
+        else:
+            raise Exception
+        return {
+            'transaction_type' : transaction_type,
+            'external_user' : external_user,
+            'credit_card' : credit_card,
+            'credit_card_id' : credit_card.id,
+            'amount' : amount,
+            'starting_balance' : starting_balance,
         }
     except:
         return {}
@@ -1111,67 +1168,12 @@ def parse_transaction_description_transfer(transaction_description):
 def payment_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     return payment_or_transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
 
-def payment_merchant_request_validate(request, merchant_request):
-    sender = request.user
-    receiver_account_ID = merchant_request.merchantCheckingsAccountNum
-    receiver_account_type = ACCOUNT_TYPE_CHECKING
-    sender_account_type = merchant_request.accountType
-    sender_account_ID = merchant_request.clientAccountNum
-    sender_routing_ID = merchant_request.clientRoutingNum
-    amount = float(merchant_request.requestAmount)
-    if not validate_account_number(account_number=sender_account_ID) or not validate_account_number(account_number=receiver_account_ID) or not validate_routing_number(routing_number=sender_routing_ID) :
-        return False
-    sender1 = get_external_user(account_ID=sender_account_ID, account_type=sender_account_type)
-    if sender1 is None or sender1 != sender:
-        return False
-    sender_account = get_external_user_account(user=sender, account_type=sender_account_type)
-    if sender_account is None:
-        return False
-    if sender_account_type == ACCOUNT_TYPE_CHECKING or sender_account_type == ACCOUNT_TYPE_SAVINGS:
-        if is_individual_customer(sender):
-            sender_user_type = INDIVIDUAL_CUSTOMER
-        else:
-            return False
-        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
-        sender_starting_balance = sender_account.active_balance
-        sender_new_balance = float(sender_starting_balance) - amount
-    else:
-        return False
-    if not validate_amount(amount):
-        return False
-    receiver = get_external_user(account_ID=receiver_account_ID, account_type=receiver_account_type)
-    if receiver is None:
-        return False
-    receiver_account = get_external_user_account(user=receiver, account_type=receiver_account_type)
-    if receiver_account is None:
-        return False
-    if is_merchant_organization(receiver):# and receiver_account_type == ACCOUNT_TYPE_CHECKING:
-        receiver_user_type = MERCHANT_ORGANIZATION
-    else:
-        return False
-    receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
-    receiver_starting_balance = receiver_account.active_balance
-    receiver_new_balance = float(receiver_starting_balance) + amount
-    if validate_amount(sender_check) and validate_amount(receiver_check) and not sender.id == receiver.id:
-        sender_account.active_balance = sender_new_balance
-        receiver_account.active_balance = receiver_new_balance
-        sender_account.save()
-        receiver_account.save()
-        create_payment_on_behalf_transaction(sender=sender, senderType=sender_user_type, senderID=sender.id, senderAccountType=sender_account_type, senderAccountID=sender_account.id, senderRoutingID=sender_account.routing_number, receiver=receiver, receiverType=receiver_user_type, receiverID=receiver.id, receiverAccountType=receiver_account_type, receiverAccountID=receiver_account.id, receiverRoutingID=receiver_account.routing_number, amount=amount, sender_starting_balance=sender_starting_balance, sender_ending_balance=sender_new_balance, receiver_starting_balance=receiver_starting_balance, receiver_ending_balance=receiver_new_balance)
-        return True
-    else:
-        print(sender_check)
-        print(receiver_check)
-        print(sender.id)
-        print(receiver.id)
-        return False
-
 def payment_on_behalf_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     receiver = request.user
     receiver_account_type = account_type
     sender_account_type = request.POST['account_type']
     if type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
-        amount = float(request.POST['amount'])
+        amount = float(request.POST['payment_on_behalf_amount'])
     else:
         return HttpResponseRedirect(reverse(error_redirect))
     if request.POST.get('email_address'):
@@ -1179,7 +1181,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
         sender = get_external_user(email=email_address)
         if sender is None:
             return HttpResponseRedirect(reverse(error_redirect))
-        sender_account = get_external_user_account(user=sender, account_type=sender_account_type)
+        sender_account = get_external_user_account(user=sender, account_type=sender_user_type)
         if sender_account is None:
             return HttpResponseRedirect(reverse(error_redirect))
     else:
@@ -1190,7 +1192,7 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
         sender = get_external_user(account_ID=sender_account_ID, routing_ID=sender_routing_ID, account_type=sender_account_type)
         if sender is None:
             return HttpResponseRedirect(reverse(error_redirect))
-        sender_account = get_external_user_account(user=sender, account_type=sender_account_type)
+        sender_account = get_external_user_account(user=sender, account_type=sender_user_type)
         if sender_account is None:
             return HttpResponseRedirect(reverse(error_redirect))
     if sender_account_type == ACCOUNT_TYPE_CHECKING or sender_account_type == ACCOUNT_TYPE_SAVINGS:
@@ -1229,17 +1231,15 @@ def payment_on_behalf_validate(request, type_of_transaction, account_type, succe
             receiver_account.save()
             return HttpResponseRedirect(reverse(error_redirect))
         return HttpResponseRedirect(reverse(success_redirect))
-    else:
-        return HttpResponseRedirect(reverse(error_redirect))
 
 def payment_or_transfer_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
     user = request.user
     sender_account_type = account_type
     receiver_account_type = request.POST['account_type']
     if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
-        amount = float(request.POST['amount'])
+        amount = float(request.POST['payment_amount'])
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
-        amount = float(request.POST['amount'])
+        amount = float(request.POST['transfer_amount'])
     else:
         return HttpResponseRedirect(reverse(error_redirect))
     if request.POST.get('email_address'):
@@ -1307,8 +1307,6 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
             user_account.save()
             receiver_account.save()
             return HttpResponseRedirect(reverse(error_redirect))
-    else:
-        return HttpResponseRedirect(reverse(error_redirect))
     return HttpResponseRedirect(reverse(success_redirect))
 
 def save_transaction(transaction, user):
@@ -1366,8 +1364,27 @@ def validate_account_number(account_number):
         pass
     return validated
 
+def validate_credit_card_number(credit_card_number):
+    validated = False
+    try:
+        number_string = str(credit_card_number)
+        number_string = number_string.zfill(CREDIT_CARD_NUMBER_LENGTH)
+        if len(number_string) == CREDIT_CARD_NUMBER_LENGTH:
+            if re.search('^[0-9]+$', number_string):
+                #print('Valid name')
+                validated = True
+    except:
+        pass
+    return validated
+
 def validate_amount(amount):
     if amount > MAX_BALANCE or amount < MIN_BALANCE:
+        return False
+    else:
+        return True
+
+def credit_card_validate_amount(amount):
+    if amount > CREDIT_CARD_MAX_BALANCE or amount < CREDIT_CARD_MIN_BALANCE:
         return False
     else:
         return True
@@ -1384,37 +1401,12 @@ def validate_business_code(business_code):
                 pass
     return validate
 
-def validate_certificate(certificate):
-    try:
-        if certificate:
-            cert = M2Crypto.X509.load_cert_string(str(certificate))
-            return True
-        else:
-            return False
-    except Exception as m:
-        print(m)
-        return False
-
 def validate_city(city):
     validated = False
     if len(city) <= CITY_LENGTH_MAX and len(city) >= CITY_LENGTH_MIN:
         if re.search('^([a-zA-Z0-9]| )+$', city):
             validated = True
             #print('Valid city')
-    return validated
-
-
-def validate_credit_card_number(credit_card_number):
-    validated = False
-    try:
-        number_string = str(credit_card_number)
-        number_string = number_string.zfill(CREDIT_CARD_NUMBER_LENGTH)
-        if len(number_string) == CREDIT_CARD_NUMBER_LENGTH:
-            if re.search('^[0-9]+$', number_string):
-                #print('Valid name')
-                validated = True
-    except:
-        pass
     return validated
 
 def validate_email(email):
