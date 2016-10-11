@@ -1,0 +1,57 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Credit card Page</h1>
+  </div>
+</div>
+
+{% if show_credit_info %}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Credit card number</th>
+      <th>Charge Limit</th>
+      <th>Remaining Balance</th>
+      <th>Late fees</th>
+      <th>Days Late</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>{{show_credit_info.creditcard_number}}</td>
+      <td>{{show_credit_info.charge_limit}}</td>
+      <td>${{show_credit_info.remaining_credit}}</td>
+      <td>${{show_credit_info.late_fee}}</td>
+      <td>${{show_credit_info.days_late}}</td>
+    </tr>
+  </tbody>
+  <tfoot>
+  </tfoot>
+</table>
+
+<br />
+
+<!--<div class="row">
+  <div class="col-md-6">
+    <a class="btn btn-primary" href="{% url 'external:debit_savings' %}">Debit your savings account</a>
+  </div>
+  <div class="col-md-6">
+    <a class="btn btn-primary" href="{% url 'external:credit_savings' %}">Credit your savings account</a>
+  </div>
+</div> -->
+{% endif %}
+
+{% endblock %}

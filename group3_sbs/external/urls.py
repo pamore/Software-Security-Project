@@ -35,7 +35,6 @@ urlpatterns = [
     url(r'^account/view/checking/$', views.checking_account, name='checking_account'),
     url(r'^account/view/savings/$', views.savings_account, name='savings_account'),
     url(r'^account/view/statements/$', views.all_statements, name='all_states'),
-    url(r'^credit_card/$', views.credit_card, name='credit_card'),
     url(r'^error/$', views.error, name='error'),
     url(r'^profile/edit/$', views.profile_edit, name='profile_edit'),
     url(r'^profile/edit/validate/$', views.profile_edit_validate, name='profile_edit_validate'),
@@ -49,4 +48,8 @@ urlpatterns = [
     url(r'^profile/certificate/add/$', views.add_certificate, name='add_certificate'),
     url(r'^account/critical_challenge_response/(?P<account_type>[a-zA-z]+)/(?P<type_of_transaction>[a-zA-z]+)/$', views.critical_challenge_response, name='critical_challenge_response'),
     url(r'^account/critical_challenge_response/(?P<account_type>[a-zA-z]+)/(?P<type_of_transaction>[a-zA-z]+)/validate/$', views.critical_challenge_response_validate, name='critical_challenge_response_validate'),
+    url(r'^show_credit_info/$', views.show_credit_info, name='show_credit_info'),
+    url(r'^charge_limit/$', views.charge_limit, name='charge_limit'),
+    url(r'^credit_card/credit_card_credit_charge_limit_validate/$', views.credit_card_credit_charge_limit_validate, name='credit_card_credit_charge_limit_validate'),
+    url(r'^credit_card/credit_card_debit_charge_limit_validate/$', views.credit_card_debit_charge_limit_validate, name='credit_card_debit_charge_limit_validate'),
 ]

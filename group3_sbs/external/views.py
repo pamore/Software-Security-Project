@@ -14,7 +14,7 @@ from global_templates.common_functions import *
 from global_templates.constants import *
 from M2Crypto import RSA, EVP
 import M2Crypto, time
-
+import datetime
 # Create your views here.
 
 """ Render Functions for Web Pages """
@@ -730,3 +730,48 @@ def all_statements(request):
         transactions.append(transaction)
     return render(request, 'external/all_statements.html',
                   {'transactions': transactions})
+
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def show_credit_info(request):
+    user = request.user
+    #days=now.day
+    #days_late=days-5
+    #user.individualcustomer.credit_card.days_late=days_late
+    #update CreditCard set days_late = days_late where id=user.id;
+    if is_individual_customer(user) and has_credit_card(user):
+        return render(request, 'external/show_credit_info.html', {'show_credit_info': user.individualcustomer.credit_card})
+    elif is_merchant_organization(user) and has_credit_card(user):
+        return render(request, 'external/show_credit_info.html', {'show_credit_info': user.merchantorganization.credit_card})
+    else:
+        return render(request, 'external/error.html')
+
+# Validate Credit Checking Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def charge_limit(request):
+    user = request.user
+    profile = get_any_user_profile(username=user.username)
+    return render(request, 'external/charge_limit.html', {'credit_card': profile.credit_card})
+# Validate Credit Checking Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_credit_charge_limit_validate(request):
+    user = request.user
+    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_CREDIT
+    error_redirect = 'external:error'
+    success_redirect = 'external:show_credit_info'
+    return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
+
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_debit_charge_limit_validate(request):
+    user = request.user
+    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_DEBIT
+    error_redirect = 'external:error'
+    success_redirect = 'external:show_credit_info'
+    return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)

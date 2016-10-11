@@ -83,7 +83,8 @@
                 </li>
                 <li>
                     <font color="#FF7F50">Credit Card</font>
-                      <a href="{% url 'external:credit_card' %}" color="#FF7F50">&nbsp &nbsp &nbsp Credit Card</a>
+                      <a href="{% url 'external:show_credit_info' %}" color="#FF7F50">&nbsp &nbsp &nbsp Credit Card Info</a>
+                      <a href="{% url 'external:charge_limit' %}" color="#FF7F50">&nbsp &nbsp &nbsp +/- Remaining Credit</a>
                 </li>
 
             {% if request.user.individualcustomer %}
