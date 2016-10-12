@@ -33,4 +33,6 @@ urlpatterns = [
     url(r'^transaction/internal_critical/(?P<transaction_id>[1-9][0-9]*)/approve/$', views.validate_internal_critical_transaction_access_request_approval, name='validate_internal_critical_transaction_access_request_approval'),
     url(r'^transaction/internal_critical/(?P<transaction_id>[1-9][0-9]*)/deny/$', views.validate_internal_critical_transaction_access_request_denial, name='validate_internal_critical_transaction_access_request_denial'),
     url(r'^transaction/internal_noncritical/$', views.internal_noncritical_transactions, name='internal_noncritical_transactions'),
+    url(r'^cron_job/bineeta_cron_job_late_charge/$', views.bineeta_cron_job_late_charge, name='bineeta_cron_job_late_charge'),
+    url(r'^cron_job/bineeta_cron_job_late_charge/validate/$', views.bineeta_cron_job_late_charge_validate, name='bineeta_cron_job_late_charge_validate'),
 ]

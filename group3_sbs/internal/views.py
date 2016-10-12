@@ -7,11 +7,13 @@ from django.shortcuts import render
 from django.template import loader
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from external.models import ExternalNoncriticalTransaction, ExternalCriticalTransaction
+from external.models import *
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
 from global_templates.common_functions import *
 from global_templates.constants import *
 import os
+from django.db import models
+from django.db.models import Q
 
 """
                         Render Web Pages
@@ -630,4 +632,33 @@ def validate_profile_edit(request, external_user_id):
         else:
             return HttpResponseRedirect(reverse(error_redirect))
     else:
+
+
         return HttpResponseRedirect(reverse(error_redirect))
+
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def bineeta_cron_job_late_charge(request):
+    return render(request, 'internal/monthly_cron.html')
+
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def bineeta_cron_job_late_charge_validate(request):
+    if request.method == "POST":
+        late_credit_card = CreditCard.objects.filter(remaining_credit__lt = 1000)
+        print(late_credit_card)
+        #no_longer_late = CreditCard.objects.filter(Q(remaining_credit=1000) | Q(days_late__gt = 0))
+        for card in late_credit_card:
+            print(card.id)
+            card.days_late = card.days_late + 1
+            card.late_fee = CREDIT_CARD_INTEREST_RATE * card.days_late
+            card.save()
+        #for card in no_longer_late:
+            #card.days_late = 0
+            #card.late_fee = 0
+            #card.save()
+        return render(request, 'internal/monthly_cron.html', {'message': "Successfully charged any late cards"})
+    else:
+        return HttpResponseRedirect(reverse('internal:error'))

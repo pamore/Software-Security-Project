@@ -1,0 +1,25 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<h1>Hi, Admin</h1>
+{% if message %}
+<p>{{message}}</p>
+{% endif %}
+
+<form action="{% url 'internal:bineeta_cron_job_late_charge_validate' %}" method="post">
+  {% csrf_token %}
+  <label>Charge any late credit card</label>
+  <input type="submit" class="btn btn-primary" value="Run it" />
+</form>
+{% endblock %}

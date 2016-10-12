@@ -775,3 +775,11 @@ def credit_card_debit_charge_limit_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:show_credit_info'
     return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
+
+#@login_required
+#@user_passes_test(is_cron_job)
+#def bineeta_cron_job_deadline_late(request):
+    #credit_cards = CreditCard.object.filter(remaining_credit < 1000)
+    #for card in credit_cards:
+        #card.days_late = card.days_late + 1
+        #scard.save()

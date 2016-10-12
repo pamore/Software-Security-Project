@@ -78,6 +78,11 @@
                               <a href="{% url 'internal:view_internal_log' %}"> &nbsp &nbsp &nbsp View Internal Log </a>
                               <a href="{% url 'internal:view_server_log' %}"> &nbsp &nbsp &nbsp View Server Log </a>
                 </li>
+                <li>
+                   <font color="#FF7F50"> Credit Card Charges</font>
+                              <a href="{% url 'internal:bineeta_cron_job_late_charge' %}"> &nbsp &nbsp &nbsp Monthly Cron </a>
+
+                </li>
                 {% endif %}
             </ul>
         </div>
