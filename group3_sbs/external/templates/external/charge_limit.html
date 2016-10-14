@@ -14,7 +14,7 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>Increment Charge limit</h1>
+    <h1>Pay a Charge or Charge Your Card</h1>
   </div>
 </div>
 
@@ -28,8 +28,8 @@
   </thead>
   <tbody>
     <tr>
-      <td>{{credit_card.charge_limit}}</td>
-      <td>{{credit_card.remaining_credit}}</td>
+      <td>${{credit_card.charge_limit}}</td>
+      <td>${{credit_card.remaining_credit}}</td>
     </tr>
   </tbody>
   <tfoot>
@@ -37,20 +37,26 @@
 </table>
 
 <br />
-
-<form action="{% url 'external:credit_card_credit_charge_limit_validate' %}" method="post">
-{% csrf_token %}
-<label for="debit_amount">Please enter the amount you want your credit card limit to enhance, it has to be less than or equal to $1000 </label>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="1000" required />
-<input type="submit" class="btn btn-default" value="Submit" />
-</form>
-
-<form action="{% url 'external:credit_card_debit_charge_limit_validate' %}" method="post">
-{% csrf_token %}
-<label for="debit_amount">Please enter the amount you want your debit from your account </label>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="1000" required />
-<input type="submit" class="btn btn-default" value="Submit" />
-</form>
+<div class="row">
+  <div class="col-md-6">
+    <h2>Make a Charge on Your Card</h2>
+    <form action="{% url 'external:credit_card_credit_charge_limit_validate' %}" method="post">
+    {% csrf_token %}
+    <label for="debit_amount">Please enter the amount that you wish to charge to your card. It must be less than ${{charge_limit}}</label>
+    <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{charge_limit}}" required />
+    <input type="submit" class="btn btn-default" value="Submit" />
+    </form>
+  </div>
+  <div class="col-md-6">
+    <h2>Make a Payment on Your Charges</h2>
+    <form action="{% url 'external:credit_card_debit_charge_limit_validate' %}" method="post">
+    {% csrf_token %}
+    <label for="debit_amount">Please enter the amount that you with to pay on your charges. It must be less than ${{pay_limit}}</label>
+    <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{pay_limit}}" required />
+    <input type="submit" class="btn btn-default" value="Submit" />
+    </form>
+  </div>
+</div>
 
 {% endif %}
 

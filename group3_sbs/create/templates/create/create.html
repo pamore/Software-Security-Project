@@ -19,9 +19,9 @@
 <form action="{% url 'create:createUser' %}" method="post">
 {% csrf_token %}
 <label for="username">New Username</label>
-<input type="text" class="form-control" name="username" value="" required />
+<input type="text" class="form-control" name="username" value="" maxlength="150" pattern=".{3,150}" required />
 <label for="email">New Account Email</label>
-<input type="email" class="form-control" name="email" value="" required />
+<input type="email" class="form-control" name="email" value="" maxlength="100" pattern=".{3,100}" required />
 <br></br>
 <div class="g-recaptcha" data-sitekey="6LeHWAcUAAAAAL_TtxsIcRhoC3IrD6yKdJNp0E2N"></div>
 <br></br>

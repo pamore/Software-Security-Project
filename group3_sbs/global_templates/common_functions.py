@@ -732,6 +732,26 @@ def get_external_user_account(user, account_type):
             account = profile.checking_account
         elif account_type == ACCOUNT_TYPE_SAVINGS and has_savings_account(user):
             account = profile.savings_account
+        elif account_type == CREDIT_CARD and has_credit_card(user):
+            account = profile.credit_card
+    return account
+
+def get_external_user_account_email(email, account_type):
+    account = None
+    try:
+        profile = IndividualCustomer.objects.filter(email=email).first()
+        if not profile:
+            profile = MerchantOrganization.objects.filter(email=email).first()
+            if not profile:
+                return None
+    except:
+        return None
+    if account_type == ACCOUNT_TYPE_CHECKING and hasattr(profile, 'checking_account'):
+        account = profile.checking_account
+    elif account_type == ACCOUNT_TYPE_SAVINGS and hasattr(profile, 'savings_account'):
+        account = profile.savings_account
+    elif account_type == CREDIT_CARD and hasattr(profile, 'credit_card'):
+        account = profile.credit_card
     return account
 
 def get_external_noncritical_transaction(transaction):

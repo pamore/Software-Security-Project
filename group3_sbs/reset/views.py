@@ -1,22 +1,23 @@
 from axes.decorators import watch_login
 from django.shortcuts import render
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
+from django.core.mail import send_mail, EmailMessage
 from global_templates.common_functions import get_any_user_profile, otpGenerator, validate_email, validate_password, validate_username
 from global_templates.constants import OTP_EXPIRATION_DATE, OTP_LENGTH
-import time
+from M2Crypto import RSA, EVP
+import M2Crypto, time
 
 # Create your views here.
 
 OTP_MESSAGE = "Hello Group3SBS User,\n\r" +\
               "You have recently requested to reset your account password from our reset page.\n\r" +\
-              "To continue with resetting your account password please use the provided confirmation code\n\r" +\
-              "to verify you have requested a password reset. This confirmation code has an expiration time of\n\r" +\
+              "To continue with resetting your account password please use the provided confirmation code in order " +\
+              "to verify you have requested a password reset. This confirmation code has an expiration time of " +\
               "15 minutes, after which you will need to re-submit your password reset request.\n\r" +\
               "\n\r" +\
               "Your confirmation code is: %s\n\r" +\
               "\n\r" +\
-              "Please continue to reset your password by entering the above confirmation code.\n\r" +\
+              "Please continue to reset your password by entering the confirmation code.\n\r" +\
               "\n\r"
 
 DEBUG = False
@@ -35,28 +36,26 @@ def resetUser(request):
         reCaptcha = request.POST['g-recaptcha-response']
         if(user_otp and reCaptcha):
             if DEBUG: print("The username, email, and captcha have been verified\n")
-
             if((user_otp.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
                 #
                 # if user's otpRequested and otpTimestamp < 15 minutes
                 #   do not send another OTP until the 15 minutes expires
                 if DEBUG: print("The current OTP is still valid, re-send current OTP until it is expired\n")
-                check = send_mail(
-                'Group 3 SBS Password OTP',
-                OTP_MESSAGE%(user_otp.otp_pass),
-                'group3sbs@gmail.com',
-                [user_otp.email],
-                fail_silently=False,
-                )
-                if DEBUG: print("Check is %d\n"%(check))
-                while(check == 0):
-                    check = send_mail(
-                    'Group 3 SBS Password OTP',
-                    OTP_MESSAGE%(user_otp.otp_pass),
-                    'group3sbs@gmail.com',
-                    [user_otp.email],
-                    fail_silently=False,
-                    )
+                try:
+                    cert = user_otp.certificate
+                    cert = str(cert)
+                    certificate = M2Crypto.X509.load_cert_string(cert)
+                    public_key = certificate.get_pubkey()
+                    rsa_public_key = public_key.get_rsa()
+                    signed = rsa_public_key.public_encrypt(user_otp.otp_pass, M2Crypto.RSA.pkcs1_oaep_padding)
+                except:
+                    signed = None
+                if signed:
+                    mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%('encrypted with your public key and attached in the document'),'group3sbs@gmail.com',[user_otp.email])
+                    mail.attach('otp.bin', signed, 'application/x-binary')
+                else:
+                    mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%(user_otp.otp_pass),'group3sbs@gmail.com',[user_otp.email])
+                mail.send()
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP recently sent, please check email",})
             else:
                 # else e.g.  user's otpRequested and otpTimestamp > 15 minutes or otpRequested is False
@@ -69,22 +68,21 @@ def resetUser(request):
                 user_otp.otp_timestamp = int(time.time())
                 user_otp.save()
                 if DEBUG: print("OTP pass and timestamp set and saved\n")
-                check = send_mail(
-                'Group 3 SBS Password OTP',
-                OTP_MESSAGE%(user_otp.otp_pass),
-                'group3sbs@gmail.com',
-                [user_otp.email],
-                fail_silently=False,
-                )
-                if DEBUG: print("Check is %d\n"%(check))
-                while(check == 0):
-                    check = send_mail(
-                    'Group 3 SBS Password OTP',
-                    OTP_MESSAGE%(user_otp.otp_pass),
-                    'group3sbs@gmail.com',
-                    [user_otp.email],
-                    fail_silently=False,
-                    )
+                try:
+                    cert = user_otp.certificate
+                    cert = str(cert)
+                    certificate = M2Crypto.X509.load_cert_string(cert)
+                    public_key = certificate.get_pubkey()
+                    rsa_public_key = public_key.get_rsa()
+                    signed = rsa_public_key.public_encrypt(user_otp.otp_pass, M2Crypto.RSA.pkcs1_oaep_padding)
+                except:
+                    signed = None
+                if signed:
+                    mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%('encrypted with your public key and attached in the document'),'group3sbs@gmail.com',[user_otp.email])
+                    mail.attach('otp.bin', signed, 'application/x-binary')
+                else:
+                    mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%(user_otp.otp_pass),'group3sbs@gmail.com',[user_otp.email])
+                mail.send()
                 if DEBUG: print("Password reset OTP code has been sent\n")
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP sent, please check email",})
         else:

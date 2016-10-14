@@ -1,5 +1,5 @@
 # Purpose
-<p>This repo will be for the CSE 545 Team #3 Software Security course project</p>
+<p>This repo will be for the CSE 545 Team 3 Software Security course project</p>
 <p>jvutukur - first push</p>
 <p>garrettgutierrezasu- second push</p>
 
@@ -59,17 +59,32 @@
   * sudo apt-get install python-dev libmysqlclient-dev
   * pip install MySQL-python
 
-# Install Django
+# Auto Install Using Pip requirements.txts
+* pip install -r requirements.txt
+
+# Do the following sections if you choose not to use the requirements.txt
+
+## Install Django
 * sudo pip install django
 
-# Install Django-Axes
+## Install Django Templated email
+* sudo pip install django-templated-email
+
+## Install Django-Axes
 * sudo pip install django-axes
   * See https://django-axes.readthedocs.io
   * Make sure to make migrations and then migrate after installing and setting up database scheme.
 
-# Install PKI Dependencies
+## Install PKI Dependencies
 * sudo apt-get install python-m2crypto
   * See http://sheogora.blogspot.com/2012/03/m2crypto-for-python-x509-certificates.html or https://www.heikkitoivonen.net/m2crypto/api/
+
+## Install Easy PDF
+* pip install django-easy-pdf
+* pip install "xhtml2pdf>=0.0.6" "reportlab>=2.7,<3"
+  * See https://media.readthedocs.org/pdf/django-easy-pdf/latest/django-easy-pdf.pdf
+  * See http://django-easy-pdf.readthedocs.io/en/stable/
+  * See https://groups.google.com/forum/#!topic/django-users/0MUrSRh6fnQ
 
 # How to clone repository
 1. Go to directory where you want you project to live

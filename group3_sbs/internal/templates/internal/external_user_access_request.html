@@ -12,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+<h1>Request Access to External User Profile</h1>
 <form action="{% url 'internal:validate_external_user_access_request' %}" method="post">
 {% csrf_token %}
 <label for="external_user_id">Enter external user ID for the profile for which you want access</label>
@@ -19,11 +20,12 @@
 <div class="panel panel-danger">
   <div class="panel-body">
     <label class="radio-inline"><input type="radio" name="page_to_view" value="checking_account" checked="checked" required >Checking Account</label>
+    <label class="radio-inline"><input type="radio" name="page_to_view" value="credit_card" required >Credit Card</label>
     {% if not request.user.administrator %}
     <label class="radio-inline"><input type="radio" name="page_to_view" value="edit_profile" required >Edit Profile</label>
     {% endif %}
-    <label class="radio-inline"><input type="radio" name="page_to_view" value="profile" required >View Profile</label>
     <label class="radio-inline"><input type="radio" name="page_to_view" value="savings_account" required >Savings Account</label>
+    <label class="radio-inline"><input type="radio" name="page_to_view" value="profile" required >View Profile</label>
   </div>
 </div>
 <input type="submit" class="btn btn-default" value="Submit" />

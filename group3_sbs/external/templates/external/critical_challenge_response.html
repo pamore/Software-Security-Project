@@ -3,7 +3,28 @@
 {% load static %}
 
 {% block stylesheets %}
-<!-- Add Stylesheets here -->
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/jquery-ui.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/keyboard/keyboard.css' %}" />
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-autocomplete.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.extension-typing.js' %}"> </script>
+<script src="{% static 'global_templates/keyboard/jquery.keyboard.js' %}"></script>
+<script src="{% static 'global_templates/keyboard/jquery.mousewheel.js' %}"> </script>
+
+<script src='https://www.google.com/recaptcha/api.js'></script>
+
+<script type="text/javascript">
+$( document ).ready(function() {
+  $('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+
+  // Open keyboard by clicking on icon
+  $('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
+  $('#icon2').click(function () { $('#keyboard2').getkeyboard().reveal(); });
+  $('#icon3').click(function () { $('#keyboard3').getkeyboard().reveal(); });
+});
+</script>
+
 {% endblock %}
 
 
@@ -14,15 +35,20 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>Please decrypt the OTP with your private key</h1>
+    <h1>Grant Permission to Perform Critical Transaction</h1>
+    <h2>Please decrypt the OTP with your private key</h2>
+    <p style="color: red;"><strong>Note: If you are successful, you will be redirected to your account page. Then, you will be allowed to make one critical transaction before reauthenticating.</strong></p>
     <form action="{% url 'external:critical_challenge_response_validate' account_type=account_type type_of_transaction=type_of_transaction %}" method="post">
     {% csrf_token %}
     <label for="username">Username</label>
-    <input type="text" class="form-control" name="username" value="" required />
+    <input type="text" class="form-control" id="keyboard1" name="username" value="" required />
+      <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/><br />
     <label for="email">Email</label>
-    <input type="email" class="form-control" name="email" value="" required />
+    <input type="email" class="form-control" id="keyboard2" name="email" value="" required />
+      <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/><br />
     <label for="opt">Decrypted OTP</label>
-    <input type="password" class="form-control" name="otp" value="" required />
+    <input type="password" class="form-control" id="keyboard3" name="otp" value="" required />
+      <img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/><br />
     <input type="submit" class="btn btn-primary" value="Submit" />
     </form>
   </div>

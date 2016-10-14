@@ -12,6 +12,7 @@
 {% endblock %}
 
 {% block content %}
+<h1>Request Access to Internal User Profile</h1>
 <form action="{% url 'internal:validate_internal_user_access_request' %}" method="post">
 {% csrf_token %}
 <label for="internal_user_id">Enter internal user ID for the profile for which you want access</label>

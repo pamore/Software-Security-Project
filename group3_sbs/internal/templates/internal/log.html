@@ -1,16 +1,3 @@
-{% extends "global_templates/internal_sbs.html" %}
-
-{% load static %}
-
-{% block stylesheets %}
-<!-- Add stylesheets or javascript here !-->
-{% endblock %}
-
-
-{% block navigation %}
-<!-- Navigation here !-->
-{% endblock %}
-
-{% block content %}
-{{content}}
-{% endblock %}
+{% for line in content %}
+ <p>{{line}}</p>
+{% endfor %}

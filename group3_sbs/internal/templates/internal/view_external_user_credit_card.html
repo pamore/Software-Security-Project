@@ -1,4 +1,4 @@
-{% extends "global_templates/external_sbs.html" %}
+{% extends "global_templates/internal_sbs.html" %}
 
 {% load static %}
 
@@ -14,11 +14,11 @@
 {% block content %}
 <div class="row">
   <div class="col-md-12">
-    <h1>Credit card Page</h1>
+    <h1>Credit card Page for {{user.username}}</h1>
   </div>
 </div>
 
-{% if show_credit_info %}
+{% if credit_card %}
 <table class="table">
   <thead>
     <tr>
@@ -31,11 +31,11 @@
   </thead>
   <tbody>
     <tr>
-      <td>{{show_credit_info.creditcard_number}}</td>
-      <td>{{show_credit_info.charge_limit}}</td>
-      <td>${{show_credit_info.remaining_credit}}</td>
-      <td>${{show_credit_info.late_fee}}</td>
-      <td>{{show_credit_info.days_late}}</td>
+      <td>{{credit_card.creditcard_number}}</td>
+      <td>{{credit_card.charge_limit}}</td>
+      <td>${{credit_card.remaining_credit}}</td>
+      <td>${{credit_card.late_fee}}</td>
+      <td>{{credit_card.days_late}}</td>
     </tr>
   </tbody>
   <tfoot>

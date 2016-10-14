@@ -21,9 +21,20 @@
 {% endif %}
 
 <div class="row">
-  <div class="col-md-12">
-    <h1>Bank Statement</h1>
+  <div class="col-md-9">
+    <h1>{{title}} Bank Statements for {{request.user.username}}</h1>
   </div>
+  <div class="col-md-3">
+    {% if title == "All Transactions"%}
+    <a class="btn btn-info" href="{% url 'external:all_statements_pdf' %}">Printable PDF Version</a>
+    {% elif title == "Checking and Savings"%}
+    <a class="btn btn-info" href="{% url 'external:checking_and_savings_statements_pdf' %}">Printable PDF Version</a>
+    {% elif title == "Credit Card"%}
+    <a class="btn btn-info" href="{% url 'external:credit_card_statements_pdf' %}">Printable PDF Version</a>
+    {% endif %}
+  </div>
+</div>
+<div class="row">
   <table class="table">
     <thead>
       <tr>

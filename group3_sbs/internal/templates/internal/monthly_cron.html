@@ -12,14 +12,27 @@
 {% endblock %}
 
 {% block content %}
-<h1>Hi, Admin</h1>
+<h1>Activate Credit Card Late Payment Functions Manually</h1>
 {% if message %}
 <p>{{message}}</p>
 {% endif %}
-
-<form action="{% url 'internal:bineeta_cron_job_late_charge_validate' %}" method="post">
-  {% csrf_token %}
-  <label>Charge any late credit card</label>
-  <input type="submit" class="btn btn-primary" value="Run it" />
-</form>
+<br />
+<div class="row">
+  <div class="col-md-6">
+    <form action="{% url 'internal:bineeta_cron_job_late_charge_validate' %}" method="post">
+      {% csrf_token %}
+      <label>Only at the first day of every month, charge any credit cards that are not fully payed.</label>
+      <br />
+      <input type="submit" class="btn btn-info" value="Run it" />
+    </form>
+  </div>
+  <div col="col-md-6">
+    <form action="{% url 'internal:bineeta_cron_job_daily_late_charge_validate' %}" method="post">
+      {% csrf_token %}
+      <label>Check and charge any non-fully payed, late credit cards daily.</label>
+      <br />
+      <input type="submit" class="btn btn-info" value="Run it" />
+    </form>
+  </div>
+</div>
 {% endblock %}

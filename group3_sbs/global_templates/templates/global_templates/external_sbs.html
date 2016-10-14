@@ -95,13 +95,15 @@
             {% elif request.user.merchantorganization %}
             <li>
                 <font color="#FF7F50">Payments on Behalf Requests</font>
-                  <a href="{% url 'external:request_payment' %}"> &nbsp &nbsp &nbsp Make Request</a>
+                  <a href="{% url 'external:request_payment' %}"> &nbsp &nbsp &nbsp Via Account Number</a>
+                  <a href="{% url 'external:request_payment_email' %}"> &nbsp &nbsp &nbsp Via Email</a>
             </li>
             {% endif %}
             <li>
-                <font color="#FF7F50"> View/Download Transactions </font>
-                  <a href="{% url 'external:all_statements' %}"> &nbsp &nbsp &nbsp Checking / Savings  </a>
-                  <a href=""> &nbsp &nbsp &nbsp Credit Card </a>
+                <font color="#FF7F50"> View Transactions </font>
+                <a href="{% url 'external:all_statements' %}"> &nbsp &nbsp &nbsp All  </a>
+                  <a href="{% url 'external:checking_and_savings_statements' %}"> &nbsp &nbsp &nbsp Checking / Savings  </a>
+                  <a href="{% url 'external:credit_card_statements' %}"> &nbsp &nbsp &nbsp Credit Card </a>
             </li>
                  <li>
                     -------

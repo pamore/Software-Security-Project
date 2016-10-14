@@ -11,9 +11,13 @@ from external.models import *
 from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
 from global_templates.common_functions import *
 from global_templates.constants import *
+from group3_sbs.settings import BASE_DIR
 import os
 from django.db import models
 from django.db.models import Q
+from datetime import date
+import datetime
+from easy_pdf.rendering import render_to_pdf_response
 
 """
                         Render Web Pages
@@ -40,13 +44,16 @@ def index(request):
 @user_passes_test(is_administrator)
 def view_external_log(request):
     try:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        f = open(dir_path+'/../log/external_log.log', 'r')
+        file_name= os.path.join(BASE_DIR,'log/external_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
-        return render(request, 'internal/log.html', {'content': lines})
-    except Exception as m:
-        print(m)
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
         return HttpResponseRedirect(reverse('internal:error'))
 
 # Internal Log Page
@@ -55,11 +62,15 @@ def view_external_log(request):
 @user_passes_test(is_administrator)
 def view_internal_log(request):
     try:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        f = open(dir_path+'/../log/internal_log.log', 'r')
+        file_name= os.path.join(BASE_DIR,'log/internal_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
-        return render(request, 'internal/log.html', {'content': lines})
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
     except:
         return HttpResponseRedirect(reverse('internal:error'))
 
@@ -69,11 +80,15 @@ def view_internal_log(request):
 @user_passes_test(is_administrator)
 def view_server_log(request):
     try:
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        f = open(dir_path+'/../log/server_log.log', 'r')
+        file_name= os.path.join(BASE_DIR,'log/server_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
         lines = f.readlines()
-        f.close
-        return render(request, 'internal/log.html', {'content': lines})
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
     except:
         return HttpResponseRedirect(reverse('internal:error'))
 
@@ -251,6 +266,27 @@ def view_external_user_checking_account(request, external_user_id):
             return HttpResponseRedirect(reverse(error_redirect))
         checking_account = get_external_user_account(user=external_user, account_type=ACCOUNT_TYPE_CHECKING)
         return render(request, success_page, {"user": external_user, "checking_account": checking_account})
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# View External User Credit Card Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def view_external_user_credit_card(request, external_user_id):
+    user = request.user
+    page_to_view = PAGE_TO_VIEW_CREDIT_CARD
+    success_page = "internal/view_external_user_" + page_to_view + ".html"
+    error_redirect = "internal:index"
+    if can_view_external_user_page(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=int(external_user_id))
+            if not is_external_user(external_user):
+                raise Exception
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+        credit_card = get_external_user_account(user=external_user, account_type=CREDIT_CARD)
+        return render(request, success_page, {"user": external_user, "credit_card": credit_card})
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
@@ -632,8 +668,6 @@ def validate_profile_edit(request, external_user_id):
         else:
             return HttpResponseRedirect(reverse(error_redirect))
     else:
-
-
         return HttpResponseRedirect(reverse(error_redirect))
 
 @never_cache
@@ -646,19 +680,36 @@ def bineeta_cron_job_late_charge(request):
 @login_required
 @user_passes_test(is_administrator)
 def bineeta_cron_job_late_charge_validate(request):
-    if request.method == "POST":
+    if request.method == "POST" and date(date.today().year, date.today().month, 1) == date.today():
         late_credit_card = CreditCard.objects.filter(remaining_credit__lt = 1000)
-        print(late_credit_card)
-        #no_longer_late = CreditCard.objects.filter(Q(remaining_credit=1000) | Q(days_late__gt = 0))
         for card in late_credit_card:
-            print(card.id)
+            #print(card.id)
             card.days_late = card.days_late + 1
             card.late_fee = CREDIT_CARD_INTEREST_RATE * card.days_late
             card.save()
-        #for card in no_longer_late:
-            #card.days_late = 0
-            #card.late_fee = 0
-            #card.save()
-        return render(request, 'internal/monthly_cron.html', {'message': "Successfully charged any late cards"})
+        return render(request, 'internal/monthly_cron.html', {'message': "Successfully charged any late cards this month"})
     else:
-        return HttpResponseRedirect(reverse('internal:error'))
+        return render(request, 'internal/monthly_cron.html', {'message': "Unsuccessfully charged any late cards"})
+
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def bineeta_cron_job_daily_late_charge_validate(request):
+    min_time = datetime.time(23, 59, 00)
+    max_time = datetime.time(23, 59, 59)
+    if request.method == "POST" and datetime.datetime.time(datetime.datetime.now()) >= max_time and request.method == "POST" and datetime.datetime.time(datetime.datetime.now()) <= max_time:
+        late_credit_card = CreditCard.objects.filter(Q(remaining_credit__lt=1000) | Q(days_late__gt = 0))
+        no_longer_late = CreditCard.objects.filter(Q(remaining_credit=1000) | Q(days_late__gt = 0))
+        for card in late_credit_card:
+            #print(card.id)
+            card.days_late = card.days_late + 1
+            card.late_fee = CREDIT_CARD_INTEREST_RATE * card.days_late
+            card.save()
+        for card in no_longer_late:
+            card.days_late = 0
+            card.late_fee = 0
+            #print(card.id)
+            card.save()
+        return render(request, 'internal/monthly_cron.html', {'message': "Updated late charges today"})
+    else:
+        return render(request, 'internal/monthly_cron.html', {'message': "Did not update late charges"})

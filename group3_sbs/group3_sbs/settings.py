@@ -17,9 +17,8 @@ import json
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #with open('/var/sbs_config.json') as data_file:
-with open('/home/bineeta/Desktop/CSE_545/group3_sbs/var/sbs_config.json') as data_file:
+with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
@@ -152,7 +151,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'group3_sbs',
         'USER': 'root',
-        'PASSWORD': '3181',
+        'PASSWORD': CONFIG['database_password'],
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -217,7 +216,6 @@ AXES_LOCKOUT_URL = None
 AXES_USERNAME_FORM_FIELD = 'username'
 AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = False
 AXES_NEVER_LOCKOUT_WHITELIST = False
-
 
 
 # Session settings

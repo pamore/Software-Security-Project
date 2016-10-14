@@ -35,4 +35,6 @@ urlpatterns = [
     url(r'^transaction/internal_noncritical/$', views.internal_noncritical_transactions, name='internal_noncritical_transactions'),
     url(r'^cron_job/bineeta_cron_job_late_charge/$', views.bineeta_cron_job_late_charge, name='bineeta_cron_job_late_charge'),
     url(r'^cron_job/bineeta_cron_job_late_charge/validate/$', views.bineeta_cron_job_late_charge_validate, name='bineeta_cron_job_late_charge_validate'),
+    url(r'^external_user/credit_card/(?P<external_user_id>[1-9][0-9]*)/view/$', views.view_external_user_credit_card, name='view_external_user_credit_card'),
+    url(r'^cron_job/bineeta_cron_job_daily_late_charge/validate/$', views.bineeta_cron_job_daily_late_charge_validate, name='bineeta_cron_job_daily_late_charge_validate'),
 ]

@@ -1,0 +1,6 @@
+django
+django-axes
+django-templated-email
+django-easy-pdf
+xhtml2pdf>=0.0.6
+reportlab>=2.7,<3

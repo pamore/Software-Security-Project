@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Permission
 from django.core.mail import send_mail, EmailMessage
 from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.db.models import Q
 from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
@@ -15,6 +16,8 @@ from global_templates.constants import *
 from M2Crypto import RSA, EVP
 import M2Crypto, time
 import datetime
+from easy_pdf.rendering import render_to_pdf_response
+
 # Create your views here.
 
 """ Render Functions for Web Pages """
@@ -358,8 +361,8 @@ def critical_challenge_response(request, account_type, type_of_transaction):
     except:
         return HttpResponseRedirect(reverse(error_redirect))
     try:
-        message = 'Hi, ' + user.username + '!\nPlease decrypt the following string using your private key and submit the decrypted value to the site. It is padded with oeap.\n'
-        message = message + 'Use a command like this to extract it. Assuming you have openssl installed and your private_key is called private_key.pem in the PEM format and all files are in the same directory:\n'
+        message = 'Hi, ' + user.username + '!\nPlease decrypt the following string using your private key and submit the decrypted value to the site. It is padded with oeap.\n\n'
+        message = message + 'Use a command like this to extract it. Assuming you have openssl installed and your private_key is called private_key.pem in the PEM format and all files are in the same directory:\n\n'
         message = message + "openssl rsautl -oaep -decrypt -in otp.bin -out output.txt -inkey private_key.pem -keyform PEM\necho `cat output.txt`"
         cert = profile.certificate
         cert = str(cert)
@@ -585,13 +588,22 @@ def transfer_savings_validate(request):
     else:
         return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
 
-# Redirect to Request Payment web page
+# Redirect to Request Payment Email page
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
 def request_payment(request):
     user = request.user
     return render(request, 'external/requestPayment.html',
+                  {'checking_account': user.merchantorganization.checking_account})
+
+# Redirect to Request Payment Email page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def request_payment_email(request):
+    user = request.user
+    return render(request, 'external/requestPaymentEmail.html',
                   {'checking_account': user.merchantorganization.checking_account})
 
 # Add requested payment to DB
@@ -604,8 +616,14 @@ def addPaymentRequestToDB(request):
     payment_amount1 = float(request.POST['amount'])
     accountType = str(request.POST['account_type'])
     type_of_transaction = TRANSACTION_TYPE_PAYMENT_ON_BEHALF
-    clientAccountNum = int(str(request.POST['account_number']))
-    clientRoutingNum = long(str(request.POST['route_number']))
+    email = request.POST.get('email_address')
+    if email:
+        account = get_external_user_account_email(email=email, account_type=accountType)
+        clientAccountNum = int(account.id)
+        clientRoutingNum = long(account.routing_number)
+    else:
+        clientAccountNum = int(str(request.POST['account_number']))
+        clientRoutingNum = long(str(request.POST['route_number']))
     clientAccountRecord = None
     log = logging.getLogger('logging.FileHandler')
     if is_pki_needed(request=request, account_type=accountType, type_of_transaction=type_of_transaction):
@@ -719,8 +737,8 @@ def reject_approvals(request):
 @user_passes_test(is_external_user)
 def all_statements(request):
     user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user).order_by('time_created')
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
     # Get all noncritical transactions for user
     # Get all critical
     transactions = []
@@ -729,7 +747,7 @@ def all_statements(request):
     for transaction in critical_transactions:
         transactions.append(transaction)
     return render(request, 'external/all_statements.html',
-                  {'transactions': transactions})
+                  {'transactions': transactions, 'title': 'All Transactions'})
 
 @never_cache
 @login_required
@@ -754,7 +772,13 @@ def show_credit_info(request):
 def charge_limit(request):
     user = request.user
     profile = get_any_user_profile(username=user.username)
-    return render(request, 'external/charge_limit.html', {'credit_card': profile.credit_card})
+    if profile and has_credit_card(user):
+        charge_limit = min(float(profile.credit_card.charge_limit),float(profile.credit_card.remaining_credit))
+        pay_limit = float(CREDIT_CARD_MAX_BALANCE)- max(float(profile.credit_card.charge_limit),float(profile.credit_card.remaining_credit))
+        return render(request, 'external/charge_limit.html', {'credit_card': profile.credit_card, 'charge_limit':charge_limit, 'pay_limit': pay_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
 # Validate Credit Checking Transaction
 @never_cache
 @login_required
@@ -782,4 +806,89 @@ def credit_card_debit_charge_limit_validate(request):
     #credit_cards = CreditCard.object.filter(remaining_credit < 1000)
     #for card in credit_cards:
         #card.days_late = card.days_late + 1
-        #scard.save()
+        #card.save()
+
+# PDF All Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def all_statements_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user,status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'All Transactions'}, filename=None, encoding=u'utf-8')
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def checking_and_savings_statements(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/all_statements.html',
+                  {'transactions': transactions, 'title': 'Checking and Savings'})
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_statements(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/all_statements.html',
+                  {'transactions': transactions, 'title': 'Credit Card'})
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def checking_and_savings_statements_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Checking and Savings'}, filename=None, encoding=u'utf-8')
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_statements_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Credit Card'}, filename=None, encoding=u'utf-8')
