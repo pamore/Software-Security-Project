@@ -52,4 +52,6 @@ urlpatterns = [
     url(r'^charge_limit/$', views.charge_limit, name='charge_limit'),
     url(r'^credit_card/credit_card_credit_charge_limit_validate/$', views.credit_card_credit_charge_limit_validate, name='credit_card_credit_charge_limit_validate'),
     url(r'^credit_card/credit_card_debit_charge_limit_validate/$', views.credit_card_debit_charge_limit_validate, name='credit_card_debit_charge_limit_validate'),
+    url(r'^account/view/checking/statements/checking-pdf$', views.checking_statement_pdf, name='checking_statement_pdf'),
+    url(r'^account/view/savings/statements/savings-pdf$', views.savings_statement_pdf, name='savings_statement_pdf'),
 ]

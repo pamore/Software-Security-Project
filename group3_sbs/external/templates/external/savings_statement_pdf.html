@@ -1,0 +1,41 @@
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Savings Bank Statement</h1>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Initiator</th>
+        <th>Description</th>
+        <th>Time Created</th>
+        <th>Status</th>
+        <th>Resolver</th>
+        <th>Time Resolved</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for transaction in transactions %}
+      <tr>
+        <td>{{transaction.type_of_transaction}}</td>
+        <td>{{transaction.initiator.username}}</td>
+        <td>{{transaction.description}}</td>
+        <td>{{transaction.time_created}}</td>
+        <td>{{transaction.status}}</td>
+        {% if transaction.resolver %}
+        <td>{{transaction.resolver.username}}</td>
+        <td>{{transaction.time_resolved}}</td>
+        {% else %}
+        <td>Unresolved</td>
+        <td>Unresolved</td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+    </tfoot>
+  </table>
+</div>
+{% endblock %}

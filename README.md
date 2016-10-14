@@ -67,6 +67,10 @@
   * See https://django-axes.readthedocs.io
   * Make sure to make migrations and then migrate after installing and setting up database scheme.
 
+# Install Easy PDF
+* $ pip install django-easy-pdf
+* $ pip install "xhtml2pdf>=0.0.6" "reportlab>=2.7,<3"
+
 # Install PKI Dependencies
 * sudo apt-get install python-m2crypto
   * See http://sheogora.blogspot.com/2012/03/m2crypto-for-python-x509-certificates.html or https://www.heikkitoivonen.net/m2crypto/api/

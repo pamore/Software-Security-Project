@@ -15,6 +15,7 @@ from global_templates.constants import *
 from M2Crypto import RSA, EVP
 import M2Crypto, time
 import datetime
+from easy_pdf.rendering import render_to_pdf_response
 # Create your views here.
 
 """ Render Functions for Web Pages """
@@ -783,3 +784,35 @@ def credit_card_debit_charge_limit_validate(request):
     #for card in credit_cards:
         #card.days_late = card.days_late + 1
         #scard.save()
+
+# PDF Checking Statement
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def checking_statement_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, account_type="Checking").order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user, account_type="Checking").order_by('time_created')
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/checking_statement_pdf.html', {'transactions': transactions}, filename=None, encoding=u'utf-8')
+
+
+# PDF Savings Statement
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def savings_statement_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participant_id=user.id, account_type="Savings").order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participant_id=user.id, account_type="Savings").order_by('time_created')
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/savings_statement_pdf.html', {'transactions': transactions}, filename=None, encoding=u'utf-8')
+
