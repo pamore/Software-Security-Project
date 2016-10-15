@@ -1,14 +1,14 @@
 from axes.decorators import watch_login
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.template import loader, RequestContext
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
 from group3_sbs.settings import *
-from global_templates.constants import OTP_EXPIRATION_DATE
+from global_templates.constants import OTP_EXPIRATION_DATE, TRUSTED_DEVICE_EXPIRY
 from global_templates.common_functions import validate_password, validate_user_type, validate_username, get_user_email, get_any_user_profile, get_user_trusted_keys, trustedDeviceKeyGenerator, otpGenerator
 from django.core.mail import send_mail
 import datetime
@@ -141,17 +141,11 @@ def loggedin(request):
         #   send the user an OTP for verifying the device
         #   redirect the user to an OTP device verification page
 
-        if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
-            return HttpResponseRedirect(reverse('internal:index'))
-        elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
-            return HttpResponseRedirect(reverse('external:index'))
-        else:
-            return HttpResponseRedirect(reverse('login:signout'))
-
         user_email = get_user_email(user)
         profile = get_any_user_profile(user.username, user_email)
-        print("Current cookies:")
-        trusted_key = request.COOKIES.get('trusted_device','')
+        if DEBUG: print("Current cookies:")
+        if DEBUG: print request.COOKIES
+        trusted_key = request.COOKIES.get('trusted_device')
         if(trusted_key != ''):
             if DEBUG: print("The 'trusted_device' cookie is present\n")
             trusted_keys = get_user_trusted_keys(profile)
@@ -164,11 +158,36 @@ def loggedin(request):
                 if DEBUG: print("The 'trusted_device' cookie is not in the list\n")
                 logout(request)
                 return send_device_verify_otp(request, profile)
+            else:
+                if DEBUG: print("trusted key is:")
+                if DEBUG: print trusted_key
+                update_key = trustedDeviceKeyGenerator()
+                if DEBUG: print("updated key is:")
+                if DEBUG: print update_key
+                trusted_keys.pop(trusted_keys.index(trusted_key))
+                trusted_keys.insert(0,update_key)
+
+                if DEBUG: print("trusted keys is:")
+                if DEBUG: print trusted_keys
+                if DEBUG: print("Update list of keys")
+                serial_keys = ''
+                for key in trusted_keys:
+                    serial_keys += key + ';'
+
+                if DEBUG: print("Serialized keys '%s'"%(serial_keys))
+
+                profile.trusted_device_keys = serial_keys
+                profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
+                profile.save()
 
             if hasattr(user, 'regularemployee') or hasattr(user, 'systemmanager') or hasattr(user, 'administrator'):
-                return HttpResponseRedirect(reverse('internal:index'))
+                response = redirect('internal:index')
+                response.set_cookie('trusted_device',update_key,max_age=TRUSTED_DEVICE_EXPIRY)
+                return response
             elif hasattr(user, 'individualcustomer') or hasattr(user, 'merchantorganization'):
-                return HttpResponseRedirect(reverse('external:index'))
+                response = redirect('external:index')
+                response.set_cookie('trusted_device',update_key,max_age=TRUSTED_DEVICE_EXPIRY)
+                return response
             else:
                 return HttpResponseRedirect(reverse('login:signout'))
         else:
@@ -222,7 +241,7 @@ def deviceVerify(request):
 
                     response = render(request, 'login/deviceVerify.html', {'error_message': "Succesfully added device to trusted devices!",})
                     if DEBUG: print("Generate response")
-                    response.set_cookie('trusted_device',new_key)
+                    response.set_cookie('trusted_device',new_key,max_age=TRUSTED_DEVICE_EXPIRY)
                     if DEBUG: print("Finish verifying device, return response")
                     return response
                 else:
