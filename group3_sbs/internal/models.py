@@ -32,3 +32,8 @@ class TransactionLog(models.Model):
     external_noncritical_transaction = models.ManyToManyField('external.ExternalNoncriticalTransaction')
     internal_critical_transaction = models.ManyToManyField(InternalCriticalTransaction)
     internal_noncritical_transaction = models.ManyToManyField(InternalNoncriticalTransaction)
+
+class accessRequests(models.Model):
+    internalUserId = models.IntegerField()
+    externalUserId = models.IntegerField()
+    pageToView = models.CharField(max_length=30)

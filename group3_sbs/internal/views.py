@@ -8,7 +8,7 @@ from django.template import loader
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import *
-from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
+from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction, accessRequests
 from global_templates.common_functions import *
 from global_templates.constants import *
 from group3_sbs.settings import BASE_DIR
@@ -170,6 +170,7 @@ def edit_internal_user_profile(request, internal_user_id):
 def external_user_access_request(request):
     user = request.user
     list = get_user_det(user)
+    print "In request page"
     return render(request, 'internal/external_user_access_request.html',{'user_type': list[2], 'first_name': list[0],'last_name':list[1] })
 
 # Internal Noncritical Transactions Page
@@ -467,6 +468,8 @@ def validate_external_user_access_request(request):
     if access_granted:
         return HttpResponseRedirect(reverse(success_redirect, kwargs={'external_user_id': external_user.id}))
     elif is_regular_employee(user) and not access_granted:
+        accessRequestObject = accessRequests.objects.create(internalUserId = user.id, externalUserId =external_user_id , pageToView=page_to_view)
+        accessRequestObject.save()
         return HttpResponseRedirect(reverse(pending_approval_redirect))
     else:
         return HttpResponseRedirect(reverse(error_redirect))

@@ -1,0 +1,58 @@
+{% extends "global_templates/external_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add Stylesheets here -->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Add Navigation here -->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Permissions Waiting for Approval</h1>
+  </div>
+</div>
+<br />
+<div class="row">
+
+
+    <table class="table">
+    <tr>
+        <td>Internal User ID</td>
+        <td>Access Page</td>
+        <td></td>
+        <td></td>
+    </tr>
+    {% for currentRequest in requests %}
+        <tr>
+
+        <td>{{currentRequest.id}}</td>
+        <td>{{currentRequest.pageToView}}</td>
+        <!-- Form Start-->
+        {% csrf_token %}
+        <input type="hidden" value={{ currentRequest.internalUserId }} name="IntenalUserId"/>
+        <input type="hidden" value={{ currentRequest.pageToView }} name="AcessPage"/>
+        <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
+        <!-- Form end -->
+
+        <!-- From Start -->
+        {% csrf_token %}
+        <input type="hidden" value={{ currentRequest.id }} name="IntenalUserId"/>
+        <input type="hidden" value={{ currentRequest.pageToView }} name="AcessPage"/>
+        <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
+        <!-- Form End -->
+
+        </tr>
+
+    {% endfor %}
+    </table >
+
+</div>
+
+
+{% endblock %}

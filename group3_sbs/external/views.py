@@ -11,6 +11,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
 from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest, IndividualCustomer
+from internal.models import accessRequests
 from global_templates.common_functions import *
 from global_templates.constants import *
 from M2Crypto import RSA, EVP
@@ -694,7 +695,18 @@ def showPaymentRequests(request):
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(clientAccountNum=user.individualcustomer.savings_account_id)
     return render(request, 'external/showPaymentRequests.html',{'checkingRequests':checkingRequests,'savingRequests':savingRequests})
 
-# Update Approvals
+
+#Get access Requests from data base and display them on web page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def getAccessRequests(request):
+    user = request.user
+    requests = accessRequests.objects.all().filter(externalUserId=user.id)
+    return render(request, 'external/ViewPermissionRequsts.html',{'requests':requests})
+
+
+# Approve Transaction Requests
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
@@ -714,7 +726,29 @@ def update_approvals(request):
         clientAccountNum=user.individualcustomer.savings_account_id)
     return HttpResponseRedirect(reverse('external:showPaymentRequests'))
 
-# Reject Approvals
+
+# Approve Access Requests
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def approveAccessRequests(request):
+    user = request.user
+    permission_codename = 'can_external_user_edit_own_profile_' + str(user.id)
+    permission_name = "Can external user " + str(user.id) + " edit their profie"
+    try:
+        permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+    except:
+        permission = Permission.objects.create(codename=permission_codename, name=permission_name,
+                                           content_type=content_type)
+    user.user_permissions.add(permission)
+    user.save()
+    #remove this request from accessRequets Table
+    requests = accessRequests.objects.all().filter(externalUserId=user.id)
+    return render(request, 'external:ViewPermissionRequsts.html',{'requests':requests})
+
+
+
+# Reject Transaction Requests
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
@@ -731,7 +765,18 @@ def reject_approvals(request):
         clientAccountNum=user.individualcustomer.savings_account_id)
     return HttpResponseRedirect(reverse('external:showPaymentRequests'))
 
-# View Bank Statements
+
+# Reject Access Requests
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def rejectAccessRequests(request):
+    user = request.users
+    # remove this request from accessRequets Table
+    requests = accessRequests.objects.all().filter(externalUserId=user.id)
+    return render(request, 'external:ViewPermissionRequsts.html', {'requests': requests})
+
+#View Bank Statements
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
@@ -892,3 +937,7 @@ def credit_card_statements_pdf(request):
     for transaction in critical_transactions:
         transactions.append(transaction)
     return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Credit Card'}, filename=None, encoding=u'utf-8')
+
+
+
+
