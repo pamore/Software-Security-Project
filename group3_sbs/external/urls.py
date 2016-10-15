@@ -58,4 +58,5 @@ urlpatterns = [
     url(r'^account/view/statements/credit_card/view/$', views.credit_card_statements, name='credit_card_statements'),
     url(r'^account/view/statements/checking_and_savings/pdf/$', views.checking_and_savings_statements_pdf, name='checking_and_savings_statements_pdf'),
     url(r'^account/view/statements/credit_card/pdf/$', views.credit_card_statements_pdf, name='credit_card_statements_pdf'),
+    url(r'^credit_card/credit_card_pay_late_fee_validate/$', views.credit_card_pay_late_fee_validation, name='credit_card_pay_late_fee_validation'),
 ]

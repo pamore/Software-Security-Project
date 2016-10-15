@@ -1,4 +1,3 @@
-import logging
 from django.utils import timezone
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -10,36 +9,63 @@ from django.template import loader
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.cache import never_cache
-from external.models import SavingsAccount, CheckingAccount, CreditCard, ExternalNoncriticalTransaction, ExternalCriticalTransaction, MerchantPaymentRequest, IndividualCustomer
+from easy_pdf.rendering import render_to_pdf_response
+from external.models import *
 from global_templates.common_functions import *
 from global_templates.constants import *
 from M2Crypto import RSA, EVP
-import M2Crypto, time
-import datetime
-from easy_pdf.rendering import render_to_pdf_response
+import M2Crypto, time, logging, datetime
 
 # Create your views here.
 
 """ Render Functions for Web Pages """
-# External User Home Page
+
+# View Bank Statements
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def index(request):
+def all_statements(request):
     user = request.user
-    if is_individual_customer(user) and not has_no_account(user):
-        return render(request, 'external/index.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name, 'checkingaccount': user.individualcustomer.checking_account, 'savingsaccount': user.individualcustomer.savings_account, 'creditcard': user.individualcustomer.credit_card})
-    elif is_merchant_organization(user) and not has_no_account(user):
-        return render(request, 'external/index.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/all_statements.html',
+                  {'transactions': transactions, 'title': 'All Transactions'})
+
+# PDF All Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def all_statements_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user,status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'All Transactions'}, filename=None, encoding=u'utf-8')
+
+# Charge Card or Pay Card Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def charge_limit(request):
+    user = request.user
+    profile = get_any_user_profile(username=user.username)
+    if profile and has_credit_card(user):
+        charge_limit = min(float(profile.credit_card.charge_limit),float(profile.credit_card.remaining_credit))
+        pay_limit = float(CREDIT_CARD_MAX_BALANCE)- max(float(profile.credit_card.charge_limit),float(profile.credit_card.remaining_credit))
+        return render(request, 'external/charge_limit.html', {'credit_card': profile.credit_card, 'charge_limit':charge_limit, 'pay_limit': pay_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
-
-# External Error Page
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def error(request):
-    return render(request, 'external/error.html')
 
 # Checking Account Page
 @never_cache
@@ -54,18 +80,40 @@ def checking_account(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
-# Savings Account Page
+# View Checking/Savings Bank Statements
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def savings_account(request):
+def checking_and_savings_statements(request):
     user = request.user
-    if is_individual_customer(user) and has_savings_account(user):
-        return render(request, 'external/savings_account.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, 'is_merchant_organization' : False})
-    elif is_merchant_organization(user) and has_savings_account(user):
-        return render(request, 'external/savings_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, 'is_merchant_organization' : True})
-    else:
-        return HttpResponseRedirect(reverse('external:error'))
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/all_statements.html',
+                  {'transactions': transactions, 'title': 'Checking and Savings'})
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def checking_and_savings_statements_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Checking and Savings'}, filename=None, encoding=u'utf-8')
 
 # Credit Card Page
 @never_cache
@@ -79,6 +127,41 @@ def credit_card(request):
         return render(request, 'external/credit_card.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'credt_card': user.merchantorganization.credit_card})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_statements(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render(request, 'external/all_statements.html',
+                  {'transactions': transactions, 'title': 'Credit Card'})
+
+# View Checking/Savings Bank Statements
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_statements_pdf(request):
+    user = request.user
+    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
+    # Get all noncritical transactions for user
+    # Get all critical
+    transactions = []
+    for transaction in noncritical_transactions:
+        transactions.append(transaction)
+    for transaction in critical_transactions:
+        transactions.append(transaction)
+    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Credit Card'}, filename=None, encoding=u'utf-8')
 
 # Credit Checking Page
 @never_cache
@@ -105,6 +188,40 @@ def credit_savings(request):
         return render(request, 'external/credit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+
+# Render Page for Critical Challenge Response
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def critical_challenge_response(request, account_type, type_of_transaction):
+    user = request.user
+    success_redirect = 'external/critical_challenge_response.html'
+    error_redirect = 'external:error'
+    try:
+        profile = get_any_user_profile(username=user.username)
+        if (profile.otp_timestamp + OTP_EXPIRATION_DATE) < int(time.time()):
+            profile.otp_pass = otpGenerator(size=OTP_LENGTH)
+            profile.otp_timestamp = int(time.time())
+            profile.save()
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    try:
+        message = 'Hi, ' + user.username + '!\nPlease decrypt the following string using your private key and submit the decrypted value to the site. It is padded with oeap.\n\n'
+        message = message + 'Use a command like this to extract it. Assuming you have openssl installed and your private_key is called private_key.pem in the PEM format and all files are in the same directory:\n\n'
+        message = message + "openssl rsautl -oaep -decrypt -in otp.bin -out output.txt -inkey private_key.pem -keyform PEM\necho `cat output.txt`"
+        cert = profile.certificate
+        cert = str(cert)
+        certificate = M2Crypto.X509.load_cert_string(cert)
+        public_key = certificate.get_pubkey()
+        rsa_public_key = public_key.get_rsa()
+        signed = rsa_public_key.public_encrypt(profile.otp_pass, M2Crypto.RSA.pkcs1_oaep_padding)
+        mail = EmailMessage("CSE545 Group3 SBS Critical Challenge Response", message,'group3sbs@gmail.com',[profile.email])
+        mail.attach('otp.bin', signed, 'application/x-binary')
+        mail.send()
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    return render(request, success_redirect, {'account_type': account_type, 'type_of_transaction': type_of_transaction})
 
 # Debit Checking Page
 @never_cache
@@ -136,18 +253,23 @@ def debit_savings(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
-# Payment Checking Page
+# External Error Page
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def payment_checking(request):
+def error(request):
+    return render(request, 'external/error.html')
+
+# External User Home Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def index(request):
     user = request.user
-    if is_individual_customer(user) and has_checking_account(user):
-        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
-        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
-    elif  is_merchant_organization(user) and has_checking_account(user):
-        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
-        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    if is_individual_customer(user) and not has_no_account(user):
+        return render(request, 'external/index.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name, 'checkingaccount': user.individualcustomer.checking_account, 'savingsaccount': user.individualcustomer.savings_account, 'creditcard': user.individualcustomer.credit_card})
+    elif is_merchant_organization(user) and not has_no_account(user):
+        return render(request, 'external/index.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -166,18 +288,18 @@ def payment_email_checking(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
-# Payment Savings Page
+# Payment Checking Page
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def payment_savings(request):
+def payment_checking(request):
     user = request.user
-    if is_individual_customer(user) and has_savings_account(user):
-        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
-        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
-    elif  is_merchant_organization(user) and has_savings_account(user):
-        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
-        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    if is_individual_customer(user) and has_checking_account(user):
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_checking_account(user):
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -193,6 +315,21 @@ def payment_email_savings(request):
     elif  is_merchant_organization(user) and has_savings_account(user):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/payment_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Payment Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def payment_savings(request):
+    user = request.user
+    if is_individual_customer(user) and has_savings_account(user):
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_savings_account(user):
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -267,20 +404,35 @@ def profile_edit(request):
         else:
             return HttpResponseRedirect(reverse("external:error"))
 
-# Transfer Checking Page
+# Savings Account Page
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def transfer_checking(request):
+def savings_account(request):
     user = request.user
-    if is_individual_customer(user) and has_checking_account(user):
-        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
-        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
-    elif  is_merchant_organization(user) and has_checking_account(user):
-        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
-        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    if is_individual_customer(user) and has_savings_account(user):
+        return render(request, 'external/savings_account.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, 'is_merchant_organization' : False})
+    elif is_merchant_organization(user) and has_savings_account(user):
+        return render(request, 'external/savings_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, 'is_merchant_organization' : True})
     else:
         return HttpResponseRedirect(reverse('external:error'))
+
+# Display Credit Card Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def show_credit_info(request):
+    user = request.user
+    #days=now.day
+    #days_late=days-5
+    #user.individualcustomer.credit_card.days_late=days_late
+    #update CreditCard set days_late = days_late where id=user.id;
+    if is_individual_customer(user) and has_credit_card(user):
+        return render(request, 'external/show_credit_info.html', {'show_credit_info': user.individualcustomer.credit_card})
+    elif is_merchant_organization(user) and has_credit_card(user):
+        return render(request, 'external/show_credit_info.html', {'show_credit_info': user.merchantorganization.credit_card})
+    else:
+        return render(request, 'external/error.html')
 
 # Transfer Checking Page
 @never_cache
@@ -297,18 +449,18 @@ def transfer_email_checking(request):
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
-# Transfer Savings Page
+# Transfer Checking Page
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def transfer_savings(request):
+def transfer_checking(request):
     user = request.user
-    if is_individual_customer(user) and has_savings_account(user):
-        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
-        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
-    elif  is_merchant_organization(user) and has_savings_account(user):
-        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
-        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    if is_individual_customer(user) and has_checking_account(user):
+        amount_limit = min(float(user.individualcustomer.checking_account.active_balance),float(user.individualcustomer.checking_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'checking_account': user.individualcustomer.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_checking_account(user):
+        amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -324,6 +476,21 @@ def transfer_email_savings(request):
     elif  is_merchant_organization(user) and has_savings_account(user):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/transfer_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    else:
+        return HttpResponseRedirect(reverse('external:error'))
+
+# Transfer Savings Page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def transfer_savings(request):
+    user = request.user
+    if is_individual_customer(user) and has_savings_account(user):
+        amount_limit = min(float(user.individualcustomer.savings_account.active_balance),float(user.individualcustomer.savings_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': INDIVIDUAL_CUSTOMER, 'first_name': user.individualcustomer.first_name, 'last_name': user.individualcustomer.last_name,'savings_account': user.individualcustomer.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
+    elif  is_merchant_organization(user) and has_savings_account(user):
+        amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
+        return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
         return HttpResponseRedirect(reverse('external:error'))
 
@@ -344,68 +511,115 @@ def add_certificate(request):
     profile.save()
     return HttpResponseRedirect(reverse('external:certificate'))
 
-# Render Page for Critical Challenge Response
+# Add requested payment to DB
 @never_cache
 @login_required
 @user_passes_test(is_external_user)
-def critical_challenge_response(request, account_type, type_of_transaction):
+def addPaymentRequestToDB(request):
     user = request.user
-    success_redirect = 'external/critical_challenge_response.html'
-    error_redirect = 'external:error'
-    try:
-        profile = get_any_user_profile(username=user.username)
-        if (profile.otp_timestamp + OTP_EXPIRATION_DATE) < int(time.time()):
-            profile.otp_pass = otpGenerator(size=OTP_LENGTH)
-            profile.otp_timestamp = int(time.time())
-            profile.save()
-    except:
-        return HttpResponseRedirect(reverse(error_redirect))
-    try:
-        message = 'Hi, ' + user.username + '!\nPlease decrypt the following string using your private key and submit the decrypted value to the site. It is padded with oeap.\n\n'
-        message = message + 'Use a command like this to extract it. Assuming you have openssl installed and your private_key is called private_key.pem in the PEM format and all files are in the same directory:\n\n'
-        message = message + "openssl rsautl -oaep -decrypt -in otp.bin -out output.txt -inkey private_key.pem -keyform PEM\necho `cat output.txt`"
-        cert = profile.certificate
-        cert = str(cert)
-        certificate = M2Crypto.X509.load_cert_string(cert)
-        public_key = certificate.get_pubkey()
-        rsa_public_key = public_key.get_rsa()
-        signed = rsa_public_key.public_encrypt(profile.otp_pass, M2Crypto.RSA.pkcs1_oaep_padding)
-        mail = EmailMessage("CSE545 Group3 SBS Critical Challenge Response", message,'group3sbs@gmail.com',[profile.email])
-        mail.attach('otp.bin', signed, 'application/x-binary')
-        mail.send()
-    except:
-        return HttpResponseRedirect(reverse(error_redirect))
-    return render(request, success_redirect, {'account_type': account_type, 'type_of_transaction': type_of_transaction})
-
-# Validate PKI OTP Critical Challenge Response
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def critical_challenge_response_validate(request, account_type, type_of_transaction):
-    user = request.user
-    username = request.POST['username']
-    email = request.POST['email']
-    otp = request.POST['otp']
-    success_redirect = 'external'
-    error_redirect = 'external:error'
-    reset_otp_redirect = 'external:critical_challenge_response'
-    if validate_username(username=username) and validate_email(email=email) and username == user.username:
-        profile = get_any_user_profile(email=email, username=username)
-        if profile and (profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time()):
-            if profile.otp_pass == otp :
-                profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
-                profile.save()
-                if add_external_user_make_critical_transaction(user=user, account_type=account_type, type_of_transaction=type_of_transaction):
-                    success_redirect = critical_challenge_response_redirect_page(account_type=account_type, type_of_transaction=type_of_transaction)
-                    return HttpResponseRedirect(reverse(success_redirect))
-                else:
-                    return HttpResponseRedirect(reverse(error_redirect))
-            else:
-                return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
-        else:
-            return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    flag = "null"
+    payment_amount1 = float(request.POST['amount'])
+    accountType = str(request.POST['account_type'])
+    type_of_transaction = TRANSACTION_TYPE_PAYMENT_ON_BEHALF
+    email = request.POST.get('email_address')
+    if email:
+        account = get_external_user_account_email(email=email, account_type=accountType)
+        clientAccountNum = int(account.id)
+        clientRoutingNum = long(account.routing_number)
     else:
-        return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+        clientAccountNum = int(str(request.POST['account_number']))
+        clientRoutingNum = long(str(request.POST['route_number']))
+    clientAccountRecord = None
+    log = logging.getLogger('logging.FileHandler')
+    if is_pki_needed(request=request, account_type=accountType, type_of_transaction=type_of_transaction):
+        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': accountType, 'type_of_transaction': type_of_transaction}))
+    if(accountType == 'Checking'):
+        client_CA_rowset = CheckingAccount.objects.all().filter(id=clientAccountNum)
+        rowset_length = len(client_CA_rowset)
+        client_IC_object = IndividualCustomer.objects.all().filter(checking_account_id=clientAccountNum)
+        condition1 = (len(client_IC_object) > 0)
+        condition2 = (len(client_CA_rowset) > 0)
+        condition3 = False
+        if condition2:
+            client_CA_object = client_CA_rowset[0]
+            condition3 = (client_CA_object.routing_number == clientRoutingNum)
+        if (condition1 and condition2 and condition3):
+            merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+            paymentRequest = MerchantPaymentRequest.objects.create(merchantCheckingsAccountNum=merchantCheckingsAccountNum,
+                                                               accountType=accountType,
+                                                               clientAccountNum=clientAccountNum,
+                                                               clientRoutingNum=clientAccountNum,
+                                                               requestAmount=payment_amount1)
+            paymentRequest.save()
+            flag = "request saved successfully"
+            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
+            return HttpResponseRedirect(reverse('external:checking_account'))
+        else:
+            flag="invalid customer account details"
+            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
+            return render(request, 'external/requestPayment.html',
+              {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+
+    if(accountType == 'Savings'):
+        client_SA_rowset = SavingsAccount.objects.all().filter(id=clientAccountNum)
+        rowset_length = len(client_SA_rowset)
+        client_IC_object = IndividualCustomer.objects.all().filter(savings_account_id=clientAccountNum)
+        condition1 = (len(client_IC_object)>0)
+        condition2 = (len(client_SA_rowset)>0)
+        condition3 = False
+        if condition2:
+            client_SA_object = client_SA_rowset[0]
+            condition3 = (client_SA_object.routing_number == clientRoutingNum)
+        if (condition1 and condition2 and condition3 ):
+            merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+            paymentRequest = MerchantPaymentRequest.objects.create(
+                merchantCheckingsAccountNum=merchantCheckingsAccountNum,
+                accountType=accountType,
+                clientAccountNum=clientAccountNum,
+                clientRoutingNum=clientAccountNum,
+                requestAmount=payment_amount1)
+            paymentRequest.save()
+            flag = "request saved successfully"
+            log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
+            return HttpResponseRedirect(reverse('external:checking_account'))
+        else:
+            flag = "invalid customer account details"
+            log.info("Request from merchant " + str(
+                user.merchantorganization.checking_account_id) + " Reject invalid details")
+            return render(request, 'external/requestPayment.html',
+                          {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
+
+# Validate Credit Checking Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_credit_charge_limit_validate(request):
+    user = request.user
+    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_CREDIT
+    error_redirect = 'external:error'
+    success_redirect = 'external:show_credit_info'
+    return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
+
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_debit_charge_limit_validate(request):
+    user = request.user
+    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_DEBIT
+    error_redirect = 'external:error'
+    success_redirect = 'external:show_credit_info'
+    return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate Credit Checking Transaction
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def credit_card_pay_late_fee_validation(request):
+    user = request.user
+    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_PAY_LATE_FEE
+    error_redirect = 'external:error'
+    success_redirect = 'external:show_credit_info'
+    return credit_card_pay_late_fee_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
 
 # Validate Credit Checking Transaction
 @never_cache
@@ -436,6 +650,36 @@ def credit_savings_validate(request):
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
+
+# Validate PKI OTP Critical Challenge Response
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def critical_challenge_response_validate(request, account_type, type_of_transaction):
+    user = request.user
+    username = request.POST['username']
+    email = request.POST['email']
+    otp = request.POST['otp']
+    success_redirect = 'external'
+    error_redirect = 'external:error'
+    reset_otp_redirect = 'external:critical_challenge_response'
+    if validate_username(username=username) and validate_email(email=email) and username == user.username:
+        profile = get_any_user_profile(email=email, username=username)
+        if profile and (profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time()):
+            if profile.otp_pass == otp :
+                profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
+                profile.save()
+                if add_external_user_make_critical_transaction(user=user, account_type=account_type, type_of_transaction=type_of_transaction):
+                    success_redirect = critical_challenge_response_redirect_page(account_type=account_type, type_of_transaction=type_of_transaction)
+                    return HttpResponseRedirect(reverse(success_redirect))
+                else:
+                    return HttpResponseRedirect(reverse(error_redirect))
+            else:
+                return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+        else:
+            return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
+    else:
+        return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
 
 # Validate Debit Checking Transaction
 @never_cache
@@ -558,6 +802,24 @@ def profile_edit_validate(request):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
+# Redirect to Request Payment Email page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def request_payment_email(request):
+    user = request.user
+    return render(request, 'external/requestPaymentEmail.html',
+                  {'checking_account': user.merchantorganization.checking_account})
+
+# Redirect to Request Payment Email page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def request_payment(request):
+    user = request.user
+    return render(request, 'external/requestPayment.html',
+                  {'checking_account': user.merchantorganization.checking_account})
+
 # Validate Transfer Checking Transaction
 @never_cache
 @login_required
@@ -587,102 +849,6 @@ def transfer_savings_validate(request):
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
-
-# Redirect to Request Payment Email page
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def request_payment(request):
-    user = request.user
-    return render(request, 'external/requestPayment.html',
-                  {'checking_account': user.merchantorganization.checking_account})
-
-# Redirect to Request Payment Email page
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def request_payment_email(request):
-    user = request.user
-    return render(request, 'external/requestPaymentEmail.html',
-                  {'checking_account': user.merchantorganization.checking_account})
-
-# Add requested payment to DB
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def addPaymentRequestToDB(request):
-    user = request.user
-    flag = "null"
-    payment_amount1 = float(request.POST['amount'])
-    accountType = str(request.POST['account_type'])
-    type_of_transaction = TRANSACTION_TYPE_PAYMENT_ON_BEHALF
-    email = request.POST.get('email_address')
-    if email:
-        account = get_external_user_account_email(email=email, account_type=accountType)
-        clientAccountNum = int(account.id)
-        clientRoutingNum = long(account.routing_number)
-    else:
-        clientAccountNum = int(str(request.POST['account_number']))
-        clientRoutingNum = long(str(request.POST['route_number']))
-    clientAccountRecord = None
-    log = logging.getLogger('logging.FileHandler')
-    if is_pki_needed(request=request, account_type=accountType, type_of_transaction=type_of_transaction):
-        return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': accountType, 'type_of_transaction': type_of_transaction}))
-    if(accountType == 'Checking'):
-        client_CA_rowset = CheckingAccount.objects.all().filter(id=clientAccountNum)
-        rowset_length = len(client_CA_rowset)
-        client_IC_object = IndividualCustomer.objects.all().filter(checking_account_id=clientAccountNum)
-        condition1 = (len(client_IC_object) > 0)
-        condition2 = (len(client_CA_rowset) > 0)
-        condition3 = False
-        if condition2:
-            client_CA_object = client_CA_rowset[0]
-            condition3 = (client_CA_object.routing_number == clientRoutingNum)
-        if (condition1 and condition2 and condition3):
-            merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
-            paymentRequest = MerchantPaymentRequest.objects.create(merchantCheckingsAccountNum=merchantCheckingsAccountNum,
-                                                               accountType=accountType,
-                                                               clientAccountNum=clientAccountNum,
-                                                               clientRoutingNum=clientAccountNum,
-                                                               requestAmount=payment_amount1)
-            paymentRequest.save()
-            flag = "request saved successfully"
-            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
-            return HttpResponseRedirect(reverse('external:checking_account'))
-        else:
-            flag="invalid customer account details"
-            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
-            return render(request, 'external/requestPayment.html',
-              {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
-
-    if(accountType == 'Savings'):
-        client_SA_rowset = SavingsAccount.objects.all().filter(id=clientAccountNum)
-        rowset_length = len(client_SA_rowset)
-        client_IC_object = IndividualCustomer.objects.all().filter(savings_account_id=clientAccountNum)
-        condition1 = (len(client_IC_object)>0)
-        condition2 = (len(client_SA_rowset)>0)
-        condition3 = False
-        if condition2:
-            client_SA_object = client_SA_rowset[0]
-            condition3 = (client_SA_object.routing_number == clientRoutingNum)
-        if (condition1 and condition2 and condition3 ):
-            merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
-            paymentRequest = MerchantPaymentRequest.objects.create(
-                merchantCheckingsAccountNum=merchantCheckingsAccountNum,
-                accountType=accountType,
-                clientAccountNum=clientAccountNum,
-                clientRoutingNum=clientAccountNum,
-                requestAmount=payment_amount1)
-            paymentRequest.save()
-            flag = "request saved successfully"
-            log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
-            return HttpResponseRedirect(reverse('external:checking_account'))
-        else:
-            flag = "invalid customer account details"
-            log.info("Request from merchant " + str(
-                user.merchantorganization.checking_account_id) + " Reject invalid details")
-            return render(request, 'external/requestPayment.html',
-                          {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
 # Show payment Requests
 @never_cache
@@ -730,165 +896,3 @@ def reject_approvals(request):
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
     return HttpResponseRedirect(reverse('external:showPaymentRequests'))
-
-# View Bank Statements
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def all_statements(request):
-    user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    # Get all noncritical transactions for user
-    # Get all critical
-    transactions = []
-    for transaction in noncritical_transactions:
-        transactions.append(transaction)
-    for transaction in critical_transactions:
-        transactions.append(transaction)
-    return render(request, 'external/all_statements.html',
-                  {'transactions': transactions, 'title': 'All Transactions'})
-
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def show_credit_info(request):
-    user = request.user
-    #days=now.day
-    #days_late=days-5
-    #user.individualcustomer.credit_card.days_late=days_late
-    #update CreditCard set days_late = days_late where id=user.id;
-    if is_individual_customer(user) and has_credit_card(user):
-        return render(request, 'external/show_credit_info.html', {'show_credit_info': user.individualcustomer.credit_card})
-    elif is_merchant_organization(user) and has_credit_card(user):
-        return render(request, 'external/show_credit_info.html', {'show_credit_info': user.merchantorganization.credit_card})
-    else:
-        return render(request, 'external/error.html')
-
-# Validate Credit Checking Transaction
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def charge_limit(request):
-    user = request.user
-    profile = get_any_user_profile(username=user.username)
-    if profile and has_credit_card(user):
-        charge_limit = min(float(profile.credit_card.charge_limit),float(profile.credit_card.remaining_credit))
-        pay_limit = float(CREDIT_CARD_MAX_BALANCE)- max(float(profile.credit_card.charge_limit),float(profile.credit_card.remaining_credit))
-        return render(request, 'external/charge_limit.html', {'credit_card': profile.credit_card, 'charge_limit':charge_limit, 'pay_limit': pay_limit})
-    else:
-        return HttpResponseRedirect(reverse('external:error'))
-
-# Validate Credit Checking Transaction
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def credit_card_credit_charge_limit_validate(request):
-    user = request.user
-    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_CREDIT
-    error_redirect = 'external:error'
-    success_redirect = 'external:show_credit_info'
-    return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
-
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def credit_card_debit_charge_limit_validate(request):
-    user = request.user
-    type_of_transaction = CREDIT_CARD_TRANSACTION_TYPE_DEBIT
-    error_redirect = 'external:error'
-    success_redirect = 'external:show_credit_info'
-    return credit_card_credit_or_debit_validate(request=request,type_of_transaction=type_of_transaction,success_redirect=success_redirect, error_redirect=error_redirect)
-
-#@login_required
-#@user_passes_test(is_cron_job)
-#def bineeta_cron_job_deadline_late(request):
-    #credit_cards = CreditCard.object.filter(remaining_credit < 1000)
-    #for card in credit_cards:
-        #card.days_late = card.days_late + 1
-        #card.save()
-
-# PDF All Statements
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def all_statements_pdf(request):
-    user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(participants=user, status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(participants=user,status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-    transactions = []
-    for transaction in noncritical_transactions:
-        transactions.append(transaction)
-    for transaction in critical_transactions:
-        transactions.append(transaction)
-    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'All Transactions'}, filename=None, encoding=u'utf-8')
-
-# View Checking/Savings Bank Statements
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def checking_and_savings_statements(request):
-    user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    # Get all noncritical transactions for user
-    # Get all critical
-    transactions = []
-    for transaction in noncritical_transactions:
-        transactions.append(transaction)
-    for transaction in critical_transactions:
-        transactions.append(transaction)
-    return render(request, 'external/all_statements.html',
-                  {'transactions': transactions, 'title': 'Checking and Savings'})
-
-# View Checking/Savings Bank Statements
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def credit_card_statements(request):
-    user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    # Get all noncritical transactions for user
-    # Get all critical
-    transactions = []
-    for transaction in noncritical_transactions:
-        transactions.append(transaction)
-    for transaction in critical_transactions:
-        transactions.append(transaction)
-    return render(request, 'external/all_statements.html',
-                  {'transactions': transactions, 'title': 'Credit Card'})
-
-# View Checking/Savings Bank Statements
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def checking_and_savings_statements_pdf(request):
-    user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT), ~Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    # Get all noncritical transactions for user
-    # Get all critical
-    transactions = []
-    for transaction in noncritical_transactions:
-        transactions.append(transaction)
-    for transaction in critical_transactions:
-        transactions.append(transaction)
-    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Checking and Savings'}, filename=None, encoding=u'utf-8')
-
-# View Checking/Savings Bank Statements
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def credit_card_statements_pdf(request):
-    user = request.user
-    noncritical_transactions = ExternalNoncriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    critical_transactions = ExternalCriticalTransaction.objects.filter(Q(participants=user), Q(status=TRANSACTION_STATUS_RESOLVED), Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_CREDIT) | Q(type_of_transaction=CREDIT_CARD_TRANSACTION_TYPE_DEBIT)).order_by('time_created')
-    # Get all noncritical transactions for user
-    # Get all critical
-    transactions = []
-    for transaction in noncritical_transactions:
-        transactions.append(transaction)
-    for transaction in critical_transactions:
-        transactions.append(transaction)
-    return render_to_pdf_response(request, 'external/all_statements_pdf.html', context={'transactions': transactions, 'username': user.username, 'title': 'Credit Card'}, filename=None, encoding=u'utf-8')

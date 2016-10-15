@@ -2,102 +2,30 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.db.models import Q
 from django.http import HttpResponse, Http404, HttpResponseRedirect
 from django.shortcuts import render
 from django.template import loader
 from django.urls import reverse
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
+from easy_pdf.rendering import render_to_pdf_response
 from external.models import *
-from internal.models import Administrator, RegularEmployee, SystemManager, InternalNoncriticalTransaction, InternalCriticalTransaction
+from internal.models import *
 from global_templates.common_functions import *
 from global_templates.constants import *
 from group3_sbs.settings import BASE_DIR
-import os
-from django.db import models
-from django.db.models import Q
 from datetime import date
-import datetime
-from easy_pdf.rendering import render_to_pdf_response
+import datetime, os
 
-"""
-                        Render Web Pages
-"""
+""" Render Web Pages """
 
-# Internal User Home Page
-@never_cache
-@login_required
-@user_passes_test(is_internal_user)
-def index(request):
-    user = request.user
-    if is_regular_employee(user):
-        return render(request, 'internal/index.html', {'user_type': REGULAR_EMPLOYEE, 'first_name': user.regularemployee.first_name, 'last_name': user.regularemployee.last_name})
-    elif is_system_manager(user):
-        return render(request, 'internal/index.html', {'user_type': SYSTEM_MANAGER, 'first_name': user.systemmanager.first_name, 'last_name': user.systemmanager.last_name})
-    elif is_administrator(user):
-        return render(request, 'internal/index.html', {'user_type': ADMINISTRATOR, 'first_name': user.administrator.first_name, 'last_name': user.administrator.last_name})
-    else:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-# External Log Page
 @never_cache
 @login_required
 @user_passes_test(is_administrator)
-def view_external_log(request):
-    try:
-        file_name= os.path.join(BASE_DIR,'log/external_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
-        f = open(file_name, 'r')
-        lines = f.readlines()
-        f.close()
-        if not lines:
-            lines = ['Nothing to View']
-        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
-    except:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-# Internal Log Page
-@never_cache
-@login_required
-@user_passes_test(is_administrator)
-def view_internal_log(request):
-    try:
-        file_name= os.path.join(BASE_DIR,'log/internal_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
-        f = open(file_name, 'r')
-        lines = f.readlines()
-        f.close()
-        if not lines:
-            lines = ['Nothing to View']
-        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
-    except:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-# Server Log Page
-@never_cache
-@login_required
-@user_passes_test(is_administrator)
-def view_server_log(request):
-    try:
-        file_name= os.path.join(BASE_DIR,'log/server_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
-        f = open(file_name, 'r')
-        lines = f.readlines()
-        f.close()
-        if not lines:
-            lines = ['Nothing to View']
-        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
-    except:
-        return HttpResponseRedirect(reverse('internal:error'))
-
-# Internal User Error Page
-@never_cache
-@login_required
-@user_passes_test(is_internal_user)
-def error(request):
-    return render(request, 'internal/error.html')
+def bineeta_cron_job_late_charge(request):
+    return render(request, 'internal/monthly_cron.html')
 
 # View Critical Transactions
 @never_cache
@@ -162,6 +90,12 @@ def edit_internal_user_profile(request, internal_user_id):
     profile = get_any_user_profile(username=internal_user.username)
     return render(request, success_page, {"internal_user": internal_user, "profile": profile, 'STATES': STATES})
 
+# Internal User Error Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def error(request):
+    return render(request, 'internal/error.html')
 
 # External User Account Request Page
 @never_cache
@@ -171,6 +105,21 @@ def external_user_access_request(request):
     user = request.user
     list = get_user_det(user)
     return render(request, 'internal/external_user_access_request.html',{'user_type': list[2], 'first_name': list[0],'last_name':list[1] })
+
+# Internal User Home Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def index(request):
+    user = request.user
+    if is_regular_employee(user):
+        return render(request, 'internal/index.html', {'user_type': REGULAR_EMPLOYEE, 'first_name': user.regularemployee.first_name, 'last_name': user.regularemployee.last_name})
+    elif is_system_manager(user):
+        return render(request, 'internal/index.html', {'user_type': SYSTEM_MANAGER, 'first_name': user.systemmanager.first_name, 'last_name': user.systemmanager.last_name})
+    elif is_administrator(user):
+        return render(request, 'internal/index.html', {'user_type': ADMINISTRATOR, 'first_name': user.administrator.first_name, 'last_name': user.administrator.last_name})
+    else:
+        return HttpResponseRedirect(reverse('internal:error'))
 
 # Internal Noncritical Transactions Page
 @never_cache
@@ -246,6 +195,24 @@ def noncritical_transactions(request):
                 access_to_resolve = True
         return render(request, 'internal/noncritical_transactions.html', {'user_type': list[2],'first_name':list[0],'last_name':list[1],'transactions': transactions, 'can_resolve': can_resolve, 'access_to_resolve': access_to_resolve, 'can_request': can_request})
     else:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# External Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_external_log(request):
+    try:
+        file_name= os.path.join(BASE_DIR,'log/external_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
         return HttpResponseRedirect(reverse('internal:error'))
 
 # View External User Checking Account Page
@@ -335,6 +302,24 @@ def view_external_user_savings_account(request, external_user_id):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
+# Internal Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_internal_log(request):
+    try:
+        file_name= os.path.join(BASE_DIR,'log/internal_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
 # View Internal User Profile Page
 @never_cache
 @login_required
@@ -353,9 +338,79 @@ def view_internal_user_profile(request, internal_user_id):
     profile = get_any_user_profile(username=internal_user.username)
     return render(request, success_page, {"user": internal_user, "profile": profile})
 
-"""
-                        Validate Webpages
-"""
+# Server Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_server_log(request):
+    try:
+        file_name= os.path.join(BASE_DIR,'log/server_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+""" Validate Webpages """
+
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def bineeta_cron_job_late_charge_validate(request):
+    if request.method == "POST" and date(date.today().year, date.today().month, 1) == date.today():
+        new_date = False
+        credit_payment_manager = CreditPaymentManager.objects.all().first()
+        if not credit_payment_manager:
+            credit_payment_manager = CreditPaymentManager.objects.create(last_day_late_fee_date_executed=timezone.now(), last_month_late_fee_date_executed=timezone.now())
+            new_date = True
+        current_time = timezone.now()
+        last_executed = credit_payment_manager.last_month_late_fee_date_executed
+        if not (current_time.year == last_executed.year and last_executed.month < current_time.month) and not new_date:
+            return render(request, 'internal/monthly_cron.html', {'message': "Unsuccessfully charged any late cards. Can only update charges once on a month."})
+        late_credit_card = CreditCard.objects.filter(remaining_credit__lt = 1000)
+        for card in late_credit_card:
+            card.days_late = card.days_late + 1
+            fee = CREDIT_CARD_INTEREST_RATE * card.days_late
+            card.late_fee = min(1000.00, fee)
+            card.save()
+        return render(request, 'internal/monthly_cron.html', {'message': "Successfully charged any late cards this month."})
+    else:
+        return render(request, 'internal/monthly_cron.html', {'message': "Unsuccessfully charged any late cards. Can only update charges once on a month on the first day of the month."})
+
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def bineeta_cron_job_daily_late_charge_validate(request):
+    min_time = datetime.time(23, 59, 00)
+    max_time = datetime.time(23, 59, 59)
+    if request.method == "POST" and datetime.datetime.time(datetime.datetime.now()) >= max_time and request.method == "POST" and datetime.datetime.time(datetime.datetime.now()) <= max_time:
+        new_date = False
+        credit_payment_manager = CreditPaymentManager.objects.all().first()
+        if not credit_payment_manager:
+            credit_payment_manager = CreditPaymentManager.objects.create(last_day_late_fee_date_executed=timezone.now(), last_month_late_fee_date_executed=timezone.now())
+            new_date = True
+        current_time = timezone.now()
+        last_executed = credit_payment_manager.last_month_late_fee_date_executed
+        if not (current_time.year == last_executed.year and last_executed.month == current_time.month and last_executed.day < current_time.day) and not new_date:
+            return render(request, 'internal/monthly_cron.html', {'message': "Did not update late charges. Can only update charges once on a day."})
+        late_credit_card = CreditCard.objects.filter(Q(late_fee__gt=0) | Q(days_late__gt=0))
+        no_longer_late = CreditCard.objects.filter(Q(late_fee=0) | Q(days_late__gt=0))
+        for card in late_credit_card:
+            card.days_late = card.days_late + 1
+            fee = CREDIT_CARD_INTEREST_RATE * card.days_late
+            card.late_fee = min(1000.00, fee)
+            card.save()
+        for card in no_longer_late:
+            card.days_late = 0
+            card.save()
+        return render(request, 'internal/monthly_cron.html', {'message': "Updated late charges today."})
+    else:
+        return render(request, 'internal/monthly_cron.html', {'message': "Did not update late charges. Can only update charges between 23:00 and 23:59."})
 
 # Approve Criticial Transactions
 @never_cache
@@ -619,7 +674,6 @@ def validate_internal_profile_edit(request, internal_user_id):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
-
 # Validate Profile Edit Page
 @never_cache
 @login_required
@@ -669,47 +723,3 @@ def validate_profile_edit(request, external_user_id):
             return HttpResponseRedirect(reverse(error_redirect))
     else:
         return HttpResponseRedirect(reverse(error_redirect))
-
-@never_cache
-@login_required
-@user_passes_test(is_administrator)
-def bineeta_cron_job_late_charge(request):
-    return render(request, 'internal/monthly_cron.html')
-
-@never_cache
-@login_required
-@user_passes_test(is_administrator)
-def bineeta_cron_job_late_charge_validate(request):
-    if request.method == "POST" and date(date.today().year, date.today().month, 1) == date.today():
-        late_credit_card = CreditCard.objects.filter(remaining_credit__lt = 1000)
-        for card in late_credit_card:
-            #print(card.id)
-            card.days_late = card.days_late + 1
-            card.late_fee = CREDIT_CARD_INTEREST_RATE * card.days_late
-            card.save()
-        return render(request, 'internal/monthly_cron.html', {'message': "Successfully charged any late cards this month"})
-    else:
-        return render(request, 'internal/monthly_cron.html', {'message': "Unsuccessfully charged any late cards"})
-
-@never_cache
-@login_required
-@user_passes_test(is_administrator)
-def bineeta_cron_job_daily_late_charge_validate(request):
-    min_time = datetime.time(23, 59, 00)
-    max_time = datetime.time(23, 59, 59)
-    if request.method == "POST" and datetime.datetime.time(datetime.datetime.now()) >= max_time and request.method == "POST" and datetime.datetime.time(datetime.datetime.now()) <= max_time:
-        late_credit_card = CreditCard.objects.filter(Q(remaining_credit__lt=1000) | Q(days_late__gt = 0))
-        no_longer_late = CreditCard.objects.filter(Q(remaining_credit=1000) | Q(days_late__gt = 0))
-        for card in late_credit_card:
-            #print(card.id)
-            card.days_late = card.days_late + 1
-            card.late_fee = CREDIT_CARD_INTEREST_RATE * card.days_late
-            card.save()
-        for card in no_longer_late:
-            card.days_late = 0
-            card.late_fee = 0
-            #print(card.id)
-            card.save()
-        return render(request, 'internal/monthly_cron.html', {'message': "Updated late charges today"})
-    else:
-        return render(request, 'internal/monthly_cron.html', {'message': "Did not update late charges"})

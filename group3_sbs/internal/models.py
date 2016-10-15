@@ -32,3 +32,7 @@ class TransactionLog(models.Model):
     external_noncritical_transaction = models.ManyToManyField('external.ExternalNoncriticalTransaction')
     internal_critical_transaction = models.ManyToManyField(InternalCriticalTransaction)
     internal_noncritical_transaction = models.ManyToManyField(InternalNoncriticalTransaction)
+
+class CreditPaymentManager(models.Model):
+    last_day_late_fee_date_executed = models.DateTimeField()
+    last_month_late_fee_date_executed = models.DateTimeField()
