@@ -29,6 +29,7 @@ TRUSTED_DEVICE_MESSAGE =  "Hello Group3SBS User,\n\r" +\
                           "\n\r"
 
 def send_device_verify_otp(request, profile):
+    print("The device verify OTP is '%s'"%(profile.otp_pass))
     if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
         #
         # if user's otpRequested and otpTimestamp < 15 minutes
