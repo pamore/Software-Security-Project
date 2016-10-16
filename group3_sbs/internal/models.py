@@ -37,3 +37,7 @@ class accessRequests(models.Model):
     internalUserId = models.IntegerField()
     externalUserId = models.IntegerField()
     pageToView = models.CharField(max_length=30)
+
+class CreditPaymentManager(models.Model):
+    last_day_late_fee_date_executed = models.DateTimeField()
+    last_month_late_fee_date_executed = models.DateTimeField()

@@ -247,3 +247,6 @@ TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBacke
 
 # Login
 LOGIN_URL = "/login/"
+
+# X Frames
+X_FRAME_OPTIONS = 'DENY'

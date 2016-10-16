@@ -58,8 +58,8 @@ urlpatterns = [
     url(r'^account/view/statements/credit_card/view/$', views.credit_card_statements, name='credit_card_statements'),
     url(r'^account/view/statements/checking_and_savings/pdf/$', views.checking_and_savings_statements_pdf, name='checking_and_savings_statements_pdf'),
     url(r'^account/view/statements/credit_card/pdf/$', views.credit_card_statements_pdf, name='credit_card_statements_pdf'),
-    url(r'^account/get_Accessrequests/$', views.getAccessRequests, name='get_Accessrequests'),
-    url(r'^account/get_Accessrequests/$', views.rejectAccessRequests, name='reject_access_approvals'),
-    url(r'^account/get_Accessrequests/$', views.approveAccessRequests, name='approve_access_approvals'),
-
+    url(r'^account/requests/access/view/$', views.getAccessRequests, name='get_Accessrequests'),
+    url(r'^account/requests/access/reject/$', views.rejectAccessRequests, name='reject_access_approvals'),
+    url(r'^account/requests/access/approve/$', views.approveAccessRequests, name='approve_access_approvals'),
+    url(r'^credit_card/credit_card_pay_late_fee_validate/$', views.credit_card_pay_late_fee_validation, name='credit_card_pay_late_fee_validation'),
 ]

@@ -31,20 +31,24 @@
     {% for currentRequest in requests %}
         <tr>
 
-        <td>{{currentRequest.id}}</td>
+        <td>{{currentRequest.internalUserId}}</td>
         <td>{{currentRequest.pageToView}}</td>
         <!-- Form Start-->
-        {% csrf_token %}
-        <input type="hidden" value={{ currentRequest.internalUserId }} name="IntenalUserId"/>
-        <input type="hidden" value={{ currentRequest.pageToView }} name="AcessPage"/>
-        <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
+        <form action="{% url 'external:approve_access_approvals' %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" value={{ currentRequest.internalUserId }} name="internal_user_id"/>
+          <input type="hidden" value={{ currentRequest.pageToView }} name="page_to_view"/>
+          <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
+        </form>
         <!-- Form end -->
 
         <!-- From Start -->
+        <form action="{% url 'external:reject_access_approvals' %}" method="post">
         {% csrf_token %}
-        <input type="hidden" value={{ currentRequest.id }} name="IntenalUserId"/>
-        <input type="hidden" value={{ currentRequest.pageToView }} name="AcessPage"/>
-        <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
+          <input type="hidden" value={{ currentRequest.internalUserId }} name="internal_user_id"/>
+          <input type="hidden" value={{ currentRequest.pageToView }} name="page_to_view"/>
+          <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
+        </form>
         <!-- Form End -->
 
         </tr>

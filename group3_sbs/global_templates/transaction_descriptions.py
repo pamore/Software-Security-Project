@@ -62,11 +62,11 @@ def credit_card_late_fee_description():
 def modify_account_description():
     return ""
 
-def credit_card_credit_description(userID,credit_number,amount, starting_balance):
+def credit_card_credit_description(userID, credit_number, amount, starting_balance):
     transactionType = CREDIT_CARD_TRANSACTION_TYPE_CREDIT
     return credit_card_credit_or_debit_description_helper(transactionType=transactionType, userID=userID, amount=amount, starting_balance=starting_balance)
 
-def credit_card_debit_description(userID,credit_number,amount, starting_balance):
+def credit_card_debit_description(userID, credit_number, amount, starting_balance):
     transactionType = CREDIT_CARD_TRANSACTION_TYPE_DEBIT
     return credit_card_credit_or_debit_description_helper(transactionType=transactionType, userID=userID, amount=amount, starting_balance=starting_balance)
 
@@ -75,3 +75,7 @@ def credit_card_credit_or_debit_description_helper(transactionType, userID, amou
     amount = str(amount)
     starting_balance = str(starting_balance)
     return 'Transaction Type: {0},User ID: {1},Amount: {2},Starting Balance: {3}'.format(unicode(transactionType,'utf-8'), unicode(userID,'utf-8'), unicode(amount,'utf-8'), unicode(starting_balance,'utf-8'))
+
+def credit_card_pay_late_fee_description(userID, credit_number, amount, starting_balance):
+    transactionType = CREDIT_CARD_TRANSACTION_TYPE_PAY_LATE_FEE
+    return credit_card_credit_or_debit_description_helper(transactionType=transactionType, userID=userID, amount=amount, starting_balance=starting_balance)

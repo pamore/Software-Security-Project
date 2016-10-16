@@ -32,7 +32,7 @@ class CreditCard(BankAccount):
     creditcard_number = models.CharField(validators=[MinLengthValidator(16)], max_length=16, unique=True)
     charge_limit = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=6, decimal_places=2)
     remaining_credit = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=6, decimal_places=2)
-    late_fee = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=5, decimal_places=2)
+    late_fee = models.DecimalField(validators=[MinValueValidator(0.00), MaxValueValidator(1000.00)], max_digits=6, decimal_places=2)
     days_late = models.IntegerField(validators=[MinValueValidator(0)])
 
 class ExternalEmployee(UserProfile):
