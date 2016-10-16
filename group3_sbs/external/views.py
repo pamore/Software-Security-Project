@@ -590,6 +590,29 @@ def addPaymentRequestToDB(request):
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
+# Approve Access Requests
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def approveAccessRequests(request):
+    user = request.user
+    error_redirect = 'external:error'
+    success_redirect = 'external:get_Accessrequests'
+    internal_id = request.POST['internal_user_id']
+    page_to_view = request.POST['page_to_view']
+    access_request = accessRequests.objects.filter(externalUserId=user.id, internalUserId=internal_id, pageToView=page_to_view).first()
+    if not access_request or access_request.externalUserId != user.id:
+        return HttpResponseRedirect(reverse(error_redirect))
+    internal_user = User.objects.filter(id=internal_id).first()
+    if not internal_user:
+        return HttpResponseRedirect(reverse(error_redirect))
+    transaction = get_internal_access_transaction(user=internal_user, page_to_view=page_to_view)
+    if commit_transaction(transaction=transaction, user=internal_user):
+        access_request.delete()
+        return HttpResponseRedirect(reverse(success_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
 # Validate Credit Checking Transaction
 @never_cache
 @login_required
@@ -712,6 +735,15 @@ def debit_savings_validate(request):
     else:
         return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
 
+#Get access Requests from data base and display them on web page
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def getAccessRequests(request):
+    user = request.user
+    requests = accessRequests.objects.all().filter(externalUserId=user.id)
+    return render(request, 'external/ViewPermissionRequsts.html',{'requests':requests})
+
 # Validate Payment Checking Transaction
 @never_cache
 @login_required
@@ -803,6 +835,39 @@ def profile_edit_validate(request):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
+# Reject Access Requests
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def rejectAccessRequests(request):
+    user = request.user
+    error_redirect = 'external:error'
+    success_redirect = 'external:get_Accessrequests'
+    internal_id = request.POST['internal_user_id']
+    page_to_view = request.POST['page_to_view']
+    access_request = accessRequests.objects.filter(externalUserId=user.id, internalUserId=internal_id, pageToView=page_to_view).first()
+    if not access_request or access_request.externalUserId != user.id:
+        return HttpResponseRedirect(reverse(error_redirect))
+    access_request.delete()
+    return HttpResponseRedirect(reverse(success_redirect))
+
+# Reject Transaction Requests
+@never_cache
+@login_required
+@user_passes_test(is_external_user)
+def reject_approvals(request):
+    user = request.user
+    #add this to transactions of the merchant as failed ones
+    string_transaction_id = str(request.POST['id'])
+    transaction_id = int(string_transaction_id)
+    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
+    transaction.delete()
+    checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
+        clientAccountNum=user.individualcustomer.checking_account_id)
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
+        clientAccountNum=user.individualcustomer.savings_account_id)
+    return HttpResponseRedirect(reverse('external:showPaymentRequests'))
+
 # Redirect to Request Payment Email page
 @never_cache
 @login_required
@@ -861,17 +926,6 @@ def showPaymentRequests(request):
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(clientAccountNum=user.individualcustomer.savings_account_id)
     return render(request, 'external/showPaymentRequests.html',{'checkingRequests':checkingRequests,'savingRequests':savingRequests})
 
-
-#Get access Requests from data base and display them on web page
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def getAccessRequests(request):
-    user = request.user
-    requests = accessRequests.objects.all().filter(externalUserId=user.id)
-    return render(request, 'external/ViewPermissionRequsts.html',{'requests':requests})
-
-
 # Approve Transaction Requests
 @never_cache
 @login_required
@@ -889,61 +943,5 @@ def update_approvals(request):
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(
-        clientAccountNum=user.individualcustomer.savings_account_id)
-    return HttpResponseRedirect(reverse('external:showPaymentRequests'))
-
-# Approve Access Requests
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def approveAccessRequests(request):
-    user = request.user
-    error_redirect = 'external:error'
-    success_redirect = 'external:get_Accessrequests'
-    internal_id = request.POST['internal_user_id']
-    page_to_view = request.POST['page_to_view']
-    access_request = accessRequests.objects.filter(externalUserId=user.id, internalUserId=internal_id, pageToView=page_to_view).first()
-    if not access_request or access_request.externalUserId != user.id:
-        return HttpResponseRedirect(reverse(error_redirect))
-    internal_user = User.objects.filter(id=internal_id).first()
-    if not internal_user:
-        return HttpResponseRedirect(reverse(error_redirect))
-    transaction = get_internal_access_transaction(user=internal_user, page_to_view=page_to_view)
-    if commit_transaction(transaction=transaction, user=internal_user):
-        access_request.delete()
-        return HttpResponseRedirect(reverse(success_redirect))
-    else:
-        return HttpResponseRedirect(reverse(error_redirect))
-
-# Deny Access Requests
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def rejectAccessRequests(request):
-    user = request.user
-    error_redirect = 'external:error'
-    success_redirect = 'external:get_Accessrequests'
-    internal_id = request.POST['internal_user_id']
-    page_to_view = request.POST['page_to_view']
-    access_request = accessRequests.objects.filter(externalUserId=user.id, internalUserId=internal_id, pageToView=page_to_view).first()
-    if not access_request or access_request.externalUserId != user.id:
-        return HttpResponseRedirect(reverse(error_redirect))
-    access_request.delete()
-    return HttpResponseRedirect(reverse(success_redirect))
-
-# Reject Transaction Requests
-@never_cache
-@login_required
-@user_passes_test(is_external_user)
-def reject_approvals(request):
-    user = request.user
-    #add this to transactions of the merchant as failed ones
-    string_transaction_id = str(request.POST['id'])
-    transaction_id = int(string_transaction_id)
-    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
-    transaction.delete()
-    checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
-        clientAccountNum=user.individualcustomer.checking_account_id)
-    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
     return HttpResponseRedirect(reverse('external:showPaymentRequests'))

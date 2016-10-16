@@ -676,7 +676,6 @@ def validate_internal_user_access_request(request):
         return HttpResponseRedirect(reverse(error_redirect))
     return HttpResponseRedirect(reverse(success_redirect, kwargs={'internal_user_id': internal_user.id}))
 
-
 # Validate Profile Edit Page
 @never_cache
 @login_required

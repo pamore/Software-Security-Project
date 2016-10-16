@@ -4,8 +4,12 @@ from . import views
 app_name = 'internal'
 urlpatterns = [
     url(r'^$', views.index, name='index'),
+    url(r'^cron_job/cron_job_late_charge/$', views.bineeta_cron_job_late_charge, name='bineeta_cron_job_late_charge'),
+    url(r'^cron_job/cron_job_late_charge/validate/$', views.bineeta_cron_job_late_charge_validate, name='bineeta_cron_job_late_charge_validate'),
+    url(r'^cron_job/cron_job_daily_late_charge/validate/$', views.bineeta_cron_job_daily_late_charge_validate, name='bineeta_cron_job_daily_late_charge_validate'),
     url(r'^error/$', views.error, name='error'),
     url(r'^external_user/checking_account/(?P<external_user_id>[1-9][0-9]*)/view/$', views.view_external_user_checking_account, name='view_external_user_checking_account'),
+    url(r'^external_user/credit_card/(?P<external_user_id>[1-9][0-9]*)/view/$', views.view_external_user_credit_card, name='view_external_user_credit_card'),
     url(r'^external_user/profile/(?P<external_user_id>[1-9][0-9]*)/edit/$', views.edit_external_user_profile, name='edit_external_user_profile'),
     url(r'^external_user/profile/(?P<external_user_id>[1-9][0-9]*)/edit/validate/$', views.validate_profile_edit, name='validate_profile_edit'),
     url(r'^external_user/profile/(?P<external_user_id>[1-9][0-9]*)/view/$', views.view_external_user_profile, name='view_external_user_profile'),
@@ -33,8 +37,4 @@ urlpatterns = [
     url(r'^transaction/internal_critical/(?P<transaction_id>[1-9][0-9]*)/approve/$', views.validate_internal_critical_transaction_access_request_approval, name='validate_internal_critical_transaction_access_request_approval'),
     url(r'^transaction/internal_critical/(?P<transaction_id>[1-9][0-9]*)/deny/$', views.validate_internal_critical_transaction_access_request_denial, name='validate_internal_critical_transaction_access_request_denial'),
     url(r'^transaction/internal_noncritical/$', views.internal_noncritical_transactions, name='internal_noncritical_transactions'),
-    url(r'^cron_job/bineeta_cron_job_late_charge/$', views.bineeta_cron_job_late_charge, name='bineeta_cron_job_late_charge'),
-    url(r'^cron_job/bineeta_cron_job_late_charge/validate/$', views.bineeta_cron_job_late_charge_validate, name='bineeta_cron_job_late_charge_validate'),
-    url(r'^external_user/credit_card/(?P<external_user_id>[1-9][0-9]*)/view/$', views.view_external_user_credit_card, name='view_external_user_credit_card'),
-    url(r'^cron_job/bineeta_cron_job_daily_late_charge/validate/$', views.bineeta_cron_job_daily_late_charge_validate, name='bineeta_cron_job_daily_late_charge_validate'),
 ]
