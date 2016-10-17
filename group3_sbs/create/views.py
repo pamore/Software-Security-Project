@@ -155,7 +155,7 @@ def confirmAccount(request):
                 # if the user already fully exists (e.g. has a full profile)
                 #   return error that username is unavailable
                 if DEBUG: print("The full user profile already exists\n")
-                return render(request, 'create/create.html', {'error_message': "User already exists, please login or reset password.",})
+                return render(request, 'create/create.html', {'error_message': "User already exists, please login or reset password.", "STATES" : STATES})
 
             elif(init_user):
                 # else if the username exists may have a pre-liminary account created (e.g. only a User type)
