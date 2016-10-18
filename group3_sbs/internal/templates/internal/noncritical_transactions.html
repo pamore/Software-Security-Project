@@ -72,7 +72,6 @@
           <form action="{% url 'internal:validate_delete_noncritical_transaction' transaction_id=transaction.id %}" method="post">
             {% csrf_token %}<input type="submit" class="btn btn-danger" value="Delete" />
           </form>
-          <!-- <a class="btn btn-danger"  href="{% url 'internal:edit_noncritical_transaction' transaction_id=transaction.id %}">Edit</a> -->
           {% endif %}
         </td>
         {% elif not access_to_resolve and can_resolve and can_request %}
