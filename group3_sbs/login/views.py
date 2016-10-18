@@ -7,11 +7,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
-from group3_sbs.settings import *
 from global_templates.constants import OTP_EXPIRATION_DATE, TRUSTED_DEVICE_EXPIRY
 from global_templates.common_functions import validate_password, validate_user_type, validate_username, get_user_email, get_any_user_profile, get_user_trusted_keys, trustedDeviceKeyGenerator, otpGenerator
 from django.core.mail import send_mail
-import datetime, time
+import datetime, time, logging
+
+logger = logging.getLogger('login')
 
 # Create your views here
 DEBUG = False
@@ -35,6 +36,7 @@ def deviceVerify(request):
         profile = get_any_user_profile(request.POST['username'],request.POST['email'])
         reCaptcha = request.POST['g-recaptcha-response']
         if(profile and reCaptcha):
+            logger.info("User:'%s' attemptting login"%(profile.user.username))
             if DEBUG: print("The username, email, and captcha have been verified\n")
             otpPassword = request.POST['otpPassword']
             if DEBUG: print("OTP code is '%s'\n"%(otpPassword))
@@ -181,8 +183,10 @@ def loginValidate(request):
             raise Exception('Are you a bot? Please fill out Recapchta.')
         if user is not None and validate_user_type(user, request.POST['user_type']) and validate_username(username=username) and validate_password(password=password):
             login(request, user)
+            logger.info("User:'%s' attemptting login"%(username))
             return HttpResponseRedirect(reverse('login:loggedin'))
         else:
+            logger.info("User:'%s' incorrect login"%(username))
             raise Exception('Incorrect username and password combination')
     except Exception as badPassword:
         return render(request, 'login/signin.html', {'error_message': badPassword[0],}, status=401)
@@ -227,6 +231,7 @@ def send_device_verify_otp(request, profile):
             [profile.email],
             fail_silently=False,
             )
+        logger.info("User:'%s' re-send valid device verify OTP"%(profile.user.username))
         return render(request, 'login/deviceVerify.html', {'error_message': "OTP recently sent, please check email",})
     else:
         # else e.g.  user's otpRequested and otpTimestamp > 15 minutes or otpRequested is False
@@ -256,4 +261,5 @@ def send_device_verify_otp(request, profile):
             fail_silently=False,
             )
         if DEBUG: print("Trusted device OTP code has been sent\n")
+        logger.info("User:'%s' send new device verify OTP"%(profile.user.username))
         return render(request, 'login/deviceVerify.html', {'error_message': "OTP sent, please check email",})
