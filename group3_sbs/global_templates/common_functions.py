@@ -41,7 +41,6 @@ def add_activate_deactivate_external_user_permission(user, external_user, page_t
     else:
         return False
 
-
 def add_edit_external_user_profile_permission(user):
     if is_external_user(user):
         try:
@@ -1808,6 +1807,8 @@ def validate_routing_number(routing_number):
 
 def validate_ssn(ssn):
     validate = False
+    if len(ssn) < SSN_LENGTH + 3 and len(ssn) > SSN_LENGTH:
+        ssn = ssn.replace('-', '')
     if len(ssn) == SSN_LENGTH:
         if re.search('^[0-9]+$', ssn):
             try:

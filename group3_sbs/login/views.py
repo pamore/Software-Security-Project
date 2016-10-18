@@ -28,6 +28,7 @@ TRUSTED_DEVICE_MESSAGE =  "Hello Group3SBS User,\n\r" +\
                           "\n\r"
 
 # Verify Device
+@watch_login
 def deviceVerify(request):
     if DEBUG: print("The deviceVerify function has been called\n")
     try:
@@ -78,14 +79,14 @@ def deviceVerify(request):
                     if DEBUG: print("Finish verifying device, return response")
                     return response
                 else:
-                    return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect OTP password",})
+                    return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect OTP password",}, status=401)
             else:
                 return HttpResponseRedirect(reverse('login:signin'))
         else:
-            return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",})
+            return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",}, status=401)
     except:
         if DEBUG: print("Threw an exception, did not complete try-block")
-        return render(request, 'login/deviceVerify.html')
+        return render(request, 'login/deviceVerify.html', status=401)
 
 # Lockout Page
 @never_cache
