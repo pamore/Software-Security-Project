@@ -68,11 +68,17 @@
           <form action="{% url 'internal:validate_noncritical_transaction_denial' transaction_id=transaction.id %}" method="post">
             {% csrf_token %}<input type="submit" class="btn btn-warning" value="Deny" />
           </form>
+          {% if request.user.systemmanager %}
+          <form action="{% url 'internal:validate_delete_noncritical_transaction' transaction_id=transaction.id %}" method="post">
+            {% csrf_token %}<input type="submit" class="btn btn-danger" value="Delete" />
+          </form>
+          <!-- <a class="btn btn-danger"  href="{% url 'internal:edit_noncritical_transaction' transaction_id=transaction.id %}">Edit</a> -->
+          {% endif %}
         </td>
         {% elif not access_to_resolve and can_resolve and can_request %}
         <td>
           <form action="{% url 'internal:validate_internal_noncritical_transaction_request' transaction_id=transaction.id %}" method="post">
-            {% csrf_token %}<input type="submit" class="btn btn-warning" value="Request to Resolvey" />
+            {% csrf_token %}<input type="submit" class="btn btn-warning" value="Request to Resolve" />
           </form>
         </td>
         {% else %}

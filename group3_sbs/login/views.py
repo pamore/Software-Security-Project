@@ -83,8 +83,7 @@ def deviceVerify(request):
                 return HttpResponseRedirect(reverse('login:signin'))
         else:
             return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",})
-    except Exception as m:
-        print(m)
+    except:
         if DEBUG: print("Threw an exception, did not complete try-block")
         return render(request, 'login/deviceVerify.html')
 

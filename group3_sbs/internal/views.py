@@ -90,6 +90,18 @@ def edit_internal_user_profile(request, internal_user_id):
     profile = get_any_user_profile(username=internal_user.username)
     return render(request, success_page, {"internal_user": internal_user, "profile": profile, 'STATES': STATES})
 
+# # Edit Noncritical Transaction
+# @never_cache
+# @login_required
+# @user_passes_test(is_system_manager)
+# def edit_noncritical_transaction(request, transaction_id):
+#     user = request.user
+#     try:
+#         transaction = ExternalNoncriticalTransaction.objects.get(id=int(transaction_id))
+#         return render(request, 'internal/edit_noncritical_transaction.html', {'transaction': transaction})
+#     except:
+#         return HttpResponseRedirect(reverse('internal:error'))
+
 # Internal User Error Page
 @never_cache
 @login_required
@@ -453,6 +465,56 @@ def validate_critical_transaction_denial(request, transaction_id):
 # Request External User Transaction Access
 @never_cache
 @login_required
+@user_passes_test(is_system_manager)
+def validate_delete_critical_transaction(request, transaction_id):
+    user = request.user
+    try:
+        transaction = ExternalCriticalTransaction.objects.get(id=int(transaction_id))
+        if deny_transaction(transaction, user):
+            transaction.delete()
+            return HttpResponseRedirect(reverse('internal:critical_transactions'))
+        else:
+            return HttpResponseRedirect(reverse('internal:error'))
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Request External User Transaction Access
+@never_cache
+@login_required
+@user_passes_test(is_system_manager)
+def validate_delete_noncritical_transaction(request, transaction_id):
+    user = request.user
+    try:
+        transaction = ExternalNoncriticalTransaction.objects.get(id=int(transaction_id))
+        if deny_transaction(transaction, user):
+            transaction.delete()
+            return HttpResponseRedirect(reverse('internal:noncritical_transactions'))
+        else:
+            return HttpResponseRedirect(reverse('internal:error'))
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Edit External Noncritical Transaction
+# @never_cache
+# @login_required
+# @user_passes_test(is_system_manager)
+# def validate_edit_noncritical_transaction(request, transaction_id):
+#     user = request.user
+#     try:
+#         transaction = ExternalNoncriticalTransaction.objects.get(id=int(transaction_id))
+#         type_of_transaction = request.POST['type_of_transaction']
+#         status = request.POST['status']
+#         description = request.POST['description']
+#         if validate_noncritical_transaction_modification(description=description, status=status, type_of_transaction=type_of_transaction, transaction=transaction, user=user):
+#             return HttpResponseRedirect(reverse('internal:noncritical_transactions'))
+#         else:
+#             return HttpResponseRedirect(reverse('internal:error'))
+#     except:
+#         return HttpResponseRedirect(reverse('internal:error'))
+
+# Request External User Transaction Access
+@never_cache
+@login_required
 @user_passes_test(can_resolve_internal_transaction)
 def validate_external_noncritical_transaction_access_request_approval(request, transaction_id):
     user = request.user
@@ -613,6 +675,27 @@ def validate_internal_profile_edit(request, internal_user_id):
     else:
         return HttpResponseRedirect(reverse(error_redirect))
 
+# Request Internal User Account Access
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def validate_internal_user_access_request(request):
+    user = request.user
+    error_redirect = "internal:error"
+    internal_user_id = request.POST['internal_user_id']
+    page_to_view = request.POST['page_to_view']
+    if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
+        success_redirect = "internal:edit_internal_user_profile"
+    else:
+        success_redirect = "internal:view_internal_user_" + page_to_view
+    try:
+        internal_user = User.objects.get(id=int(internal_user_id))
+        if not is_internal_user(internal_user):
+            raise Exception
+    except:
+        return HttpResponseRedirect(reverse(error_redirect))
+    return HttpResponseRedirect(reverse(success_redirect, kwargs={'internal_user_id': internal_user.id}))
+
 # Approve Non-criticial Transactions
 @never_cache
 @login_required
@@ -654,27 +737,6 @@ def validate_noncritical_transaction_denial(request, transaction_id):
         return HttpResponseRedirect(reverse(success_page_reverse))
     else:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Denied transaction not commmited"})
-
-# Request Internal User Account Access
-@never_cache
-@login_required
-@user_passes_test(is_administrator)
-def validate_internal_user_access_request(request):
-    user = request.user
-    error_redirect = "internal:error"
-    internal_user_id = request.POST['internal_user_id']
-    page_to_view = request.POST['page_to_view']
-    if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
-        success_redirect = "internal:edit_internal_user_profile"
-    else:
-        success_redirect = "internal:view_internal_user_" + page_to_view
-    try:
-        internal_user = User.objects.get(id=int(internal_user_id))
-        if not is_internal_user(internal_user):
-            raise Exception
-    except:
-        return HttpResponseRedirect(reverse(error_redirect))
-    return HttpResponseRedirect(reverse(success_redirect, kwargs={'internal_user_id': internal_user.id}))
 
 # Validate Profile Edit Page
 @never_cache
