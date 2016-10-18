@@ -462,7 +462,87 @@ def validate_critical_transaction_denial(request, transaction_id):
     else:
         return render(request, success_page, {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions, 'error_message': "Denied transaction not commmited"})
 
-# Request External User Transaction Access
+# Validate deactivate external user account
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def validate_deactivate_external_user(request, external_user_id):
+    user = request.user
+    page_to_view = PAGE_TO_VIEW_DEACTIVATE
+    success_page = "internal:index"
+    error_redirect = "internal:error"
+    if can_activate_deactivate_external_user(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=external_user_id)
+            if is_external_user(external_user) and user.id != external_user_id:
+                external_user.is_active = False
+                external_user.save()
+                return HttpResponseRedirect(reverse(success_page))
+            else:
+                return HttpResponseRedirect(reverse(error_redirect))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# Validate reactivate external user account
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def validate_reactivate_external_user(request, external_user_id):
+    user = request.user
+    page_to_view = PAGE_TO_VIEW_REACTIVATE
+    success_page = "internal:index"
+    error_redirect = "internal:error"
+    if can_activate_deactivate_external_user(user=user, external_user_id=external_user_id, page_to_view=page_to_view):
+        try:
+            external_user = User.objects.get(id=external_user_id)
+            if is_external_user(external_user) and user.id != external_user_id:
+                external_user.is_active = True
+                external_user.save()
+                return HttpResponseRedirect(reverse(success_page))
+            else:
+                return HttpResponseRedirect(reverse(error_redirect))
+        except:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# Validate deactivate internal user account
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def validate_deactivate_internal_user(request, internal_user_id):
+    user = request.user
+    try:
+        internal_user = User.objects.get(id=internal_user_id)
+        if is_internal_user(internal_user) and user.id != internal_user_id:
+            internal_user.is_active = False
+            internal_user.save()
+            return HttpResponseRedirect(reverse('internal:index'))
+        else:
+            return HttpResponseRedirect(reverse('internal:error'))
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Validate reactivate internal user account
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def validate_reactivate_internal_user(request, internal_user_id):
+    user = request.user
+    try:
+        internal_user = User.objects.get(id=internal_user_id)
+        if is_internal_user(internal_user) and user.id != internal_user_id:
+            internal_user.is_active = True
+            internal_user.save()
+            return HttpResponseRedirect(reverse('internal:index'))
+        else:
+            return HttpResponseRedirect(reverse('internal:error'))
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Validate delete critical transaction
 @never_cache
 @login_required
 @user_passes_test(is_system_manager)
@@ -478,7 +558,7 @@ def validate_delete_critical_transaction(request, transaction_id):
     except:
         return HttpResponseRedirect(reverse('internal:error'))
 
-# Request External User Transaction Access
+# Validate delete noncritical transaction
 @never_cache
 @login_required
 @user_passes_test(is_system_manager)
@@ -569,7 +649,11 @@ def validate_external_user_access_request(request):
     page_to_view = request.POST['page_to_view']
     if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE and not is_administrator(user):
         success_redirect = "internal:edit_external_user_profile"
+    elif (page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE) and not is_administrator(user):
+        success_redirect = "internal:validate_" + page_to_view + "_external_user"
     elif page_to_view == PAGE_TO_VIEW_EDIT_PROFILE and is_administrator(user):
+        return HttpResponseRedirect(reverse(error_redirect))
+    elif (page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE) and is_administrator(user):
         return HttpResponseRedirect(reverse(error_redirect))
     else:
         success_redirect = "internal:view_external_user_" + page_to_view
@@ -686,6 +770,8 @@ def validate_internal_user_access_request(request):
     page_to_view = request.POST['page_to_view']
     if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
         success_redirect = "internal:edit_internal_user_profile"
+    elif (page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE):
+        success_redirect = "internal:validate_" + page_to_view + "_internal_user"
     else:
         success_redirect = "internal:view_internal_user_" + page_to_view
     try:

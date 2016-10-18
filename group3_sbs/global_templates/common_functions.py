@@ -16,6 +16,32 @@ from M2Crypto import RSA, EVP
 from templated_email import send_templated_mail
 import M2Crypto, random, re, string, time, thread
 
+def add_activate_deactivate_external_user_permission(user, external_user, page_to_view):
+    if is_regular_employee(user):
+        try:
+            content_type = ContentType.objects.get_for_model(RegularEmployee)
+            if page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+                permission_codename = 'can_internal_user_' + page_to_view + '_external_user_profile_' + str(external_user.id)
+                permission_name = "Can internal user " + page_to_view + " external user " + str(external_user.id) + "'s profile"
+            else:
+                return False
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    elif is_system_manager(user):
+        return True
+    else:
+        return False
+
+
 def add_edit_external_user_profile_permission(user):
     if is_external_user(user):
         try:
@@ -106,6 +132,26 @@ def add_view_external_user_permission(user, external_user, page_to_view):
     else:
         return False
 
+def can_activate_deactivate_external_user(user, external_user_id, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            if page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+                permission_codename = 'can_internal_user_' + page_to_view + '_external_user_profile_' + str(external_user_id)
+            else:
+                return verify
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                verify = True
+                user.user_permissions.remove(permission)
+                user.save()
+        except:
+            pass
+    elif is_system_manager(user):
+        verify = True
+    return verify
+
 def can_edit_external_user_page(user, external_user_id, page_to_view):
     verify = False
     if is_regular_employee(user):
@@ -177,7 +223,6 @@ def can_view_noncritical_transaction(user):
         return False
 
 def commit_transaction(transaction, user):
-    print('Bonjour')
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         result = commit_transaction_credit_or_debit(transaction=transaction, user=user)
@@ -318,13 +363,22 @@ def commit_transaction_internal_noncritical(transaction, user):
 
 def commit_transaction_internal_transcaction_for_access(transaction, user):
     try:
-        print('Bonjour')
         data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=transaction.type_of_transaction)
         initiator = transaction.initiator
         external_user = data['external_user']
         page_to_view = data['page_to_view']
         if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
             if add_internal_edit_external_user_profile_permission(user=initiator, external_user=external_user):
+                save_transaction(transaction=transaction, user=user)
+                access_request = accessRequests.objects.filter(externalUserId=external_user.id, internalUserId=initiator.id, pageToView=page_to_view)
+                if access_request.exists():
+                    for x in access_request:
+                        x.delete()
+                return True
+            else:
+                return False
+        elif page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+            if add_activate_deactivate_external_user_permission(user=initiator, external_user=external_user, page_to_view=page_to_view):
                 save_transaction(transaction=transaction, user=user)
                 access_request = accessRequests.objects.filter(externalUserId=external_user.id, internalUserId=initiator.id, pageToView=page_to_view)
                 if access_request.exists():
@@ -877,6 +931,8 @@ def does_user_have_external_user_permission(user, external_user, page_to_view):
         try:
             if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
                 permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user.id)
+            elif page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+                permission_codename = 'can_internal_user_' + page_to_view + '_external_user_profile_' + str(external_user.id)
             else:
                 permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
             permission = Permission.objects.filter(codename=permission_codename).first()
