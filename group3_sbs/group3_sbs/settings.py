@@ -92,6 +92,14 @@ LOGGING = {
             'class': 'logging.FileHandler',
             'filename': './log/global_templates_log.log',
         },
+        'create_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/create_log.log',
+        },
+        'reset_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/reset_log.log',
+        },
     },
     'loggers': {
         'django': {
@@ -116,6 +124,16 @@ LOGGING = {
         },
         'global_templates': {
             'handlers': ['global_templates_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'create': {
+            'handlers': ['create_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'reset': {
+            'handlers': ['reset_handler'],
             'level': 'DEBUG',
             'propagate': True,
         },
