@@ -1,0 +1,6 @@
+2016-10-18 22:32:35,736 loginValidate User:'garrettgutierrez' attemptting login
+2016-10-18 22:32:38,416 send_device_verify_otp User:'garrettgutierrez' send new device verify OTP
+2016-10-18 22:32:42,407 loginValidate User:'johnlennon' attemptting login
+2016-10-18 22:32:44,648 send_device_verify_otp User:'johnlennon' send new device verify OTP
+2016-10-18 22:33:06,855 deviceVerify User:'johnlennon' attemptting login
+2016-10-18 22:33:35,204 deviceVerify User:'garrettgutierrez' attemptting login
