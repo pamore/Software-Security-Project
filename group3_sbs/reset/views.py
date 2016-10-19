@@ -5,7 +5,9 @@ from django.core.mail import send_mail, EmailMessage
 from global_templates.common_functions import get_any_user_profile, otpGenerator, validate_email, validate_password, validate_username
 from global_templates.constants import OTP_EXPIRATION_DATE, OTP_LENGTH
 from M2Crypto import RSA, EVP
-import M2Crypto, time
+import M2Crypto, time, logging
+
+logger = logging.getLogger('reset')
 
 # Create your views here.
 
@@ -51,9 +53,11 @@ def resetUser(request):
                 except:
                     signed = None
                 if signed:
+                    logger.info("User account '%s' reset password PKI"%(user_otp.user.username))
                     mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%('encrypted with your public key and attached in the document'),'group3sbs@gmail.com',[user_otp.email])
                     mail.attach('otp.bin', signed, 'application/x-binary')
                 else:
+                    logger.info("User account '%s' reset password basic"%(user_otp.user.username))
                     mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%(user_otp.otp_pass),'group3sbs@gmail.com',[user_otp.email])
                 mail.send()
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP recently sent, please check email",})
@@ -78,14 +82,17 @@ def resetUser(request):
                 except:
                     signed = None
                 if signed:
+                    logger.info("User account '%s' re-send reset password PKI"%(user_otp.user.username))
                     mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%('encrypted with your public key and attached in the document'),'group3sbs@gmail.com',[user_otp.email])
                     mail.attach('otp.bin', signed, 'application/x-binary')
                 else:
+                    logger.info("User account '%s' re-send reset password basic"%(user_otp.user.username))
                     mail = EmailMessage("CSE545 Group3 SBS Password Recovery OTP", OTP_MESSAGE%(user_otp.otp_pass),'group3sbs@gmail.com',[user_otp.email])
                 mail.send()
                 if DEBUG: print("Password reset OTP code has been sent\n")
                 return render(request, 'reset/otpReset.html', {'error_message': "OTP sent, please check email",})
         else:
+            logger.info("User account '%s' incorrect username/email or missing reCaptcha"%(user_otp.user.username))
             return render(request, 'reset/reset.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",})
     except:
         if DEBUG: print("Threw an exception, did not complete try-block")
@@ -102,6 +109,7 @@ def otpUserReset(request):
         email = request.POST['email']
         reCaptcha = request.POST['g-recaptcha-response']
         if not validate_email(email=email) or not validate_username(username=username):
+            logger.info("User account '%s' incorrect format username/email"%(username))
             return render(request, 'reset/otpReset.html', {'error_message': "Incorrect username and email format",}, status=401)
         user_otp = get_any_user_profile(username, email)
         if(user_otp and reCaptcha):
@@ -115,6 +123,7 @@ def otpUserReset(request):
             if DEBUG: print("Confirm password is '%s'\n"%(conPass))
             if newPass == conPass:
                 if not validate_password(newPass) or not validate_password(conPass):
+                    logger.info("User account '%s' new password requirement not met"%(username))
                     return render(request, 'reset/otpReset.html', {'error_message': "New password does not meet requirements",}, status=401)
                 #
                 # if user's otpRequested is False or otpTimestamp > 15 minutes
@@ -126,16 +135,22 @@ def otpUserReset(request):
                         user_otp.user.save()
                         user_otp.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
                         user_otp.save()
+                        logger.info("User account '%s' new password succesfully set"%(username))
                         return render(request, 'reset/otpReset.html', {'error_message': "Succesfully reset account password!",})
                     else:
+                        logger.info("User account '%s' incorrect OTP for reset"%(username))
                         return render(request, 'reset/otpReset.html', {'error_message': "Incorrect OTP password",}, status=401)
                 else:
+                    logger.info("User account '%s' OTP for password reset expired"%(username))
                     return render(request, 'reset/reset.html', {'error_message': "OTP password is expired, re-submit password reset request",}, status=401)
             else:
+                logger.info("User account '%s' new password/confirm password mismatch"%(username))
                 return render(request, 'reset/otpReset.html', {'error_message': "New password does not match confirm password",}, status=401)
         else:
+            logger.info("User account '%s' username/email mismatch or missing reCaptcha"%(username))
             return render(request, 'reset/otpReset.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",}, status=401)
 
+        logger.info("User account '%s' other error?"%(username))
         return render(request, 'reset/otpReset.html', {'error_message': "Error occurred with submission",}, status=401)
     except:
         return render(request, 'reset/otpReset.html', status=401)

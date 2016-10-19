@@ -16,6 +16,31 @@ from M2Crypto import RSA, EVP
 from templated_email import send_templated_mail
 import M2Crypto, random, re, string, time, thread
 
+def add_activate_deactivate_external_user_permission(user, external_user, page_to_view):
+    if is_regular_employee(user):
+        try:
+            content_type = ContentType.objects.get_for_model(RegularEmployee)
+            if page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+                permission_codename = 'can_internal_user_' + page_to_view + '_external_user_profile_' + str(external_user.id)
+                permission_name = "Can internal user " + page_to_view + " external user " + str(external_user.id) + "'s profile"
+            else:
+                return False
+            try:
+                permission = Permission.objects.get(codename=permission_codename, name=permission_name, content_type=content_type)
+            except:
+                permission = Permission.objects.create(codename=permission_codename,name=permission_name, content_type=content_type)
+            if user.has_perm(permission):
+                return True
+            user.user_permissions.add(permission)
+            user.save()
+            return True
+        except:
+            return False
+    elif is_system_manager(user):
+        return True
+    else:
+        return False
+
 def add_edit_external_user_profile_permission(user):
     if is_external_user(user):
         try:
@@ -106,6 +131,26 @@ def add_view_external_user_permission(user, external_user, page_to_view):
     else:
         return False
 
+def can_activate_deactivate_external_user(user, external_user_id, page_to_view):
+    verify = False
+    if is_regular_employee(user):
+        try:
+            if page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+                permission_codename = 'can_internal_user_' + page_to_view + '_external_user_profile_' + str(external_user_id)
+            else:
+                return verify
+            permission = Permission.objects.get(codename=permission_codename)
+            permission_codename = 'internal.' + permission_codename
+            if user.has_perm(permission_codename):
+                verify = True
+                user.user_permissions.remove(permission)
+                user.save()
+        except:
+            pass
+    elif is_system_manager(user):
+        verify = True
+    return verify
+
 def can_edit_external_user_page(user, external_user_id, page_to_view):
     verify = False
     if is_regular_employee(user):
@@ -177,7 +222,6 @@ def can_view_noncritical_transaction(user):
         return False
 
 def commit_transaction(transaction, user):
-    print('Bonjour')
     type_of_transaction = transaction.type_of_transaction
     if type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
         result = commit_transaction_credit_or_debit(transaction=transaction, user=user)
@@ -318,13 +362,22 @@ def commit_transaction_internal_noncritical(transaction, user):
 
 def commit_transaction_internal_transcaction_for_access(transaction, user):
     try:
-        print('Bonjour')
         data = parse_transaction_description(transaction_description=transaction.description, type_of_transaction=transaction.type_of_transaction)
         initiator = transaction.initiator
         external_user = data['external_user']
         page_to_view = data['page_to_view']
         if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
             if add_internal_edit_external_user_profile_permission(user=initiator, external_user=external_user):
+                save_transaction(transaction=transaction, user=user)
+                access_request = accessRequests.objects.filter(externalUserId=external_user.id, internalUserId=initiator.id, pageToView=page_to_view)
+                if access_request.exists():
+                    for x in access_request:
+                        x.delete()
+                return True
+            else:
+                return False
+        elif page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+            if add_activate_deactivate_external_user_permission(user=initiator, external_user=external_user, page_to_view=page_to_view):
                 save_transaction(transaction=transaction, user=user)
                 access_request = accessRequests.objects.filter(externalUserId=external_user.id, internalUserId=initiator.id, pageToView=page_to_view)
                 if access_request.exists():
@@ -877,6 +930,8 @@ def does_user_have_external_user_permission(user, external_user, page_to_view):
         try:
             if page_to_view == PAGE_TO_VIEW_EDIT_PROFILE:
                 permission_codename = 'can_internal_user_edit_external_user_profile_' + str(external_user.id)
+            elif page_to_view == PAGE_TO_VIEW_DEACTIVATE or page_to_view == PAGE_TO_VIEW_REACTIVATE:
+                permission_codename = 'can_internal_user_' + page_to_view + '_external_user_profile_' + str(external_user.id)
             else:
                 permission_codename = 'can_view_external_user_' + page_to_view + '_' + str(external_user.id)
             permission = Permission.objects.filter(codename=permission_codename).first()
@@ -1752,6 +1807,8 @@ def validate_routing_number(routing_number):
 
 def validate_ssn(ssn):
     validate = False
+    if len(ssn) < SSN_LENGTH + 3 and len(ssn) > SSN_LENGTH:
+        ssn = ssn.replace('-', '')
     if len(ssn) == SSN_LENGTH:
         if re.search('^[0-9]+$', ssn):
             try:
@@ -1776,6 +1833,289 @@ def validate_street_address(street_address):
             validated = True
             #print('Valid street address')
     return validated
+
+def validate_noncritical_transaction_modification(description, status, type_of_transaction, transaction, user):
+    try:
+        if validate_transaction_type_of_transaction(type_of_transaction=type_of_transaction) and validate_transaction_status(status=status) and validate_transaction_description(description=description, type_of_transaction=type_of_transaction):
+            deny_transaction(transaction=transaction, user=user)
+            transaction.resolver = None
+            transaction.time_resolved = None
+            transaction.status = TRANSACTION_STATUS_UNRESOLVED
+            transaction.save()
+            data = parse_transaction_description(transaction_description=description, type_of_transaction=type_of_transaction)
+            if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT or type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
+                validate_noncritical_transaction_modification_credit_card_credit_or_debit(data=data, type_of_transaction=type_of_transaction, user=transaction.initiator)
+            elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_PAY_LATE_FEE:
+                validate_noncritical_transaction_modification_credit_card_pay_late_fee(data=data, type_of_transaction=type_of_transaction, user=transaction.initiator)
+            elif type_of_transaction == TRANSACTION_TYPE_CREDIT or type_of_transaction == TRANSACTION_TYPE_DEBIT:
+                validate_noncritical_transaction_modification_credit_or_debit(data=data, type_of_transaction=type_of_transaction, user=transaction.initiator)
+            elif type_of_transaction == TRANSACTION_TYPE_PAYMENT or type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+                validate_noncritical_transaction_modification_payment_or_transfer(data=data, type_of_transaction=type_of_transaction, user=transaction.initiator)
+            elif type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
+                validate_noncritical_transaction_modification_payment_on_behalf_validate(data=data, type_of_transaction=type_of_transaction, user=transaction.initiator)
+            transaction.type_of_transaction = type_of_transaction
+            transaction.status = status
+            transaction.description = description
+            transaction.save()
+            return True
+        else:
+            return False
+    except:
+        return False
+
+def validate_noncritical_transaction_modification_credit_card_credit_or_debit(data, type_of_transaction, user):
+    amount = float(data['amount'])
+    if not credit_card_validate_amount(amount) or amount > NONCRITICAL_TRANSACTION_LIMIT:
+        return False
+    if is_individual_customer(user):
+        account =  user.individualcustomer.credit_card
+        user_type = INDIVIDUAL_CUSTOMER
+    elif is_merchant_organization(user):
+        account =  user.merchantorganization.credit_card
+        user_type = MERCHANT_ORGANIZATION
+    else:
+        return False
+    if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
+        starting_balance = float(account.charge_limit)
+        creditcard_number=account.creditcard_number
+        check = float(starting_balance) + float(amount)
+        new_balance=float(starting_balance) + float(amount)
+        if credit_card_validate_amount(check):
+            account.charge_limit = float(new_balance)
+            account.save()
+            create_credit_card_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, creditcard_number= creditcard_number, amount=amount, starting_balance=starting_balance)
+        else:
+            return False
+    elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
+        starting_balance = float(account.charge_limit)
+        creditcard_number=account.creditcard_number
+        new_balance=float(starting_balance) - float(amount)
+        check = float(starting_balance) - float(amount)
+        if credit_card_validate_amount(check):
+            account.charge_limit = float(new_balance)
+            account.save()
+        else:
+            return False
+    else:
+        return False
+    return True
+
+def validate_noncritical_transaction_modification_credit_card_pay_late_fee(data, type_of_transaction, user):
+    amount = float(data['amount'])
+    if not credit_card_validate_amount(amount) or amount > NONCRITICAL_TRANSACTION_LIMIT:
+        return False
+    if is_individual_customer(user):
+        account =  user.individualcustomer.credit_card
+        user_type = INDIVIDUAL_CUSTOMER
+    elif is_merchant_organization(user):
+        account =  user.merchantorganization.credit_card
+        user_type = MERCHANT_ORGANIZATION
+    else:
+        return False
+    if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_PAY_LATE_FEE:
+        starting_balance = float(account.late_fee)
+        creditcard_number=account.creditcard_number
+        check = float(starting_balance) + float(amount)
+        new_balance=float(starting_balance) + float(amount)
+        if credit_card_validate_amount(check):
+            pass
+        else:
+            return False
+    else:
+        return False
+    return True
+
+def validate_noncritical_transaction_modification_credit_or_debit(data, type_of_transaction, user):
+    if type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        amount = float(data['amount'])
+    if type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        amount = float(data['amount'])
+    if not validate_amount(amount) or amount > NONCRITICAL_TRANSACTION_LIMIT:
+        return False
+    account_type = data['account_type']
+    if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING:
+        account =  user.individualcustomer.checking_account
+        user_type = INDIVIDUAL_CUSTOMER
+    elif is_individual_customer(user) and account_type == ACCOUNT_TYPE_SAVINGS:
+        account =  user.individualcustomer.savings_account
+        user_type = INDIVIDUAL_CUSTOMER
+    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_CHECKING:
+        account =  user.merchantorganization.checking_account
+        user_type = MERCHANT_ORGANIZATION
+    elif is_merchant_organization(user) and account_type == ACCOUNT_TYPE_SAVINGS:
+        account =  user.merchantorganization.savings_account
+        user_type = MERCHANT_ORGANIZATION
+    else:
+        return False
+    if type_of_transaction == TRANSACTION_TYPE_CREDIT:
+        starting_balance = account.active_balance
+        check = max(float(account.active_balance), float(account.current_balance)) + amount
+        new_balance = float(starting_balance) + amount
+        if validate_amount(check):
+            account.active_balance = new_balance
+            account.save()
+        else:
+            return False
+    elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
+        starting_balance = account.active_balance
+        check = min(float(account.active_balance), float(account.current_balance)) - amount
+        new_balance = float(starting_balance) - amount
+        if validate_amount(check):
+            account.active_balance = new_balance
+            account.save()
+        else:
+            return False
+    else:
+        return False
+    return True
+
+def validate_noncritical_transaction_modification_payment_on_behalf_validate(data, type_of_transaction, user):
+    receiver = user
+    receiver_account_type = data['receiver_account_type']
+    sender_account_type = data['sender_account_type']
+    if type_of_transaction == TRANSACTION_TYPE_PAYMENT_ON_BEHALF:
+        amount = float(data['amount'])
+    else:
+        return False
+    sender_account = data['sender_account']
+    sender_account_ID = data['sender_account_id']
+    sender_routing_ID = data['sender_routing_id']
+    if not validate_account_number(account_number=sender_account_ID) or not validate_routing_number(routing_number=sender_routing_ID):
+        return False
+    sender = data['sender']
+    if sender is None:
+        return False
+    if sender_account is None:
+        return False
+    if sender_account_type == ACCOUNT_TYPE_CHECKING or sender_account_type == ACCOUNT_TYPE_SAVINGS:
+        if is_individual_customer(sender):
+            sender_user_type = INDIVIDUAL_CUSTOMER
+        else:
+            return False
+        sender_check = min(float(sender_account.active_balance), float(sender_account.current_balance)) - amount
+        sender_starting_balance = sender_account.active_balance
+        sender_new_balance = float(sender_starting_balance) - amount
+    else:
+        return False
+    if not validate_amount(amount) or amount > NONCRITICAL_TRANSACTION_LIMIT:
+        return False
+    if is_merchant_organization(receiver) and receiver_account_type == ACCOUNT_TYPE_CHECKING:
+        receiver_account = receiver.merchantorganization.checking_account
+    elif is_merchant_organization(receiver) and receiver_account_type == ACCOUNT_TYPE_SAVINGS:
+        receiver_account = receiver.merchantorganization.savings_account
+    else:
+        return False
+    receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
+    receiver_starting_balance = receiver_account.active_balance
+    receiver_user_type = MERCHANT_ORGANIZATION
+    receiver_new_balance = float(receiver_starting_balance) + amount
+    if validate_amount(sender_check) and validate_amount(receiver_check) and not sender.id == receiver.id:
+        sender_account.active_balance = sender_new_balance
+        receiver_account.active_balance = receiver_new_balance
+        sender_account.save()
+        receiver_account.save()
+        return True
+    else:
+        return False
+
+def validate_noncritical_transaction_modification_payment_or_transfer(data, type_of_transaction, user):
+    receiver_account_type = data['receiver_account_type']
+    sender_account_type = data['sender_account_type']
+    if type_of_transaction == TRANSACTION_TYPE_PAYMENT:
+        amount = float(data['amount'])
+    elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
+        amount = float(data['amount'])
+    else:
+        return False
+    receiver_account_ID = data['receiver_account_id']
+    receiver_routing_ID = data['receiver_route_id']
+    if not validate_account_number(account_number=receiver_account_ID) or not validate_routing_number(routing_number=receiver_routing_ID):
+        return False
+    receiver = data['receiver']
+    if receiver is None:
+        return False
+    receiver_account = data['receiver_account']
+    if receiver_account is None:
+        return False
+    if receiver_account_type == ACCOUNT_TYPE_CHECKING or receiver_account_type == ACCOUNT_TYPE_SAVINGS:
+        if is_individual_customer(receiver):
+            receiver_user_type = INDIVIDUAL_CUSTOMER
+        elif is_merchant_organization(receiver):
+            receiver_user_type = MERCHANT_ORGANIZATION
+        else:
+            return False
+        receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
+        receiver_starting_balance = receiver_account.active_balance
+        receiver_new_balance = float(receiver_starting_balance) + amount
+    else:
+        return False
+    if not validate_amount(amount) or amount > NONCRITICAL_TRANSACTION_LIMIT:
+        return False
+    if is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
+        user_account = user.individualcustomer.checking_account
+        sender_user_type = INDIVIDUAL_CUSTOMER
+    elif is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_SAVINGS:
+        user_account = user.individualcustomer.savings_account
+        sender_user_type = INDIVIDUAL_CUSTOMER
+    elif is_merchant_organization(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
+        user_account = user.merchantorganization.checking_account
+        sender_user_type = MERCHANT_ORGANIZATION
+    elif is_merchant_organization(user) and sender_account_type == ACCOUNT_TYPE_SAVINGS:
+        user_account = user.merchantorganization.savings_account
+        sender_user_type = MERCHANT_ORGANIZATION
+    else:
+        return False
+    sender_check = min(float(user_account.active_balance), float(user_account.current_balance)) - amount
+    sender_starting_balance = user_account.active_balance
+    sender_new_balance = float(sender_starting_balance) - amount
+    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance) and not user.id == receiver.id:
+        user_account.active_balance = sender_new_balance
+        receiver_account.active_balance = receiver_new_balance
+        user_account.save()
+        receiver_account.save()
+    else:
+        return False
+    return True
+
+def validate_transaction_description(description, type_of_transaction):
+    try:
+        data = parse_transaction_description(transaction_description=description, type_of_transaction=type_of_transaction)
+        if float(data['amount']) > NONCRITICAL_TRANSACTION_LIMIT:
+            return False
+        return True
+    except:
+        return False
+
+def validate_transaction_status(status):
+    statuses = [
+        TRANSACTION_STATUS_APPROVED,
+        TRANSACTION_STATUS_DENIED,
+        TRANSACTION_STATUS_RESOLVED,
+        TRANSACTION_STATUS_UNRESOLVED,
+    ]
+    if status in statuses:
+        return True
+    else:
+        return False
+
+def validate_transaction_type_of_transaction(type_of_transaction):
+    types = [
+        CREDIT_CARD_TRANSACTION_TYPE_CREDIT,
+        CREDIT_CARD_TRANSACTION_TYPE_DEBIT,
+        CREDIT_CARD_TRANSACTION_TYPE_PAY_LATE_FEE,
+        TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST,
+        TRANSACTION_TYPE_CREDIT,
+        TRANSACTION_TYPE_DEBIT,
+        TRANSACTION_TYPE_EXTERNAL_USER_PROFILE_EDIT_REQUEST,
+        TRANSACTION_TYPE_PAYMENT,
+        TRANSACTION_TYPE_PAYMENT_ON_BEHALF,
+        TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST,
+        TRANSACTION_TYPE_TRANSFER,
+    ]
+    if type_of_transaction in types:
+        return True
+    else:
+        return False
 
 def validate_user_type(user, user_type):
     if is_individual_customer(user) and user_type == INDIVIDUAL_CUSTOMER:

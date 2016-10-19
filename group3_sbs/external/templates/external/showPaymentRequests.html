@@ -19,67 +19,75 @@
 </div>
 <br />
 <div class="row">
-  <div class="col-md-6">
+  <div >
     <h2> Checking Account Approvals</h2>
     <table class="table">
     <tr>
         <td>Transaction ID</td>
         <td>Request Amount</td>
         <td>Merchant Checking Account Num</td>
-        <td></td>
-        <td></td>
+        <td> Approve</td>
+        <td>Reject</td>
     </tr>
     {% for currentRequest in checkingRequests %}
         <tr>
-
-        <td>{{currentRequest.id}}</td>
-        <td>{{currentRequest.requestAmount}}</td>
-        <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
-        <form name="forms" action="{% url 'external:update_approvals' %}" method="post">
-        {% csrf_token %}
-        <input type="hidden" value={{ currentRequest.id }} name="id"/>
-        <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
-        </form>
-        <form name="forms" action="{% url 'external:reject_approvals' %}" method="post">
-        {% csrf_token %}
-        <input type="hidden" value={{ currentRequest.id }} name="id"/>
-        <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
-        </form>
+          <td>{{currentRequest.id}}</td>
+          <td>{{currentRequest.requestAmount}}</td>
+          <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
+          <form name="forms" action="{% url 'external:update_approvals' %}" method="post">
+          {% csrf_token %}
+            <input type="hidden" value={{ currentRequest.id }} name="id"/>
+            <input type="hidden" value={{ currentRequest.merchantCheckingsAccountNum }} name="account_number"/>
+            <input type="hidden" value="Checking" name="account_type"/>
+            <input type="hidden" value={{ currentRequest.merchantCheckingsAccountNum }} name="account_number"/>
+            <input type="hidden" value={{ currentRequest.merchantCheckingRouteNum }} name="route_number"/>
+            <input type="hidden" value={{ currentRequest.requestAmount }} name="amount"/>
+            <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
+            </form>
+            <form name="forms" action="{% url 'external:reject_approvals' %}" method="post">
+            {% csrf_token %}
+            <input type="hidden" value={{ currentRequest.id }} name="id"/>
+            <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
+          </form>
         </tr>
-
     {% endfor %}
     </table >
   </div>
-  <div class="col-md-6">
+  <div >
     <h2> Saving Account Approvals</h2>
     <table class="table">
     <tr>
         <td>Transaction ID</td>
         <td>Request Amount</td>
         <td>Merchant Checking Account Num</td>
-        <td></td>
-        <td></td>
+        <td>Approve</td>
+        <td>Reject</td>
     </tr>
     {% for currentRequest in savingRequests %}
         <tr>
-        <td>{{currentRequest.id}}</td>
-        <td>{{currentRequest.requestAmount}}</td>
-        <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
+          <td>{{currentRequest.id}}</td>
+          <td>{{currentRequest.requestAmount}}</td>
+          <td>{{currentRequest.merchantCheckingsAccountNum}}</td>
+          <form name="forms" action="{% url 'external:update_approvals' %}" method="post">
+          {% csrf_token %}
+            <input type="hidden" value={{ currentRequest.id }} name="id"/>
+            <input type="hidden" value={{ currentRequest.merchantCheckingsAccountNum }} name="account_number"/>
+            <input type="hidden" value="Checking" name="account_type"/>>
+            <input type="hidden" value={{ currentRequest.merchantCheckingsAccountNum }} name="account_number"/>
+            <input type="hidden" value={{ currentRequest.merchantCheckingRouteNum }} name="route_number"/>
+            <input type="hidden" value={{ currentRequest.requestAmount }} name="amount"/>
+            <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
+          </form>
+          <form name="forms" action="{% url 'external:reject_approvals' %}" method="post">
+          {% csrf_token %}
+            <input type="hidden" value={{ currentRequest.id }} name="id"/>
+            <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
+          </form>
         </tr>
-        <form name="forms" action="{% url 'external:update_approvals' %}" method="post">
-        {% csrf_token %}
-        <input type="hidden" value={{ currentRequest.id }} name="id"/>
-        <td><input type="submit" class="btn btn-primary" value="Approve" /></td>
-        </form>
-        {% csrf_token %}
-        <form name="forms" action="{% url 'external:reject_approvals' %}" method="post">
-        <input type="hidden" value={{ currentRequest.id }} name="id"/>
-        <td><input type="submit" class="btn btn-warning" value="Reject" /></td>
-        </form>
-        </tr>
+    {% endfor %}
     </table>
   </div>
 </div>
-{% endfor %}
+
 
 {% endblock %}

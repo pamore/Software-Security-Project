@@ -4,6 +4,9 @@ from django.core.mail import send_mail
 from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number, validate_account_info, validate_certificate, validate_email, validate_password, validate_username
 from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH, STATES
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
+import logging
+
+logger = logging.getLogger('create')
 
 # Create your views here.
 DEBUG = False
@@ -49,6 +52,7 @@ def createUser(request):
                 # if the user already fully exists (e.g. has a full profile)
                 #   return error that username is unavailable
                 if DEBUG: print("The full user profile already exists\n")
+                logger.info("Full user account '%s' already exists"%(username))
                 return render(request, 'create/create.html', {'error_message': "Username not correct. Try another.",})
 
             elif(init_user):
@@ -60,6 +64,7 @@ def createUser(request):
                     #       re-direct them to final account creation
                     init_email = User.objects.get(username=username,email=email)
                     if DEBUG: print("The init user email exists in the system\n")
+                    logger.info("Temporary user account '%s' already exists"%(username))
                     check = send_mail(
                     'Group 3 SBS New Account',
                     NEW_ACCOUNT_MESSAGE%(init_email.username,init_email.first_name),
@@ -82,6 +87,7 @@ def createUser(request):
                 else:
                     #   else
                     #       return error that new account username/email mismatch
+                    logger.info("Temporary user account '%s' username/email mismatch"%(username))
                     return render(request, 'create/create.html', {'error_message': "Username and email account mismatch.",})
 
             else:
@@ -94,6 +100,7 @@ def createUser(request):
                 new_user = User.objects.create_user(username=username,email=email,first_name=otpGenerator(size=OTP_LENGTH))
                 new_user.save()
                 if DEBUG: print("Initial account created and saved\n")
+                logger.info("Temporary user account '%s' created"%(username))
                 check = send_mail(
                 'Group 3 SBS New Account',
                 NEW_ACCOUNT_MESSAGE%(new_user.username,new_user.first_name),
@@ -155,12 +162,14 @@ def confirmAccount(request):
                 # if the user already fully exists (e.g. has a full profile)
                 #   return error that username is unavailable
                 if DEBUG: print("The full user profile already exists\n")
-                return render(request, 'create/create.html', {'error_message': "User already exists, please login or reset password.",})
+                logger.info("Full user account '%s' already exists"%(username))
+                return render(request, 'create/create.html', {'error_message': "User already exists, please login or reset password.", "STATES" : STATES})
 
             elif(init_user):
                 # else if the username exists may have a pre-liminary account created (e.g. only a User type)
                 if DEBUG: print("Filter for the init user\n")
                 if not validate_account_info(user_type=user_type, username=username, email=email, first_name=firstname, last_name=lastname, address=address, city=city, state=state,zipcode=zipcode, personal_code=personalcode):
+                    logger.info("User '%s' invalid user input"%(username))
                     return render(request, 'create/confirmAccount.html', {'error_message': "User information not correct.", "STATES" : STATES})
                 init_email = User.objects.filter(username=username,email=email,first_name=request.POST['otpPassword'])
                 if(init_email):
@@ -224,6 +233,7 @@ def confirmAccount(request):
                             individualcustomer.save()
                             if DEBUG: print("Create and save ind. account type\n")
                             new_account = individualcustomer
+                            logger.info("Created individual customer '%s' account"%(username))
                         else:
                             #(request.POST['user_type'] == MERCHANT_ORGANIZATION):
                             if DEBUG: print("Merchant account type\n")
@@ -245,6 +255,7 @@ def confirmAccount(request):
                             merchantcustomer.save()
                             if DEBUG: print("Create and save merch. account type\n")
                             new_account = merchantcustomer
+                            logger.info("Created merchant '%s' account"%(username))
 
                         newUser.set_password(newPassword)
                         newUser.email = ""
@@ -272,14 +283,17 @@ def confirmAccount(request):
                         if DEBUG: print("New account created email sent\n")
                         return render(request, 'create/confirmAccount.html', {'error_message': "New account created! Email notification sent.","STATES" : STATES})
                     else:
+                        logger.info("User '%s' new password/confirm password mismatch"%(username))
                         return render(request, 'create/confirmAccount.html', {'error_message': "New password and confirm password mismatch.","STATES" : STATES})
                 else:
                     #   else
                     #       return error that new account username/email mismatch
+                    logger.info("User '%s' username/email mismatch"%(username))
                     return render(request, 'create/confirmAccount.html', {'error_message': "Username and email account mismatch.","STATES" : STATES})
 
             else:
                 if DEBUG: print("No user account present, need to apply for new account first\n")
+                logger.info("User '%s' username not found, need to create account"%(username))
                 return render(request, 'create/create.html', {'error_message': "Application not found, please re-apply for an account.","STATES" : STATES})
 
     except Exception as e:

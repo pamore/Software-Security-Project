@@ -7,12 +7,12 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.cache import never_cache
-from group3_sbs.settings import *
 from global_templates.constants import OTP_EXPIRATION_DATE, TRUSTED_DEVICE_EXPIRY
 from global_templates.common_functions import validate_password, validate_user_type, validate_username, get_user_email, get_any_user_profile, get_user_trusted_keys, trustedDeviceKeyGenerator, otpGenerator
 from django.core.mail import send_mail
-import datetime
-import time
+import datetime, time, logging
+
+logger = logging.getLogger('login')
 
 # Create your views here
 DEBUG = False
@@ -28,97 +28,72 @@ TRUSTED_DEVICE_MESSAGE =  "Hello Group3SBS User,\n\r" +\
                           "Please continue to verify the device by entering the above confirmation code.\n\r" +\
                           "\n\r"
 
-def send_device_verify_otp(request, profile):
-    if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
-        #
-        # if user's otpRequested and otpTimestamp < 15 minutes
-        #   do not send another OTP until the 15 minutes expires
-        if DEBUG: print("The current OTP is still valid, re-send current OTP until it is expired\n")
-        check = send_mail(
-        'Group 3 SBS Trusted Device OTP',
-        TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
-        'group3sbs@gmail.com',
-        [profile.email],
-        fail_silently=False,
-        )
-        if DEBUG: print("Check is %d\n"%(check))
-        while(check == 0):
-            check = send_mail(
-            'Group 3 SBS Trusted Device OTP',
-            TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
-            'group3sbs@gmail.com',
-            [profile.email],
-            fail_silently=False,
-            )
-        return render(request, 'login/deviceVerify.html', {'error_message': "OTP recently sent, please check email",})
-    else:
-        # else e.g.  user's otpRequested and otpTimestamp > 15 minutes or otpRequested is False
-        #   set the time stamp of the request
-        #   set the value of the user's generated OTP
-        #
-        if DEBUG: print("Generate an OTP code\n")
-        profile.otp_pass = otpGenerator(size=13)
-        profile.otp_timestamp = int(time.time())
-        profile.save()
-        if DEBUG: print("OTP pass and timestamp set and saved\n")
-        check = send_mail(
-        'Group 3 SBS Trusted Device OTP',
-        TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
-        'group3sbs@gmail.com',
-        [profile.email],
-        fail_silently=False,
-        )
-        if DEBUG: print("Check is %d\n"%(check))
-        while(check == 0):
-            check = send_mail(
-            'Group 3 SBS Trusted Device OTP',
-            TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
-            'group3sbs@gmail.com',
-            [profile.email],
-            fail_silently=False,
-            )
-        if DEBUG: print("Trusted device OTP code has been sent\n")
-        return render(request, 'login/deviceVerify.html', {'error_message': "OTP sent, please check email",})
+# Verify Device
+@watch_login
+def deviceVerify(request):
+    if DEBUG: print("The deviceVerify function has been called\n")
+    try:
+        profile = get_any_user_profile(request.POST['username'],request.POST['email'])
+        reCaptcha = request.POST['g-recaptcha-response']
+        if(profile and reCaptcha):
+            logger.info("User:'%s' attemptting login"%(profile.user.username))
+            if DEBUG: print("The username, email, and captcha have been verified\n")
+            otpPassword = request.POST['otpPassword']
+            if DEBUG: print("OTP code is '%s'\n"%(otpPassword))
+            if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
+                if(profile.otp_pass == otpPassword):
+                    if DEBUG: print("Confirmed the user OTP key")
+                    trusted_keys = get_user_trusted_keys(profile)
+                    new_key = trustedDeviceKeyGenerator()
+
+                    if(trusted_keys is None):
+                        trusted_keys = [new_key]
+                    elif(len(trusted_keys) == 10):
+                        trusted_keys.pop()
+                        trusted_keys.insert(0, new_key)
+                    else:
+                        trusted_keys.insert(0, new_key)
+
+                    if DEBUG: print("trusted keys is:")
+                    if DEBUG: print(trusted_keys)
+                    if DEBUG: print("Update list of keys")
+                    serial_keys = ''
+                    for key in trusted_keys:
+                        serial_keys += key + ';'
+
+                    if DEBUG: print("Serialized keys '%s'"%(serial_keys))
+
+                    profile.trusted_device_keys = serial_keys
+                    profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
+                    profile.save()
+
+                    if DEBUG: print("Update user profile keys and OTP")
+
+                    oneYear = datetime.datetime.now()
+                    oneYear.replace(year = oneYear.year + 1)
+
+                    if DEBUG: print("Get cookie expiration")
+                    user = profile.user
+                    login(request, user)
+                    response = redirect('login:signin')
+                    if DEBUG: print("Generate response")
+                    response.set_cookie('trusted_device',new_key,max_age=TRUSTED_DEVICE_EXPIRY)
+                    if DEBUG: print("Finish verifying device, return response")
+                    return response
+                else:
+                    return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect OTP password",}, status=401)
+            else:
+                return HttpResponseRedirect(reverse('login:signin'))
+        else:
+            return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",}, status=401)
+    except:
+        if DEBUG: print("Threw an exception, did not complete try-block")
+        return render(request, 'login/deviceVerify.html', status=401)
 
 # Lockout Page
 @never_cache
 def lock_out(request):
     return render(request, 'login/lock_out.html')
-
-# Login Page
-@never_cache
-def signin(request):
-    if request.user.is_authenticated:
-        return HttpResponseRedirect(reverse('login:loggedin'))
-    else:
-        return render(request, 'login/signin.html')
-
-# Validate login
-@never_cache
-@watch_login
-def loginValidate(request):
-    try:
-        username = request.POST['username']
-        password = request.POST['password']
-        reCaptcha = request.POST['g-recaptcha-response']
-        user = authenticate(username=username, password=password)
-        if not reCaptcha:
-            raise Exception('Are you a bot? Please fill out Recapchta.')
-        if user is not None and validate_user_type(user, request.POST['user_type']) and validate_username(username=username) and validate_password(password=password):
-            login(request, user)
-            return HttpResponseRedirect(reverse('login:loggedin'))
-        else:
-            raise Exception('Incorrect username and password combination')
-    except Exception as badPassword:
-        return render(request, 'login/signin.html', {'error_message': badPassword[0],}, status=401)
-    except:
-        return render(request, 'login/signin.html', {'error_message': "Error occurred with submission",}, status=401)
-
-# Logout
-@never_cache
-def signout(request):
-    logout(request)
-    return HttpResponseRedirect(reverse('login:signin'))
 
 # Logged in page
 @never_cache
@@ -195,62 +170,96 @@ def loggedin(request):
             logout(request)
             return send_device_verify_otp(request, profile)
 
-def deviceVerify(request):
-    if DEBUG: print("The deviceVerify function has been called\n")
-
+# Validate login
+@never_cache
+@watch_login
+def loginValidate(request):
     try:
-        profile = get_any_user_profile(request.POST['username'],request.POST['email'])
+        username = request.POST['username']
+        password = request.POST['password']
         reCaptcha = request.POST['g-recaptcha-response']
-        if(profile and reCaptcha):
-            if DEBUG: print("The username, email, and captcha have been verified\n")
-            otpPassword = request.POST['otpPassword']
-            if DEBUG: print("OTP code is '%s'\n"%(otpPassword))
-            if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
-                if(profile.otp_pass == otpPassword):
-                    if DEBUG: print("Confirmed the user OTP key")
-                    trusted_keys = get_user_trusted_keys(profile)
-                    new_key = trustedDeviceKeyGenerator()
-
-                    if(trusted_keys is None):
-                        trusted_keys = [new_key]
-                    elif(len(trusted_keys) == 10):
-                        trusted_keys.pop()
-                        trusted_keys.insert(0, new_key)
-                    else:
-                        trusted_keys.insert(0, new_key)
-
-                    print("trusted keys is:")
-                    print trusted_keys
-                    if DEBUG: print("Update list of keys")
-                    serial_keys = ''
-                    for key in trusted_keys:
-                        serial_keys += key + ';'
-
-                    if DEBUG: print("Serialized keys '%s'"%(serial_keys))
-
-                    profile.trusted_device_keys = serial_keys
-                    profile.otp_timestamp = time.time() - OTP_EXPIRATION_DATE
-                    profile.save()
-
-                    if DEBUG: print("Update user profile keys and OTP")
-
-                    oneYear = datetime.datetime.now()
-                    oneYear.replace(year = oneYear.year + 1)
-
-                    if DEBUG: print("Get cookie expiration")
-
-                    response = render(request, 'login/deviceVerify.html', {'error_message': "Succesfully added device to trusted devices!",})
-                    if DEBUG: print("Generate response")
-                    response.set_cookie('trusted_device',new_key,max_age=TRUSTED_DEVICE_EXPIRY)
-                    if DEBUG: print("Finish verifying device, return response")
-                    return response
-                else:
-                    return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect OTP password",})
-            else:
-                return render(request, 'login/deviceVerify.html', {'error_message': "OTP expired! Please re-try login to re-start device verification",})
+        user = authenticate(username=username, password=password)
+        if not reCaptcha:
+            raise Exception('Are you a bot? Please fill out Recapchta.')
+        if user is not None and validate_user_type(user, request.POST['user_type']) and validate_username(username=username) and validate_password(password=password):
+            login(request, user)
+            logger.info("User:'%s' attemptting login"%(username))
+            return HttpResponseRedirect(reverse('login:loggedin'))
         else:
-            return render(request, 'login/deviceVerify.html', {'error_message': "Incorrect username and email combination or missing reCaptcha",})
-
+            logger.info("User:'%s' incorrect login"%(username))
+            raise Exception('Incorrect username and password combination')
+    except Exception as badPassword:
+        return render(request, 'login/signin.html', {'error_message': badPassword[0],}, status=401)
     except:
-        if DEBUG: print("Threw an exception, did not complete try-block")
-        render(request, 'login/deviceVerify.html')
+        return render(request, 'login/signin.html', {'error_message': "Error occurred with submission",}, status=401)
+
+# Login Page
+@never_cache
+def signin(request):
+    if request.user.is_authenticated:
+        return HttpResponseRedirect(reverse('login:loggedin'))
+    else:
+        return render(request, 'login/signin.html')
+
+# Logout
+@never_cache
+def signout(request):
+    logout(request)
+    return HttpResponseRedirect(reverse('login:signin'))
+
+# Verify OTP
+def send_device_verify_otp(request, profile):
+    if((profile.otp_timestamp + OTP_EXPIRATION_DATE) >= int(time.time())):
+        #
+        # if user's otpRequested and otpTimestamp < 15 minutes
+        #   do not send another OTP until the 15 minutes expires
+        if DEBUG: print("The current OTP is still valid, re-send current OTP until it is expired\n")
+        check = send_mail(
+        'Group 3 SBS Trusted Device OTP',
+        TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
+        'group3sbs@gmail.com',
+        [profile.email],
+        fail_silently=False,
+        )
+        if DEBUG: print("Check is %d\n"%(check))
+        print(profile.otp_pass)
+        while(check == 0):
+            check = send_mail(
+            'Group 3 SBS Trusted Device OTP',
+            TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
+            'group3sbs@gmail.com',
+            [profile.email],
+            fail_silently=False,
+            )
+        logger.info("User:'%s' re-send valid device verify OTP"%(profile.user.username))
+        return render(request, 'login/deviceVerify.html', {'error_message': "OTP recently sent, please check email",})
+    else:
+        # else e.g.  user's otpRequested and otpTimestamp > 15 minutes or otpRequested is False
+        #   set the time stamp of the request
+        #   set the value of the user's generated OTP
+        #
+        if DEBUG: print("Generate an OTP code\n")
+        profile.otp_pass = otpGenerator(size=13)
+        profile.otp_timestamp = int(time.time())
+        profile.save()
+        if DEBUG: print("OTP pass and timestamp set and saved\n")
+        print(profile.otp_pass)
+        check = send_mail(
+        'Group 3 SBS Trusted Device OTP',
+        TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
+        'group3sbs@gmail.com',
+        [profile.email],
+        fail_silently=False,
+        )
+        if DEBUG: print("Check is %d\n"%(check))
+        while(check == 0):
+            check = send_mail(
+            'Group 3 SBS Trusted Device OTP',
+            TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
+            'group3sbs@gmail.com',
+            [profile.email],
+            fail_silently=False,
+            )
+        if DEBUG: print("Trusted device OTP code has been sent\n")
+        logger.info("User:'%s' send new device verify OTP"%(profile.user.username))
+        return render(request, 'login/deviceVerify.html', {'error_message': "OTP sent, please check email",})

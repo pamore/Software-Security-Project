@@ -68,6 +68,9 @@
           <form action="{% url 'internal:validate_critical_transaction_denial' transaction_id=transaction.id %}" method="post">
             {% csrf_token %}<input type="submit" class="btn btn-warning" value="Deny" />
           </form>
+          <form action="{% url 'internal:validate_delete_critical_transaction' transaction_id=transaction.id %}" method="post">
+            {% csrf_token %}<input type="submit" class="btn btn-danger" value="Delete" />
+          </form>
           {% else %}
           <td>None</td>
           {% endif %}

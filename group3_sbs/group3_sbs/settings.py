@@ -71,6 +71,11 @@ ROOT_URLCONF = 'group3_sbs.urls'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s %(funcName)s %(message)s'
+        }
+    },
     'handlers': {
         'file': {
             'level': 'DEBUG',
@@ -80,18 +85,32 @@ LOGGING = {
         'login_handler': {
             'class': 'logging.FileHandler',
             'filename': './log/login_log.log',
+            'formatter': 'standard'
         },
         'internal_handler': {
             'class': 'logging.FileHandler',
             'filename': './log/internal_log.log',
+            'formatter': 'standard'
         },
         'external_handler': {
             'class': 'logging.FileHandler',
             'filename': './log/external_log.log',
+            'formatter': 'standard'
         },
         'global_templates_handler': {
             'class': 'logging.FileHandler',
             'filename': './log/global_templates_log.log',
+            'formatter': 'standard'
+        },
+        'create_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/create_log.log',
+            'formatter': 'standard'
+        },
+        'reset_handler': {
+            'class': 'logging.FileHandler',
+            'filename': './log/reset_log.log',
+            'formatter': 'standard'
         },
     },
     'loggers': {
@@ -117,6 +136,16 @@ LOGGING = {
         },
         'global_templates': {
             'handlers': ['global_templates_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'create': {
+            'handlers': ['create_handler'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'reset': {
+            'handlers': ['reset_handler'],
             'level': 'DEBUG',
             'propagate': True,
         },
@@ -158,6 +187,10 @@ DATABASES = {
     }
 }
 
+# Atomtic HTTP Requests
+ATOMIC_REQUESTS = True
+
+AUTOCOMMIT = True
 
 # Password validation
 # https://docs.djangoproject.com/en/1.10/ref/settings/#auth-password-validators

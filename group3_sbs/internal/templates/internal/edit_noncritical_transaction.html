@@ -1,0 +1,34 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add stylesheets or javascript here !-->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Navigation here !-->
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-md-12">
+    <h1>Edit Noncritical Transaction # {{transaction.id}}</h1>
+    <h2 style="color:red;"><strong>Warning: Changing any of theses values can make the database inconsistent!!!</strong><h2>
+  </div>
+  <div class="col-md-12">
+    <form action="{% url 'internal:validate_edit_noncritical_transaction' transaction_id=transaction.id %}" method="post">
+    {% csrf_token %}
+      <label for="type_of_transaction">Type of Transaction</label>
+      <input type="text" class="form-control" name="type_of_transaction" value="{{transaction.type_of_transaction}}" required />
+      <label for="status">Status</label>
+      <input type="text" class="form-control" name="status" value="{{transaction.status}}" required />
+      <label for="description">Description</label>
+      <input type="text" class="form-control" name="description" value="{{transaction.description}}" required />
+      <input type="submit" class="btn btn-danger" value="Dangerously Try to Change Transaction" />
+    </form>
+  </div>
+</div>
+{% endblock %}
