@@ -61,6 +61,7 @@ class ExternalCriticalTransaction(Transaction):
 
 class MerchantPaymentRequest(models.Model):
     merchantCheckingsAccountNum = models.IntegerField()
+    merchantCheckingRouteNum = models.IntegerField()
     accountType = models.CharField(max_length=30)
     clientAccountNum = models.IntegerField()
     clientRoutingNum = models.IntegerField()

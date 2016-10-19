@@ -546,7 +546,9 @@ def addPaymentRequestToDB(request):
             condition3 = (client_CA_object.routing_number == clientRoutingNum)
         if (condition1 and condition2 and condition3):
             merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+            merchantCheckingsRoutingNum = user.merchantorganization.checking_account.routing_number
             paymentRequest = MerchantPaymentRequest.objects.create(merchantCheckingsAccountNum=merchantCheckingsAccountNum,
+                                                                   merchantCheckingRouteNum=merchantCheckingsRoutingNum,
                                                                accountType=accountType,
                                                                clientAccountNum=clientAccountNum,
                                                                clientRoutingNum=clientAccountNum,
@@ -573,8 +575,10 @@ def addPaymentRequestToDB(request):
             condition3 = (client_SA_object.routing_number == clientRoutingNum)
         if (condition1 and condition2 and condition3 ):
             merchantCheckingsAccountNum = user.merchantorganization.checking_account_id
+            merchantCheckingsRoutingNum = user.merchantorganization.checking_account.routing_number
             paymentRequest = MerchantPaymentRequest.objects.create(
                 merchantCheckingsAccountNum=merchantCheckingsAccountNum,
+                merchantCheckingRouteNum=merchantCheckingsRoutingNum,
                 accountType=accountType,
                 clientAccountNum=clientAccountNum,
                 clientRoutingNum=clientAccountNum,
@@ -923,7 +927,7 @@ def transfer_savings_validate(request):
 def showPaymentRequests(request):
     user = request.user
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(clientAccountNum=user.individualcustomer.checking_account_id)
-    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(clientAccountNum=user.individualcustomer.savings_account_id)
+    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(clientAccountNum=user.individualcustomer.savings_account_id)
     return render(request, 'external/showPaymentRequests.html',{'checkingRequests':checkingRequests,'savingRequests':savingRequests})
 
 # Approve Transaction Requests
@@ -932,16 +936,29 @@ def showPaymentRequests(request):
 @user_passes_test(is_external_user)
 def update_approvals(request):
     user = request.user
-    #make transfer
-    #add this to transactions of the user
+
+    error_redirect = 'external:error'
+    success_redirect = 'external:showPaymentRequests' #Show transaction requests
+
+    #add this to transactions of the user --not implemented
+
+    # Remove this transaction from requests
     string_transaction_id = str(request.POST['id'])
     transaction_id = int(string_transaction_id)
     transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id).first()
-    if not payment_merchant_request_validate(request=request, merchant_request=transaction):
-        return HttpResponseRedirect(reverse('external:error'))
+
+    #sender account type
+    account_type = str(transaction.accountType)
+
+#    if not payment_merchant_request_validate(request=request, merchant_request=transaction):
+#        return HttpResponseRedirect(reverse('external:error'))
     transaction.delete()
     checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
         clientAccountNum=user.individualcustomer.checking_account_id)
     savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Savings").filter(
         clientAccountNum=user.individualcustomer.savings_account_id)
-    return HttpResponseRedirect(reverse('external:showPaymentRequests'))
+
+
+    #make Transfer
+    type_of_transaction = TRANSACTION_TYPE_TRANSFER
+    return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
