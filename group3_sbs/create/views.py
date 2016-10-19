@@ -78,7 +78,7 @@ def createUser(request):
                         )
                         if DEBUG: print("Check is %d\n"%(check))
                     if DEBUG: print("New Account OTP code has been sent\n")
-                    return render(request, 'create/confirmAccount.html', {'error_message': "New Account email sent, please check email",})
+                    return render(request, 'create/confirmAccount.html', {'error_message': "New Account email sent, please check email","STATES" : STATES})
                 else:
                     #   else
                     #       return error that new account username/email mismatch
@@ -282,6 +282,7 @@ def confirmAccount(request):
                 if DEBUG: print("No user account present, need to apply for new account first\n")
                 return render(request, 'create/create.html', {'error_message': "Application not found, please re-apply for an account.","STATES" : STATES})
 
-    except:
+    except Exception as e:
         if DEBUG: print("Threw an exception, did not complete try-block")
+        print '%s (%s)' % (e.message,type(e))  
         return render(request, 'create/confirmAccount.html', {"STATES" : STATES})
