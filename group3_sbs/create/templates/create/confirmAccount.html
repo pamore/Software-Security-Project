@@ -12,18 +12,7 @@
 <script src="{% static 'global_templates/keyboard/jquery.mousewheel.js' %}"> </script>
 
 <link rel="stylesheet" type="text/css" href="{% static 'create/style.css' %}" />
-<link rel="stylesheet" type="text/css" href="{% static 'global_templates/bootstrapValidator/bootstrapValidator.css' %}" />
-<link rel="stylesheet" type="text/css" href="{% static 'global_templates/bootstrapValidator/bootstrapValidator.min.css' %}" />
-<script src="{% static 'global_templates/bootstrapValidator/bootstrapValidator.js' %}"> </script>
-<script src="{% static 'global_templates/bootstrapValidator/bootstrapValidator.min.js' %}"> </script>
-<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
-<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-<style>
-      .ui-tooltip-content {
-    font-size:10pt;
-    font-family:Calibri;
-   }
-</style>
+
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -80,14 +69,14 @@ $(document).ready(function() {
                     notEmpty: {
                         message: 'The username is required'
                     },
-                    regexp: {
+                   regexp: {
                       regexp : /^[A-Za-z0-9]+[@+.\-]{0,1}[A-Za-z0-9]+$/,
                       message : 'The user name should contain letters/digits/combination , followed by ONE optional characters @+.\- , followed by letters/digits/combination'
                     },
                     stringLength: {
-                      max: 20,
+                      max: 150,
                       min: 6,
-                      message: 'The length must be between 6 and 20'
+                      message: 'The length must be between 6 and 150'
                     }
                 }
             },
@@ -128,9 +117,9 @@ $(document).ready(function() {
                         message : 'The confirm password must be same as password'
                     },
                      stringLength: {
-                      max: 20,
+                      max: 256,
                       min: 8,
-                      message: 'The length must be between 8 and 20'
+                      message: 'The length must be between 8 and 256'
                     },
                     callback: {
                        message: 'The password is not valid',
@@ -185,9 +174,9 @@ $(document).ready(function() {
                       message : 'The last name can contain alphabets and single space as seperator.'
                     },
                       stringLength: {
-                      max: 20,
+                      max: 30,
                       min: 1,
-                      message: 'The length must be between 1 and 20'
+                      message: 'The length must be between 1 and 30'
                     }
                 }
             },   
@@ -201,9 +190,9 @@ $(document).ready(function() {
                       message : 'The first name can contain alphabets and single space as seperator.'
                     },
                     stringLength: {
-                      max: 20,
+                      max: 30,
                       min: 1,
-                      message: 'The length must be between 1 and 20'
+                      message: 'The length must be between 1 and 30'
                     }
                 }
             }, 
@@ -233,9 +222,9 @@ $(document).ready(function() {
                       message : 'The city should contain only alphabets and single space as seperator'
                     },
                     stringLength: {
-                      max: 20,
+                      max: 30,
                       min: 4,
-                      message : 'The length must be between 4 and 20'
+                      message : 'The length must be between 4 and 30'
                     }
                 }
             },
@@ -333,14 +322,14 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 
 <div class="form-group"> 
     <label class="control-label">Username</label>
-      <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" title="Length must be between 6 to 20 ; consist of uppercase/lowercase/digits/combination , followed by one optional character in the set _@+.- , followed by uppercase/lowercase/digits/combination" required />
+      <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" title="Length must be between 6 to 150 ; consist of alphabet/digits/combination , followed by one optional character in the set _@+.- , followed by alphabet/digits/combination" required />
       <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="username" value="" required /> -->
 
 <div class="form-group"> 
     <label class="control-label">Email</label>
-     <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" title="Length must be between 8 to 20; Should follow the correct email format " required />
+     <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" title="Length must be between 3 to 100; Should follow the correct email format " required />
      <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 
@@ -352,7 +341,7 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 </div>
 <!-- <input type="password" class="form-control" name="otpPassword" value="" required /> -->
 <div class="form-group"> <label class="control-label">Set New Password</label>
-<input type="password" id="keyboard4" class="form-control" name="newPassword" value="" placeholder="New Password" title="Length must be between 8 and 20; Should have atleast One uppercase, AND atleast one lowecase AND atleast one digit and atleast one character in this set ~`!@#$%^&*()_-+={}[]|;:‘”,<.>? " required />
+<input type="password" id="keyboard4" class="form-control" name="newPassword" value="" placeholder="New Password" title="Length must be between 8 and 256; Should have atleast One uppercase, AND atleast one lowecase AND atleast one digit and atleast one character in this set ~`!@#$%^&*()_-+={}[]|;:‘”,<.>? " required />
       <img id="icon4" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="password" class="form-control" name="newPassword" value="" required /> -->
@@ -362,12 +351,12 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 </div>
 <!-- <input type="password" class="form-control" name="confirmPassword" value="" required /> -->
 <div class="form-group"> <label class="control-label">First Name or Business Name</label>
-<input type="text" id="keyboard6" class="form-control" name="firstname" value="" placeholder="First Name" title="length between 1 and 20. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
+<input type="text" id="keyboard6" class="form-control" name="firstname" value="" placeholder="First Name" title="length between 1 and 30. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
       <img id="icon6" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="firstname" value="" required /> -->
 <div class="form-group"> <label class="control-label">Last Name or Company Type (e.g. LLC, inc, corp, etc.)</label>
-<input type="text" id="keyboard7" class="form-control" name="lastname" value="" placeholder="Last Name" title="length between 1 and 20. upper OR lowercase Or combination of all ; Should not start or end with space ; only one space allowed between characters." required />
+<input type="text" id="keyboard7" class="form-control" name="lastname" value="" placeholder="Last Name" title="length between 1 and 30. upper OR lowercase Or combination of all ; Should not start or end with space ; only one space allowed between characters." required />
       <img id="icon7" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="lastname" value="" required /> -->
@@ -377,7 +366,7 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 </div>
 <!-- <input type="text" class="form-control" name="address" value="" required /> -->
 <div class="form-group"> <label class="control-label">City</label>
- <input type="text" id="keyboard9" class="form-control" name="city" value="" placeholder="City" title="length between 4 and 20. upper OR lowercase OR combination of both; should not start or end with space ;  only one space allowed between characters." required />
+ <input type="text" id="keyboard9" class="form-control" name="city" value="" placeholder="City" title="length between 4 and 30. upper OR lowercase OR combination of both; should not start or end with space ;  only one space allowed between characters." required />
       <img id="icon9" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="city" value="" required /> -->

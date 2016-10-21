@@ -4,6 +4,89 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" type="text/css" href="{% static 'reset/style.css' %}" />
+<script type="text/javascript">
+$(document).ready(function() {
+         
+    $('#resetForm').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            username: {
+                validators: {
+                     callback: {
+                        callback: function(value, username, $field){
+                            if (value == "") {
+                              return {
+                                valid: false,
+                                message: 'The user name cannot be empty'
+                              }
+                            }
+
+                            if (value.search(/^[A-Za-z0-9]+[@+.\-]{0,1}[A-Za-z0-9]+$/) < 0) {
+                                return {
+                                    valid: false,
+                                    message: 'The user name is invalid'
+                                }
+                            }
+                            if (value.length < 6 && value.length > 150 ) {
+                                return {
+                                  valid: false,
+                                  message: 'The user name is invalid'
+                                }
+
+                            }
+
+                            return true;
+
+                           }
+
+                    }
+                }
+            },
+            email:   {
+                validators: {
+                    callback: {
+                              callback: function(value, otpPassword, $field){
+                                  if (value == "")
+                                  {
+                                    return {
+                                      valid: false,
+                                      message: 'The email cannot be empty'
+                                    }
+
+                                  }
+                                  if (value.search(/^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-z]{2,3}$/) < 0)
+                                  {
+                                    return {
+                                      valid: false,
+                                      message: 'Invalid email format'
+                                    }
+                                  }
+
+                                  if ((value.length < 3) && (value.length>100) ) {
+                                    return {
+                                  valid: false,
+                                  message: 'Invalid email format'
+                                     }
+
+                                  }
+
+                                  return true;
+
+                                  }
+
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
+
 {% endblock %}
 
 
@@ -15,12 +98,18 @@
 {% block content %}
 <h1>Password Reset</h1>
 {% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
-<form action="{% url 'reset:resetUser' %}" method="post">
+<form action="{% url 'reset:resetUser' %}" method="post" id="resetForm">
 {% csrf_token %}
-<label for="username">Username</label>
-<input type="text" class="form-control" name="username" value="" required />
-<label for="email">Email</label>
-<input type="email" class="form-control" name="email" value="" required />
+<div class="form-group">
+	<label class="control-label">Username</label>
+	<input type="text" class="form-control" name="username" value=""  />
+</div>
+
+<div class="form-group">
+	<label class="control-label">Email</label>
+	<input type="email" class="form-control" name="email" value="" />
+</div>
+
 <br></br>
 <div class="g-recaptcha" data-sitekey="6LeHWAcUAAAAAL_TtxsIcRhoC3IrD6yKdJNp0E2N"></div>
 <br></br>

@@ -14,6 +14,197 @@
 <script type="text/javascript">
 $( document ).ready(function() {
 
+for (i = 4; i <= 5; i++)
+   { var keyboard = "keyboard"+i;
+  $("#"+keyboard).tooltip({
+              position : {my : "left+15 center", at : "right center"}
+            });   
+   }
+
+ $('#otpUserResetForm').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            email:   {
+                validators: {
+                    callback: {
+                              callback: function(value, otpPassword, $field){
+                                  if (value == "")
+                                  {
+                                    return {
+                                      valid: false,
+                                      message: 'Email cannot be empty'
+                                    }
+
+                                  }
+                                  if (value.search(/^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-z]{2,3}$/) < 0)
+                                  {
+                                    return {
+                                      valid: false,
+                                      message: 'Invalid email format'
+                                    }
+                                  }
+
+                                  if ((value.length < 3) && (value.length>100) ) {
+                                    return {
+                                  valid: false,
+                                  message: 'Invalid email format'
+                                     }
+
+                                  }
+
+                                  return true;
+
+                                  }
+
+                    }
+                }
+            },
+            otpPassword: {
+               validators: {
+                    callback: {
+                        callback: function(value, otpPassword, $field){
+                            if (value == "") {
+                              return {
+                                valid: false,
+                                message: 'OTP cannot be empty'
+                              }
+                            }
+                            /*
+                            if (value.search(/^[a-zA-Z0-9]+$/) < 0) {
+                                return {
+                                    valid: false,
+                                    message: 'Invalid OTP'
+                                }
+                            }
+                            if (value.length != 13 ) {
+                                return {
+                                  valid: false,
+                                  message: 'Invalid OTP'
+                                }
+
+                            }
+                            */
+                            return true;
+
+                           }
+
+                    }
+                }
+            },
+            confirmPassword : {
+              validators : {
+                notEmpty : {
+                  message: 'The confirm password is required'
+                },
+                identical : {
+                  field : 'newPassword',
+                  message : 'The confirm password must be same as password'
+                }
+              }
+            },
+            username: {
+                validators: {
+                   callback: {
+                        callback: function(value, username, $field){
+                            if (value == "") {
+                              return {
+                                valid: false,
+                                message: 'The user name cannot be empty'
+                              }
+                            }
+
+                            if (value.search(/^[A-Za-z0-9]+[@+.\-]{0,1}[A-Za-z0-9]+$/) < 0) {
+                                return {
+                                    valid: false,
+                                    message: 'The user name is invalid'
+                                }
+                            }
+                            if (value.length < 6 && value.length > 150 ) {
+                                return {
+                                  valid: false,
+                                  message: 'The user name is invalid'
+                                }
+
+                            }
+
+                            return true;
+
+                           }
+
+                    }
+                }
+            },
+            newPassword: {
+                validators: {
+                    notEmpty: {
+                        message: 'The password is required'
+                    },
+                    identical : {
+                        field : 'confirmPassword',
+                        message : 'The confirm password must be same as password'
+                    },
+                     stringLength: {
+                      max: 256,
+                      min: 8,
+                      message: 'The length must be between 8 and 256'
+                    },
+                    callback: {
+                       message: 'The password is not valid',
+                        callback: function(value, newPassword, $field){
+                            if(value===''){
+                                return true;
+                             }
+
+                            if (value.search(/[0-9]/) < 0) {
+                                return {
+                                    valid: false,
+                                    message: 'Password must contain atleast 1 digit'
+                                }
+                            }
+                      
+                        if (value.search(/[\~\`\!\@\#\$\%\^\&\*\(\)\_\-\+\=\{\}\[\]\|\\\;\:\'\"\,\<\.\>\?]/) < 0)
+                             {//~`!@#$%^&*()_-+={}[]|;:‘”,<.>?
+                                return {
+                                    valid: false,
+                                    message: 'password must contain atleast one of these ~`!@#$%^&*()_-+={}[]|;:‘”,<.>?'
+                                }
+                             }
+                             
+                        
+                            if (value === value.toLowerCase()) {
+                                return {
+                                    valid: false,
+                                    message: 'Password must contain at least one upper case character'
+                                }
+                            }
+
+                              if (value === value.toUpperCase()) {
+                                return {
+                                    valid: false,
+                                    message: 'Password must contain at least one lower case character'
+                                }
+                            }
+
+                            return true;
+                      } 
+
+                    }
+                }
+            },
+      
+          
+         
+
+        }
+    });
+
+
+
 $('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
 $('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
 $('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
@@ -50,31 +241,36 @@ $('#icon5').click(function () { $('#keyboard5').getkeyboard().reveal(); });
   <li>Your password cannot be too similar to your other personal information</li>
   <li>Your password cannot be a commonly used password</li>
 </ul>
-<form action="{% url 'reset:otpUserReset' %}" method="post">
+<form action="{% url 'reset:otpUserReset' %}" method="post" id="otpUserResetForm">
 {% csrf_token %}
-<label for="username">Username</label>
-<div class="form-group"> <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" required />
-	    <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
+<div class="form-group"> 
+  <label class="control-label">Username</label>
+   <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username"  />
+	 <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="username" value="" required /> -->
-<label for="email">Email</label>
-<div class="form-group"> <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" required />
-	    <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
+<div class="form-group"> 
+  <label class="control-label">Email</label>
+  <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email"  />
+	<img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="email" class="form-control" name="email" value="" required /> -->
-<label for="password">Confirmation Code (OTP)</label>
-<div class="form-group"> <input type="password" id="keyboard3" class="form-control" name="otpPassword" value="" placeholder="OTP Password" required />
-	    <img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/>
+<div class="form-group"> 
+  <label class="control-label">Confirmation Code (OTP)</label>
+  <input type="password" id="keyboard3" class="form-control" name="otpPassword" value="" placeholder="OTP Password"  />
+	<img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="password" class="form-control" name="otpPassword" value="" required /> -->
-<label for="password">New Password</label>
-<div class="form-group"> <input type="password" id="keyboard4" class="form-control" name="newPassword" value="" placeholder="New Password" required />
-	    <img id="icon4" src="{% static 'global_templates/images/keyboard.png' %}"/>
+<div class="form-group"> 
+  <label class="control-label">New Password</label>
+  <div class="form-group"> <input type="password" id="keyboard4" class="form-control" name="newPassword" value="" placeholder="New Password" title="Length must be between 8 and 256; Should have atleast One uppercase, AND atleast one lowecase AND atleast one digit and atleast one character in this set ~`!@#$%^&*()_-+={}[]|;:‘”,<.>? "  />
+	<img id="icon4" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="password" class="form-control" name="newPassword" value="" required /> -->
-<label for="password">Confirm Password</label>
-<div class="form-group"> <input type="password" id="keyboard5" class="form-control" name="confirmPassword" value="" placeholder="Confirm Password" required />
-	    <img id="icon5" src="{% static 'global_templates/images/keyboard.png' %}"/>
+<div class="form-group"> 
+  <label class="control-label">Confirm Password</label>
+  <div class="form-group"> <input type="password" id="keyboard5" class="form-control" name="confirmPassword" value="" placeholder="Confirm Password" title = "Must match the new password field"  />
+	<img id="icon5" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="password" class="form-control" name="confirmPassword" value="" required /> -->
 <br></br>
