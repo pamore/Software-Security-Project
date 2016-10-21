@@ -209,6 +209,24 @@ def noncritical_transactions(request):
     else:
         return HttpResponseRedirect(reverse('internal:error'))
 
+# Create Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_create_log(request):
+    try:
+        file_name= os.path.join(BASE_DIR,'log/create_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
 # External Log Page
 @never_cache
 @login_required
@@ -332,6 +350,24 @@ def view_internal_log(request):
     except:
         return HttpResponseRedirect(reverse('internal:error'))
 
+# Login Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_login_log(request):
+    try:
+        file_name= os.path.join(BASE_DIR,'log/login_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
+
 # View Internal User Profile Page
 @never_cache
 @login_required
@@ -349,6 +385,24 @@ def view_internal_user_profile(request, internal_user_id):
         return HttpResponseRedirect(reverse(error_redirect))
     profile = get_any_user_profile(username=internal_user.username)
     return render(request, success_page, {"user": internal_user, "profile": profile})
+
+# Reset Log Page
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def view_reset_log(request):
+    try:
+        file_name= os.path.join(BASE_DIR,'log/reset_log.log')
+        print('Base Dir', BASE_DIR)
+        print('File Name', file_name)
+        f = open(file_name, 'r')
+        lines = f.readlines()
+        f.close()
+        if not lines:
+            lines = ['Nothing to View']
+        return render_to_pdf_response(request, 'internal/log.html', context={'content': lines}, filename=None, encoding=u'utf-8')
+    except:
+        return HttpResponseRedirect(reverse('internal:error'))
 
 # Server Log Page
 @never_cache
