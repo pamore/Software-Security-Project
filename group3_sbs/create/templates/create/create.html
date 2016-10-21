@@ -26,8 +26,8 @@ $(document).ready(function() {
                         message: 'The username is required'
                     },
                     regexp: {
-                      regexp : /^[A-Za-z0-9]+[@+.\-]{0,1}[A-Za-z0-9]+$/,
-                      message : 'The user name should contain letters/digits/combination , followed by ONE optional characters @+.\- , followed by letters/digits/combination'
+                      regexp : /^[A-Za-z0-9]+[_@+.\-]{0,1}[A-Za-z0-9]+$/,
+                      message : 'The user name should contain letters/digits/combination , followed by ONE optional characters _@+.- , followed by letters/digits/combination'
                     },
                     stringLength: {
                       max: 150,
