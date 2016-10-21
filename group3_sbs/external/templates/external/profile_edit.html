@@ -4,7 +4,113 @@
 
 {% block stylesheets %}
 <!-- Add Stylesheets here -->
+<script type="text/javascript">
+$(document).ready(function() {
+$("#first_name").tooltip({
+              position : {my : "left center+15", at : "right center"}
+            });
+$("#last_name").tooltip({
+              position : {my : "left center+15", at : "right center"}
+            });
+$("#street_address").tooltip({
+              position : {my : "left center+15", at : "right center"}
+            });
+$("#city").tooltip({
+              position : {my : "left center+15", at : "right center"}
+            });
+ $("#zipcode").tooltip({
+              position : {my : "left center+15", at : "right center"}
+            });           
+
+  $('#profileEditForm').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+           last_name:   {
+                validators: {
+                    notEmpty: {
+                        message: 'The lastname is required'
+                    },
+                    regexp: {
+                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
+                      message : 'The last name can contain alphabets and single space as seperator.'
+                    },
+                      stringLength: {
+                      max: 30,
+                      min: 1,
+                      message: 'The length must be between 1 and 30'
+                    }
+                }
+            },   
+          first_name:   {
+                validators: {
+                    notEmpty: {
+                        message: 'The firstname is required'
+                    },
+                    regexp: {
+                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
+                      message : 'The first name can contain alphabets and single space as seperator.'
+                    },
+                    stringLength: {
+                      max: 30,
+                      min: 1,
+                      message: 'The length must be between 1 and 30'
+                    }
+                }
+            }, 
+          street_address :  {
+                validators: {
+                    notEmpty: {
+                        message: 'The address is required'
+                    },
+                    regexp: {
+                      regexp : /^[a-zA-Z0-9]+(\s?[a-zA-Z0-9]+)*$/,
+                      message : 'The address should contain only alphabets and single space as seperator'
+                    },
+                    stringLength: {
+                      max: 30,
+                      min: 4,
+                      message: 'The length must be between 1 and 30'
+                    }
+                }
+            },
+            city :  {
+                validators: {
+                    notEmpty: {
+                        message: 'The city is required'
+                    },
+                    regexp: {
+                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
+                      message : 'The city should contain only alphabets and single space as seperator'
+                    },
+                    stringLength: {
+                      max: 30,
+                      min: 4,
+                      message : 'The length must be between 4 and 30'
+                    }
+                }
+            },
+            zipcode : {
+                validators: {
+                    notEmpty: {
+                        message: 'The zip code is required'
+                    },
+                    regexp: {
+                      regexp : /^\d{5}$/,
+                      message : 'The zip code should contain only 5 digits'
+                    }
+                }
+            },
+        }
+    });
+});
+</script>
 {% endblock %}
+
 
 
 {% block navigation %}
@@ -17,27 +123,48 @@
     <h1>Edit Your Profile</h1>
   </div>
 </div>
+
 <div class="row">
   <div class="col-md-12">
-    <form action="{% url 'external:profile_edit_validate' %}" method="post">
+    <form action="{% url 'external:profile_edit_validate' %}" method="post" id="profileEditForm">
     {% csrf_token %}
-    <label for="first_name">First Name</label>
-    <input type="text" class="form-control" name="first_name" value="{{profile.first_name}}" required />
-    <label for="last_name">Last Name</label>
-    <input type="text" class="form-control" name="last_name" value="{{profile.last_name}}" required />
-    <label for="street_address">Street Address</label>
-    <input type="text" class="form-control" name="street_address" value="{{profile.street_address}}" required />
-    <label for="city">City</label>
-    <input type="text" class="form-control" name="city" value="{{profile.city}}" required />
-    <label for="STATES">State</label>
-    <select class="form-control" name="state">
-      {% for state in STATES %}
-      <option value="{{state}}" {% if profile.state == state %}selected="selected"{% endif %}>{{state}}</option>
-      {% endfor %}
-    </select>
-    <label for="zipcode">Zipcode</label>
-    <input type="text" class="form-control" name="zipcode" value="{{profile.zipcode}}" maxlength="5" required />
-    <input type="submit" class="btn btn-primary" value="Submit" />
+ 
+
+          <div class="form-group">
+              <label class="control-label">First Name</label>
+              <input type="text" class="form-control" name="first_name" id="first_name" value="{{profile.first_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
+          </div>
+
+          <div class="form-group">    
+              <label class="control-label">Last Name</label>
+              <input type="text" class="form-control" name="last_name" id="last_name" value="{{profile.last_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
+          </div>
+
+          <div class="form-group">    
+              <label class="control-label">Street Address</label>
+              <input type="text" class="form-control" name="street_address" id="street_address" value="{{profile.street_address}}" title="between 4 and 30. upper OR lowercase OR digit OR combination of all ; should not start or end with space; only one space allowed between characters. " required />
+          </div>
+
+          <div class="form-group">    
+              <label class="control-label">City</label>
+              <input type="text" class="form-control" name="city" id="city" value="{{profile.city}}"  title="length between 4 and 30. upper OR lowercase OR combination of both; should not start or end with space ;  only one space allowed between characters." required />
+          </div>
+
+          <div class="form-group">    
+              <label class="control-label">State</label>
+              <select class="form-control" name="state">
+                {% for state in STATES %}
+                <option value="{{state}}" {% if profile.state == state %}selected="selected"{% endif %}>{{state}}</option>
+                {% endfor %}
+              </select>
+          </div>
+
+          <div class="form-group">    
+              <label class="control-label">Zipcode</label>
+              <input type="text" class="form-control" name="zipcode" id="zipcode" value="{{profile.zipcode}}" maxlength="5" title="Only 5 digits are allowed" required />
+          </div>
+
+      <input type="submit" class="btn btn-primary" value="Submit" />
     </form>
   </div>
 </div>
