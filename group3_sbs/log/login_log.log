@@ -4,3 +4,14 @@
 2016-10-18 22:32:44,648 send_device_verify_otp User:'johnlennon' send new device verify OTP
 2016-10-18 22:33:06,855 deviceVerify User:'johnlennon' attemptting login
 2016-10-18 22:33:35,204 deviceVerify User:'garrettgutierrez' attemptting login
+2016-10-18 23:40:35,982 loginValidate User:'johnlennon' attemptting login
+2016-10-18 23:40:38,679 send_device_verify_otp User:'johnlennon' send new device verify OTP
+2016-10-18 23:41:18,391 deviceVerify User:'johnlennon' attemptting login
+2016-10-18 23:41:39,955 loginValidate User:'garrettgutierrez' attemptting login
+2016-10-18 23:41:42,117 send_device_verify_otp User:'garrettgutierrez' send new device verify OTP
+2016-10-18 23:42:15,284 deviceVerify User:'garrettgutierrez' attemptting login
+2016-10-19 00:10:52,147 loginValidate User:'ringostarr' attemptting login
+2016-10-19 00:11:04,653 send_device_verify_otp User:'ringostarr' send new device verify OTP
+2016-10-19 00:11:16,700 deviceVerify User:'ringostarr' attemptting login
+2016-10-20 22:03:19,982 send_device_verify_otp User:'iamuser2' send new device verify OTP
+2016-10-20 22:17:00,697 send_device_verify_otp User:'iamuser3' send new device verify OTP
