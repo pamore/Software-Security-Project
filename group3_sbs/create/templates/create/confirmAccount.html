@@ -70,8 +70,8 @@ $(document).ready(function() {
                         message: 'The username is required'
                     },
                    regexp: {
-                      regexp : /^[A-Za-z0-9]+[@+.\-]{0,1}[A-Za-z0-9]+$/,
-                      message : 'The user name should contain letters/digits/combination , followed by ONE optional characters @+.\- , followed by letters/digits/combination'
+                      regexp : /^[A-Za-z0-9]+[_@+.\-]{0,1}[A-Za-z0-9]+$/,
+                      message : 'The user name should contain letters/digits/combination , followed by ONE optional characters _@+.\- , followed by letters/digits/combination'
                     },
                     stringLength: {
                       max: 150,
@@ -250,15 +250,7 @@ $(document).ready(function() {
                     }
                 }
             },
-            certificate : {
-               validators: {
-                    regexp: {
-                      regexp : /^\d{9}$/,
-                      message : 'The certificate should should contain only 9 digits'
-                    }
-                }
-            }
-
+      
         }
     });
 });
@@ -391,7 +383,7 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 <!-- <input type="text" class="form-control" name="personalcode" value="" required /> -->
 <div class="form-group">
       <label class="control-label">Optional: Certificate</label>
-      <textarea id="certificate" class="form form-control" name="certificate" form="createUserForm"></textarea>
+      <textarea id="certificate" class="form form-control" name="certificate"></textarea>
       <img id="icon12" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 

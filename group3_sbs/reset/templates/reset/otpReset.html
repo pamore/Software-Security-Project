@@ -118,7 +118,7 @@ for (i = 4; i <= 5; i++)
                               }
                             }
 
-                            if (value.search(/^[A-Za-z0-9]+[@+.\-]{0,1}[A-Za-z0-9]+$/) < 0) {
+                            if (value.search(/^[A-Za-z0-9]+[_@+.\-]{0,1}[A-Za-z0-9]+$/) < 0) {
                                 return {
                                     valid: false,
                                     message: 'The user name is invalid'
