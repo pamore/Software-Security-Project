@@ -4,18 +4,6 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" type="text/css" href="{% static 'create/style.css' %}" />
-<link rel="stylesheet" type="text/css" href="{% static 'global_templates/bootstrapValidator/bootstrapValidator.css' %}" />
-<link rel="stylesheet" type="text/css" href="{% static 'global_templates/bootstrapValidator/bootstrapValidator.min.css' %}" />
-<script src="{% static 'global_templates/bootstrapValidator/bootstrapValidator.js' %}"> </script>
-<script src="{% static 'global_templates/bootstrapValidator/bootstrapValidator.min.js' %}"> </script>
-<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
-<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
-<style>
-      .ui-tooltip-content {
-    font-size:10pt;
-    font-family:Calibri;
-   }
-</style>
 
 <script type="text/javascript">
 $(document).ready(function() {
@@ -42,9 +30,9 @@ $(document).ready(function() {
                       message : 'The user name should contain letters/digits/combination , followed by ONE optional characters @+.\- , followed by letters/digits/combination'
                     },
                     stringLength: {
-                      max: 20,
+                      max: 150,
                       min: 6,
-                      message: 'The length must be between 6 and 20'
+                      message: 'The length must be between 6 and 150'
                     }
                 }
             },
@@ -87,7 +75,7 @@ $(document).ready(function() {
 
 <div class="form-group">
     <label class="control-label">New username</label>
-       <input id="username" title="Length must be between 6 to 20 ; consist of uppercase/lowercase/digits/combination , followed by one optional character in the set _@+.- , followed by uppercase/lowercase/digits/combination" type="text" class="form-control" name="username" value="" maxlength="150" required/>
+       <input id="username" title="Length must be between 6 to 150 ; Alphabet/digit/combination, followed by one optional character in the set _@+.- , followed by Alphabet/digits/combination" type="text" class="form-control" name="username" value="" maxlength="150" required/>
 </div>
 
 <div class="form-group">

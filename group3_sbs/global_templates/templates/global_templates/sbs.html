@@ -5,13 +5,28 @@
 <!--This is for Jquery -->
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <!-- Latest compiled and minified CSS -->
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   <!-- Latest compiled JavaScript -->
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   <!-- reCaptcha -->
   <script src='https://www.google.com/recaptcha/api.js'></script>
   <!-- Global CSS -->
-  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}" /
+  <link rel="stylesheet" type="text/css" href="{% static 'global_templates/style.css' %}"/>
+<!--Validation and tool tip below -->
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/bootstrapValidator/bootstrapValidator.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'global_templates/bootstrapValidator/bootstrapValidator.min.css' %}" />
+<script src="{% static 'global_templates/bootstrapValidator/bootstrapValidator.js' %}"> </script>
+<script src="{% static 'global_templates/bootstrapValidator/bootstrapValidator.min.js' %}"> </script>
+<link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet" />
+<script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+
+<style>
+      .ui-tooltip-content {
+    font-size:10pt;
+    font-family:Calibri;
+   }
+</style>
+
   {% block stylesheets %}{% endblock %}
 </head>
 <body class="">
