@@ -230,7 +230,6 @@ def commit_transaction(transaction, user):
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
         result = commit_transaction_transfer(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_TRANSACTION_ACCESS_REQUEST:
-        print('Comment ca va?')
         result = commit_transaction_internal_noncritical(transaction=transaction, user=user)
     elif type_of_transaction == TRANSACTION_TYPE_ACCESS_EXTERNAL_USER_REQUEST:
         result = commit_transaction_internal_transcaction_for_access(transaction=transaction, user=user)
@@ -1686,7 +1685,6 @@ def validate_account_number(account_number):
         number_string = number_string.zfill(ACCOUNT_NUMBER_LENGTH)
         if len(number_string) == ACCOUNT_NUMBER_LENGTH:
             if re.search('^[0-9]+$', number_string):
-                #print('Valid name')
                 validated = True
     except:
         pass
@@ -1725,7 +1723,6 @@ def validate_city(city):
     if len(city) <= CITY_LENGTH_MAX and len(city) >= CITY_LENGTH_MIN:
         if re.search('^([a-zA-Z0-9]| )+$', city):
             validated = True
-            #print('Valid city')
     return validated
 
 def validate_credit_card_number(credit_card_number):
@@ -1735,7 +1732,6 @@ def validate_credit_card_number(credit_card_number):
         number_string = number_string.zfill(CREDIT_CARD_NUMBER_LENGTH)
         if len(number_string) == CREDIT_CARD_NUMBER_LENGTH:
             if re.search('^[0-9]+$', number_string):
-                #print('Valid name')
                 validated = True
     except:
         pass
@@ -1757,7 +1753,6 @@ def validate_name(name):
     validated = False
     if len(name) <= NAME_LENGTH_MAX and len(name) >= NAME_LENGTH_MIN:
         if re.search('^[a-zA-Z]+$', name):
-            #print('Valid name')
             validated = True
     return validated
 
@@ -1765,9 +1760,17 @@ def validate_first_name_save(profile, first_name):
     validated = False
     if len(first_name) <= NAME_LENGTH_MAX and len(first_name) >= NAME_LENGTH_MIN:
         if re.search('^[a-zA-Z]+$', first_name):
-            #print('Valid name')
             validated = True
             profile.first_name = first_name
+            profile.save()
+    return validated
+
+def validate_last_name_save(profile, last_name):
+    validated = False
+    if len(last_name) <= NAME_LENGTH_MAX and len(last_name) >= NAME_LENGTH_MIN:
+        if re.search('^[a-zA-Z]+$', last_name):
+            validated = True
+            profile.last_name = last_name
             profile.save()
     return validated
 
@@ -2041,7 +2044,6 @@ def validate_routing_number(routing_number):
         number_string = number_string.zfill(ROUTING_NUMBER_LENGTH)
         if len(number_string) == ROUTING_NUMBER_LENGTH:
             if re.search('^[0-9]+$', number_string):
-                #print('Valid name')
                 validated = True
     except:
         pass
@@ -2064,7 +2066,6 @@ def validate_ssn(ssn):
 def validate_state(state):
     validated = False
     if state in STATES:
-        #print('Valid state')
         validated = True
     return validated
 
@@ -2073,7 +2074,6 @@ def validate_street_address(street_address):
     if len(street_address) <= STREET_ADDRESS_LENGTH_MAX and len(street_address) >= STREET_ADDRESS_LENGTH_MIN:
         if re.search('^([a-zA-Z0-9]| )+$', street_address):
             validated = True
-            #print('Valid street address')
     return validated
 
 def validate_transaction_description(description, type_of_transaction):
@@ -2147,6 +2147,5 @@ def validate_zipcode(zipcode):
     validated = False
     if len(zipcode) == ZIPCODE_LENGTH:
         if re.search('^[0-9]+$', zipcode):
-            #print('Valid zipcode')
             validated = True
     return validated

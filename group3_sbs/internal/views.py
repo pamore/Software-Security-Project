@@ -216,8 +216,6 @@ def noncritical_transactions(request):
 def view_create_log(request):
     try:
         file_name= os.path.join(BASE_DIR,'log/create_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
         f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
@@ -234,8 +232,6 @@ def view_create_log(request):
 def view_external_log(request):
     try:
         file_name= os.path.join(BASE_DIR,'log/external_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
         f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
@@ -339,8 +335,6 @@ def view_external_user_savings_account(request, external_user_id):
 def view_internal_log(request):
     try:
         file_name= os.path.join(BASE_DIR,'log/internal_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
         f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
@@ -357,8 +351,6 @@ def view_internal_log(request):
 def view_login_log(request):
     try:
         file_name= os.path.join(BASE_DIR,'log/login_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
         f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
@@ -393,8 +385,6 @@ def view_internal_user_profile(request, internal_user_id):
 def view_reset_log(request):
     try:
         file_name= os.path.join(BASE_DIR,'log/reset_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
         f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
@@ -411,8 +401,6 @@ def view_reset_log(request):
 def view_server_log(request):
     try:
         file_name= os.path.join(BASE_DIR,'log/server_log.log')
-        print('Base Dir', BASE_DIR)
-        print('File Name', file_name)
         f = open(file_name, 'r')
         lines = f.readlines()
         f.close()
@@ -891,8 +879,8 @@ def validate_profile_edit(request, external_user_id):
     if int(profile.user.id) != int(external_user_id):
         return HttpResponseRedirect(reverse(error_redirect))
     first_name = request.POST['first_name']
-    """ This preserves PII privilege of editing profile
     last_name = request.POST['last_name']
+    """ This preserves PII privilege of editing profile
     street_address = request.POST['street_address']
     city = request.POST['city']
     state = request.POST['state']
@@ -902,7 +890,7 @@ def validate_profile_edit(request, external_user_id):
         """ This preserves PII privilege of editing profile
         if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
         """
-        if validate_first_name_save(profile=profile, first_name=first_name):
+        if validate_first_name_save(profile=profile, first_name=first_name) and validate_last_name_save(profile=profile, last_name=last_name):
             return HttpResponseRedirect(reverse(success_redirect))
         else:
             return HttpResponseRedirect(reverse(error_redirect))
@@ -917,7 +905,7 @@ def validate_profile_edit(request, external_user_id):
             """ This preserves PII privilege of editing profile
             if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
             """
-            if validate_first_name_save(profile=profile, first_name=first_name):
+            if validate_first_name_save(profile=profile, first_name=first_name) and validate_last_name_save(profile=profile, last_name=last_name):
                 user.user_permissions.remove(permission)
                 user.save()
                 return HttpResponseRedirect(reverse(success_redirect))
