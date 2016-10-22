@@ -16,7 +16,7 @@ import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-#with open('/home/cse545/git/sbs_config.json') as data_file: 
+#with open('/home/cse545/git/sbs_config.json') as data_file:
 #with open('/var/sbs_config.json') as data_file:
 with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
@@ -68,6 +68,14 @@ ROOT_URLCONF = 'group3_sbs.urls'
 # https://docs.djangoproject.com/en/1.10/topics/logging/
 # https://github.com/jgutbub/CSE_545/wiki/Logging
 
+SERVER_LOG_NAME = os.path.join(BASE_DIR, 'log/server_log.log')
+LOGIN_LOG_NAME = os.path.join(BASE_DIR, 'log/login_log.log')
+INTERNAL_LOG_NAME = os.path.join(BASE_DIR, 'log/internal_log.log')
+EXTERNAL_LOG_NAME = os.path.join(BASE_DIR, 'log/external_log.log')
+GLOBAL_TEMPLATES_LOG_NAME = os.path.join(BASE_DIR, 'log/global_templates_log.log')
+CREATE_LOG_NAME = os.path.join(BASE_DIR, 'log/create_log.log')
+RESET_LOG_NAME = os.path.join(BASE_DIR, 'log/reset_log.log')
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -80,36 +88,36 @@ LOGGING = {
         'file': {
             'level': 'DEBUG',
             'class': 'logging.FileHandler',
-            'filename': './log/server_log.log',
+            'filename': SERVER_LOG_NAME,
         },
         'login_handler': {
             'class': 'logging.FileHandler',
-            'filename': './log/login_log.log',
+            'filename': LOGIN_LOG_NAME,
             'formatter': 'standard'
         },
         'internal_handler': {
             'class': 'logging.FileHandler',
-            'filename': './log/internal_log.log',
+            'filename': INTERNAL_LOG_NAME,
             'formatter': 'standard'
         },
         'external_handler': {
             'class': 'logging.FileHandler',
-            'filename': './log/external_log.log',
+            'filename': EXTERNAL_LOG_NAME,
             'formatter': 'standard'
         },
         'global_templates_handler': {
             'class': 'logging.FileHandler',
-            'filename': './log/global_templates_log.log',
+            'filename': GLOBAL_TEMPLATES_LOG_NAME,
             'formatter': 'standard'
         },
         'create_handler': {
             'class': 'logging.FileHandler',
-            'filename': './log/create_log.log',
+            'filename': CREATE_LOG_NAME,
             'formatter': 'standard'
         },
         'reset_handler': {
             'class': 'logging.FileHandler',
-            'filename': './log/reset_log.log',
+            'filename': RESET_LOG_NAME,
             'formatter': 'standard'
         },
     },

@@ -88,8 +88,111 @@
 
 # How to clone repository
 1. Go to directory where you want you project to live
-  * cd <path>/<destination_folder>
-  * Ex: cd home/GitHub
+     cd <path>/<destination_folder>
+     Ex: cd home/GitHub
 
 2. Clone the repository
-  * git clone https://github.com/jgutbub/CSE_545
+     git clone https://github.com/jgutbub/CSE_545
+
+     # How to Host Django on Apache using Ubuntu 14.04 LTS
+     ## Create a virtualenv
+     1. Install virtualenv
+
+
+               sudo pip install virtualenv
+
+
+
+     2. Create a virtualenv in the project folder assuming you have installed all pip and sudo apt-get packages globally
+
+
+               cd CSE_545/group3_sbs
+               virtualenv group3_sbs_projectenv --system-site-packages
+
+
+     3. Enter the virutalenv if needed
+
+
+               source group3_sbs_projectenv/bin/activate
+
+
+     4. Exit from the virtualenv
+
+
+               deactivate
+
+
+     ## Collect Django Static Files
+     1. Edit the static root where the files will be copied if needed
+
+
+               vim CSE_545/group3_sbs/groupe_sbs/settings.py
+               STATIC_ROOT = '/DESITNATION_OF_COLLECTED_FILES'
+
+
+     2. Collect files
+
+
+               python manage.py collect static
+
+
+     3. Make the log files executable for some reason
+
+
+               chmod -R 777 CSE_545/group3_sbs/logs/
+
+
+     ## Setup Mod_wsgi
+     1. Install mod_wsgi for python 2.7
+
+
+               sudo apt-get install libapache2-mod-wsgi
+
+
+
+     ## Setup Apache
+     1. Check hostname
+
+
+               hostname
+
+
+     2. Update System
+
+
+               sudo apt-get update && sudo apt-get upgrade
+
+
+     3. Install Apache
+
+
+               sudo apt-get install apache2 apache2-doc apache2-utils
+
+
+     4. Edit Apache Config settings if needed
+
+
+               cd /etc/apache2/
+               vim apache2.conf
+
+
+     5. Edit the sites_enabled
+
+
+               cd /etc/apache2/sites-enabled/
+               vim 000-default.conf
+               Alias /static /home/garrett/Documents/GitHub/CSE_545/group3_sbs/static
+               <Directory /home/garrett/Documents/GitHub/CSE_545/group3_sbs/static>
+                        Require all granted
+               </Directory>
+               <Directory /home/garrett/Documents/GitHub/CSE_545/group3_sbs/log>
+                        Require all granted
+               </Directory>
+               <Directory /home/garrett/Documents/GitHub/CSE_545/group3_sbs/group3_sbs>
+                       <Files wsgi.py>
+                               Require all granted
+                       </Files>
+               </Directory>
+               WSGIDaemonProcess group3_sbs python-path=/home/garrett/Documents/GitHub/CSE_545/group3_sbs:/home/garrett/Documents/GitHub/CE_545/group3_sbs/group3_sbs_projectenv/lib/python2.7/site-packages
+               WSGIProcessGroup group3_sbs
+               WSGIScriptAlias / /home/garrett/Documents/GitHub/CSE_545/group3_sbs/group3_sbs/wsgi.py

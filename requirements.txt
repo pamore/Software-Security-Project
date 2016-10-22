@@ -2,6 +2,7 @@ django
 django-axes
 django-templated-email
 django-easy-pdf
+MySQL-python
 xhtml2pdf>=0.0.6
 html5lib==1.0b8
 reportlab>=2.7,<3
