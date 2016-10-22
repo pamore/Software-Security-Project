@@ -298,5 +298,4 @@ def confirmAccount(request):
 
     except Exception as e:
         if DEBUG: print("Threw an exception, did not complete try-block")
-        print '%s (%s)' % (e.message,type(e))  
         return render(request, 'create/confirmAccount.html', {"STATES" : STATES})
