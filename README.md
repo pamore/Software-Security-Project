@@ -193,6 +193,6 @@
                                Require all granted
                        </Files>
                </Directory>
-               WSGIDaemonProcess group3_sbs python-path=/home/garrett/Documents/GitHub/CSE_545/group3_sbs:/home/garrett/Documents/GitHub/CE_545/group3_sbs/group3_sbs_projectenv/lib/python2.7/site-packages
+               WSGIDaemonProcess group3_sbs python-path=/home/garrett/Documents/GitHub/CSE_545/group3_sbs:/home/garrett/Documents/GitHub/CSE_545/group3_sbs/group3_sbs_projectenv/lib/python2.7/site-packages
                WSGIProcessGroup group3_sbs
                WSGIScriptAlias / /home/garrett/Documents/GitHub/CSE_545/group3_sbs/group3_sbs/wsgi.py
