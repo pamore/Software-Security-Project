@@ -1749,7 +1749,7 @@ def validate_email(email):
             local = parts[0]
             domain = parts[1]
             if re.search("^([a-zA-Z0-9]|!|#|\$|%|&|'|\*|\+|-|\/|=|\?|\^\_|`|{|\||}|~|\.|,)+$", local):
-                if re.search("^([a-zA-Z0-9]|\.|-)+$", domain):
+                if re.search("^([a-zA-Z0-9]|\.|-|\[|\])+$", domain):
                     validated = True
     return validated
 
@@ -1769,69 +1769,6 @@ def validate_first_name_save(profile, first_name):
             validated = True
             profile.first_name = first_name
             profile.save()
-    return validated
-
-def validate_password(password):
-    validated = False
-    #print(password)
-    if len(password) <= PASSWORD_LENGTH_MAX and len(password) >= PASSWORD_LENGTH_MIN:
-        if re.search(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(~|`|!|@|#|\$|%|\^|&|\*|\(|\)|_|-|\+|=|{|}|\[|\]|\||\\|;|:|\'|\"|,|<|\.|>|\?|\/))([a-zA-Z0-9]|~|`|!|@|#|\$|%|\^|&|\*|\(|\)|_|-|\+|=|{|}|\[|\]|\||\\|;|:|\'|\"|,|<|\.|>|\?|\/)+$', password):
-            validated = True
-    return validated
-
-def validate_profile_change(profile, first_name, last_name, street_address, city, state, zipcode):
-    if validate_name(name=first_name) and validate_name(name=last_name) and validate_street_address(street_address=street_address) and validate_city(city=city) and validate_state(state=state) and validate_zipcode(zipcode=zipcode):
-        profile.first_name = first_name
-        profile.last_name = last_name
-        profile.street_address = street_address
-        profile.city = city
-        profile.state = state
-        profile.zipcode = zipcode
-        profile.save()
-        return True
-    else:
-        return False
-
-def validate_routing_number(routing_number):
-    validated = False
-    try:
-        number_string = str(routing_number)
-        number_string = number_string.zfill(ROUTING_NUMBER_LENGTH)
-        if len(number_string) == ROUTING_NUMBER_LENGTH:
-            if re.search('^[0-9]+$', number_string):
-                #print('Valid name')
-                validated = True
-    except:
-        pass
-    return validated
-
-def validate_ssn(ssn):
-    validate = False
-    if len(ssn) < SSN_LENGTH + 3 and len(ssn) > SSN_LENGTH:
-        ssn = ssn.replace('-', '')
-    if len(ssn) == SSN_LENGTH:
-        if re.search('^[0-9]+$', ssn):
-            try:
-                customer = IndividualCustomer.objects.filter(ssn=ssn)
-                if not customer.exists():
-                    validate = True
-            except:
-                pass
-    return validate
-
-def validate_state(state):
-    validated = False
-    if state in STATES:
-        #print('Valid state')
-        validated = True
-    return validated
-
-def validate_street_address(street_address):
-    validated = False
-    if len(street_address) <= STREET_ADDRESS_LENGTH_MAX and len(street_address) >= STREET_ADDRESS_LENGTH_MIN:
-        if re.search('^([a-zA-Z0-9]| )+$', street_address):
-            validated = True
-            #print('Valid street address')
     return validated
 
 def validate_noncritical_transaction_modification(description, status, type_of_transaction, transaction, user):
@@ -2076,6 +2013,68 @@ def validate_noncritical_transaction_modification_payment_or_transfer(data, type
     else:
         return False
     return True
+
+def validate_password(password):
+    validated = False
+    if len(password) <= PASSWORD_LENGTH_MAX and len(password) >= PASSWORD_LENGTH_MIN:
+        if re.search(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*(~|`|!|@|#|\$|%|\^|&|\*|\(|\)|_|-|\+|=|{|}|\[|\]|\||\\|;|:|\'|\"|,|<|\.|>|\?|\/))([a-zA-Z0-9]|~|`|!|@|#|\$|%|\^|&|\*|\(|\)|_|-|\+|=|{|}|\[|\]|\||\\|;|:|\'|\"|,|<|\.|>|\?|\/)+$', password):
+            validated = True
+    return validated
+
+def validate_profile_change(profile, first_name, last_name, street_address, city, state, zipcode):
+    if validate_name(name=first_name) and validate_name(name=last_name) and validate_street_address(street_address=street_address) and validate_city(city=city) and validate_state(state=state) and validate_zipcode(zipcode=zipcode):
+        profile.first_name = first_name
+        profile.last_name = last_name
+        profile.street_address = street_address
+        profile.city = city
+        profile.state = state
+        profile.zipcode = zipcode
+        profile.save()
+        return True
+    else:
+        return False
+
+def validate_routing_number(routing_number):
+    validated = False
+    try:
+        number_string = str(routing_number)
+        number_string = number_string.zfill(ROUTING_NUMBER_LENGTH)
+        if len(number_string) == ROUTING_NUMBER_LENGTH:
+            if re.search('^[0-9]+$', number_string):
+                #print('Valid name')
+                validated = True
+    except:
+        pass
+    return validated
+
+def validate_ssn(ssn):
+    validate = False
+    if len(ssn) < SSN_LENGTH + 3 and len(ssn) > SSN_LENGTH:
+        ssn = ssn.replace('-', '')
+    if len(ssn) == SSN_LENGTH:
+        if re.search('^[0-9]+$', ssn):
+            try:
+                customer = IndividualCustomer.objects.filter(ssn=ssn)
+                if not customer.exists():
+                    validate = True
+            except:
+                pass
+    return validate
+
+def validate_state(state):
+    validated = False
+    if state in STATES:
+        #print('Valid state')
+        validated = True
+    return validated
+
+def validate_street_address(street_address):
+    validated = False
+    if len(street_address) <= STREET_ADDRESS_LENGTH_MAX and len(street_address) >= STREET_ADDRESS_LENGTH_MIN:
+        if re.search('^([a-zA-Z0-9]| )+$', street_address):
+            validated = True
+            #print('Valid street address')
+    return validated
 
 def validate_transaction_description(description, type_of_transaction):
     try:
