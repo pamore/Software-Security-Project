@@ -41,7 +41,7 @@ for (i = 4; i <= 5; i++)
                                     }
 
                                   }
-                                  if (value.search(/^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-z]{2,3}$/) < 0)
+                                  if (value.search(/^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/) < 0)
                                   {
                                     return {
                                       valid: false,
@@ -251,7 +251,7 @@ $('#icon5').click(function () { $('#keyboard5').getkeyboard().reveal(); });
 <!-- <input type="text" class="form-control" name="username" value="" required /> -->
 <div class="form-group"> 
   <label class="control-label">Email</label>
-  <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email"  />
+  <input type="text" id="keyboard2" class="form-control" name="email" value="" placeholder="Email"  />
 	<img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="email" class="form-control" name="email" value="" required /> -->

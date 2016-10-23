@@ -7,19 +7,19 @@
 <script type="text/javascript">
 $(document).ready(function() {
 $("#first_name").tooltip({
-              position : {my : "left center+15", at : "right center"}
+              position : {my : "right center+15", at : "right center"}
             });
 $("#last_name").tooltip({
-              position : {my : "left center+15", at : "right center"}
+              position : {my : "right center+15", at : "right center"}
             });
 $("#street_address").tooltip({
-              position : {my : "left center+15", at : "right center"}
+              position : {my : "right center+15", at : "right center"}
             });
 $("#city").tooltip({
-              position : {my : "left center+15", at : "right center"}
+              position : {my : "right center+15", at : "right center"}
             });
  $("#zipcode").tooltip({
-              position : {my : "left center+15", at : "right center"}
+              position : {my : "right center+15", at : "right center"}
             });           
 
   $('#profileEditForm').bootstrapValidator({
@@ -36,8 +36,8 @@ $("#city").tooltip({
                         message: 'The lastname is required'
                     },
                     regexp: {
-                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
-                      message : 'The last name can contain alphabets and single space as seperator.'
+                      regexp : /^[a-zA-Z]+$/,
+                      message : 'The last name can contain only alphabets.'
                     },
                       stringLength: {
                       max: 30,
@@ -52,8 +52,8 @@ $("#city").tooltip({
                         message: 'The firstname is required'
                     },
                     regexp: {
-                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
-                      message : 'The first name can contain alphabets and single space as seperator.'
+                      regexp : /^[a-zA-Z]+$/,
+                      message : 'The first name can contain only alphabets.'
                     },
                     stringLength: {
                       max: 30,
@@ -132,12 +132,12 @@ $("#city").tooltip({
 
           <div class="form-group">
               <label class="control-label">First Name</label>
-              <input type="text" class="form-control" name="first_name" id="first_name" value="{{profile.first_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
+              <input type="text" class="form-control" name="first_name" id="first_name" value="{{profile.first_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both;" required />
           </div>
 
           <div class="form-group">    
               <label class="control-label">Last Name</label>
-              <input type="text" class="form-control" name="last_name" id="last_name" value="{{profile.last_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
+              <input type="text" class="form-control" name="last_name" id="last_name" value="{{profile.last_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both;" required />
           </div>
 
           <div class="form-group">    

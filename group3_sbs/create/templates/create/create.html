@@ -42,7 +42,7 @@ $(document).ready(function() {
                         message: 'The Email is required'
                     },
                     regexp: {
-                      regexp : /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-z]{2,3}$/,
+                      regexp: /^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/,
                       message : 'The email format is incorrect'
                     },
                       stringLength: {
