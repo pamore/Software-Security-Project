@@ -42,7 +42,7 @@
 <div class="row">
   <div class="col-md-6">
     <h2>Make a Charge on Your Card</h2>
-    <form action="{% url 'external:credit_card_credit_charge_limit_validate' %}" method="post">
+    <form action="{% url 'external:credit_card_debit_charge_limit_validate' %}" method="post">
     {% csrf_token %}
     <label for="amount">Please enter the amount that you wish to charge to your card. It must be less than ${{charge_limit}}</label>
     <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{charge_limit}}" step="0.01" required />
@@ -51,7 +51,7 @@
   </div>
   <div class="col-md-6">
     <h2>Make a Payment on Your Charges</h2>
-    <form action="{% url 'external:credit_card_debit_charge_limit_validate' %}" method="post">
+    <form action="{% url 'external:credit_card_credit_charge_limit_validate' %}" method="post">
     {% csrf_token %}
     <label for="amount">Please enter the amount that you wish to pay on your charges. It must be less than ${{pay_limit}}</label>
     <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{pay_limit}}" step="0.01" required />

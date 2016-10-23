@@ -17,6 +17,8 @@ from global_templates.constants import *
 from M2Crypto import RSA, EVP
 import M2Crypto, time, logging, datetime
 
+logger = logging.getLogger('external')
+
 # Create your views here.
 
 """ Render Functions for Web Pages """
@@ -79,6 +81,7 @@ def checking_account(request):
     elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/checking_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, 'is_merchant_organization' : True})
     else:
+        logger.info("User %s tried to access checking account page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # View Checking/Savings Bank Statements
@@ -127,6 +130,7 @@ def credit_card(request):
     elif is_merchant_organization(user) and has_credit_card(user):
         return render(request, 'external/credit_card.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'credt_card': user.merchantorganization.credit_card})
     else:
+        logger.info("User %s tried to access credit card page without a credit card " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # View Checking/Savings Bank Statements
@@ -175,6 +179,7 @@ def credit_checking(request):
     elif is_merchant_organization(user) and has_checking_account(user):
         return render(request, 'external/credit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking"})
     else:
+        logger.info("User %s tried to access credit checking account page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Credit Savings Page
@@ -188,8 +193,8 @@ def credit_savings(request):
     elif is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/credit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings"})
     else:
+        logger.info("User %s tried to access credit savings account page without a savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
-
 
 # Render Page for Critical Challenge Response
 @never_cache
@@ -206,6 +211,7 @@ def critical_challenge_response(request, account_type, type_of_transaction):
             profile.otp_timestamp = int(time.time())
             profile.save()
     except:
+        logger.info("User %s encountered an error with getting a OTP for critical challenge response" % (request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))
     try:
         message = 'Hi, ' + user.username + '!\nPlease decrypt the following string using your private key and submit the decrypted value to the site. It is padded with oeap.\n\n'
@@ -220,7 +226,9 @@ def critical_challenge_response(request, account_type, type_of_transaction):
         mail = EmailMessage("CSE545 Group3 SBS Critical Challenge Response", message,'group3sbs@gmail.com',[profile.email])
         mail.attach('otp.bin', signed, 'application/x-binary')
         mail.send()
+        logger.info("Encrypted OTP sent to user %s" % (request.user.username))
     except:
+        logger.info("Failed to send encrypted OTP to user %s" % (request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))
     return render(request, success_redirect, {'account_type': account_type, 'type_of_transaction': type_of_transaction})
 
@@ -237,6 +245,7 @@ def debit_checking(request):
         amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
         return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access debit checking account page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Debit Savings Page
@@ -252,6 +261,7 @@ def debit_savings(request):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/debit.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access debit savings account page without a savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # External Error Page
@@ -272,6 +282,7 @@ def index(request):
     elif is_merchant_organization(user) and not has_no_account(user):
         return render(request, 'external/index.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name, 'checkingaccount': user.merchantorganization.checking_account, 'savingsaccount': user.merchantorganization.savings_account, 'creditcard': user.merchantorganization.credit_card})
     else:
+        logger.info("User %s tried to access homepage without any account" % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Payment Checking Page
@@ -287,6 +298,7 @@ def payment_email_checking(request):
         amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
         return render(request, 'external/payment_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access email payment checking page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Payment Checking Page
@@ -302,6 +314,7 @@ def payment_checking(request):
         amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
         return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access payment checking page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Payment Savings Page
@@ -317,6 +330,7 @@ def payment_email_savings(request):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/payment_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access email payment savings page without a  savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Payment Savings Page
@@ -332,6 +346,7 @@ def payment_savings(request):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/payment.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access email savings page without a savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 """
@@ -398,11 +413,14 @@ def profile_edit(request):
     user = request.user
     profile = get_any_user_profile(username=user.username)
     if has_permission_to_edit_profile(user):
+        logger.info("User %s is editing their profile"%(request.user.username))
         return render(request, 'external/profile_edit.html', {'profile': profile, 'STATES': STATES})
     else:
         if create_transaction_external_user_profile_edit_request(user):
+            logger.info("User %s is requesting access to edit their profile"%(request.user.username))
             return render(request, 'external/profile.html', {'profile': profile, 'message': "Awaiting Internal Employee Approval for Account Edit"})
         else:
+            logger.info("User %s tried edit their profile. Transaction to request access for profile edit failed to be created." % (request.user.username))
             return HttpResponseRedirect(reverse("external:error"))
 
 # Savings Account Page
@@ -416,6 +434,7 @@ def savings_account(request):
     elif is_merchant_organization(user) and has_savings_account(user):
         return render(request, 'external/savings_account.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, 'is_merchant_organization' : True})
     else:
+        logger.info("User %s tried to access savings account page without a savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Display Credit Card Page
@@ -433,6 +452,7 @@ def show_credit_info(request):
     elif is_merchant_organization(user) and has_credit_card(user):
         return render(request, 'external/show_credit_info.html', {'show_credit_info': user.merchantorganization.credit_card})
     else:
+        logger.info("User %s tried to access credit card page without a credit card " % (request.user.username))
         return render(request, 'external/error.html')
 
 # Transfer Checking Page
@@ -448,6 +468,7 @@ def transfer_email_checking(request):
         amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
         return render(request, 'external/transfer_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access email transfer checking page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Transfer Checking Page
@@ -463,6 +484,7 @@ def transfer_checking(request):
         amount_limit = min(float(user.merchantorganization.checking_account.active_balance),float(user.merchantorganization.checking_account.current_balance))
         return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'checking_account': user.merchantorganization.checking_account, "account_type": "Checking", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access transfer checking page without a checking account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Transfer Savings Page
@@ -478,6 +500,7 @@ def transfer_email_savings(request):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/transfer_email.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access email transfer savings page without a savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 # Transfer Savings Page
@@ -493,6 +516,7 @@ def transfer_savings(request):
         amount_limit = min(float(user.merchantorganization.savings_account.active_balance),float(user.merchantorganization.savings_account.current_balance))
         return render(request, 'external/transfer.html', {'user_type': MERCHANT_ORGANIZATION, 'first_name': user.merchantorganization.first_name, 'last_name': user.merchantorganization.last_name,'savings_account': user.merchantorganization.savings_account, "account_type": "Savings", "amount_limit": amount_limit})
     else:
+        logger.info("User %s tried to access transfer savings account page without a savings account " % (request.user.username))
         return HttpResponseRedirect(reverse('external:error'))
 
 """ Validator Functions for Web Pages """
@@ -510,6 +534,7 @@ def add_certificate(request):
     else:
         profile.certificate = str(certificate)
     profile.save()
+    logger.info("User %s added a certificate %s "%(request.user.username, str(certificate)))
     return HttpResponseRedirect(reverse('external:profile'))
 
 # Add requested payment to DB
@@ -531,8 +556,8 @@ def addPaymentRequestToDB(request):
         clientAccountNum = int(str(request.POST['account_number']))
         clientRoutingNum = long(str(request.POST['route_number']))
     clientAccountRecord = None
-    log = logging.getLogger('logging.FileHandler')
     if is_pki_needed(request=request, account_type=accountType, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for payment on behalf "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': accountType, 'type_of_transaction': type_of_transaction}))
     if(accountType == 'Checking'):
         client_CA_rowset = CheckingAccount.objects.all().filter(id=clientAccountNum)
@@ -555,11 +580,11 @@ def addPaymentRequestToDB(request):
                                                                requestAmount=payment_amount1)
             paymentRequest.save()
             flag = "request saved successfully"
-            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" stored successfully")
+            logger.info("Request from merchant " + str(request.user.username) + " was stored successfully")
             return HttpResponseRedirect(reverse('external:checking_account'))
         else:
             flag="invalid customer account details"
-            log.info("Request from merchant "+ str(user.merchantorganization.checking_account_id)+" Reject invalid details")
+            logger.info("Request from merchant " + str(request.user.username)+ " was rejected for invalid information")
             return render(request, 'external/requestPayment.html',
               {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
@@ -585,12 +610,11 @@ def addPaymentRequestToDB(request):
                 requestAmount=payment_amount1)
             paymentRequest.save()
             flag = "request saved successfully"
-            log.debug("Request from merchant " + str(user.merchantorganization.checking_account_id) + " Rejected for invalid data")
+            logger.info("Request from merchant " + str(request.user.username) + " was stored successfully")
             return HttpResponseRedirect(reverse('external:checking_account'))
         else:
             flag = "invalid customer account details"
-            log.info("Request from merchant " + str(
-                user.merchantorganization.checking_account_id) + " Reject invalid details")
+            log.info("Request from merchant " + str(request.user.username) + " was reject invalid details")
             return render(request, 'external/requestPayment.html',
                           {'checking_account': user.merchantorganization.checking_account, 'flag': flag})
 
@@ -606,15 +630,19 @@ def approveAccessRequests(request):
     page_to_view = request.POST['page_to_view']
     access_request = accessRequests.objects.filter(externalUserId=user.id, internalUserId=internal_id, pageToView=page_to_view).first()
     if not access_request or access_request.externalUserId != user.id:
+        logger.info("User %s tried approve an access request for an internal user %s to view page %s but did not have correct authorization to do so" % (request.user.username, str(internal_id), str(page_to_view)))
         return HttpResponseRedirect(reverse(error_redirect))
     internal_user = User.objects.filter(id=internal_id).first()
     if not internal_user:
+        logger.info("User %s to to approve an access request, but user id %s does not belong to an internal user" % (request.user.username, str(internal_id)))
         return HttpResponseRedirect(reverse(error_redirect))
     transaction = get_internal_access_transaction(user=internal_user, page_to_view=page_to_view)
     if commit_transaction(transaction=transaction, user=internal_user):
         access_request.delete()
+        logger.info("User %s granted access to view page %s for internal user %s" % (request.user.username, page_to_view, internal_user.username))
         return HttpResponseRedirect(reverse(success_redirect))
     else:
+        logger.info("User %s tried to allow internal user %s to access page %s, but the transaction failed to be committed" % (request.user.username, internal_user.username, page_to_view))
         return HttpResponseRedirect(reverse(error_redirect))
 
 # Validate Credit Checking Transaction
@@ -660,6 +688,7 @@ def credit_checking_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for crediting checking account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -675,6 +704,7 @@ def credit_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for crediting savings account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
@@ -699,14 +729,19 @@ def critical_challenge_response_validate(request, account_type, type_of_transact
                 profile.save()
                 if add_external_user_make_critical_transaction(user=user, account_type=account_type, type_of_transaction=type_of_transaction):
                     success_redirect = critical_challenge_response_redirect_page(account_type=account_type, type_of_transaction=type_of_transaction)
+                    logger.info("User %s completed pki challenge response and is going to %s"%(request.user.username, str(success_redirect)))
                     return HttpResponseRedirect(reverse(success_redirect))
                 else:
+                    logger.info("User %s failed to be granted permission after successfully completed pki challenge response "%(request.user.username))
                     return HttpResponseRedirect(reverse(error_redirect))
             else:
+                logger.info("User %s is provided an incorrect opt of %s for the pki challenge response "%(request.user.username, str(otp)))
                 return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
         else:
+            logger.info("User %s entered otp of %s after it expired "%(request.user.username, str(otp)))
             return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
+        logger.info("User %s is attempting to perform a critical transaction using invalid username of %s and email of %s"%(request.user.username, str(username), str(email)))
         return HttpResponseRedirect(reverse(reset_otp_redirect, kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
 
 # Validate Debit Checking Transaction
@@ -720,6 +755,7 @@ def debit_checking_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for debiting checking account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -735,6 +771,7 @@ def debit_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for debiting savings account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return credit_or_debit_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
@@ -759,6 +796,7 @@ def payment_checking_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for making a payment from their checking account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -774,6 +812,7 @@ def payment_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for making a payment from their savings account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return payment_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -789,6 +828,7 @@ def payment_on_behalf_checking_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for making a payment on belalf from their checking account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -804,6 +844,7 @@ def payment_on_behalf_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for making a payment on behalf from their savings account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return payment_on_behalf_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -828,15 +869,19 @@ def profile_edit_validate(request):
         permission = Permission.objects.get(codename=permission_codename)
         permission_codename = 'external.' + permission_codename
     except:
+        logger.info("There was database permission error when user %s tried to edit their profile"%(request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))
     if user.has_perm(permission_codename):
         if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
             user.user_permissions.remove(permission)
             user.save()
+            logger.info("User %s successfully edited their account"%(request.user.username))
             return HttpResponseRedirect(reverse(success_redirect))
         else:
+            logger.info("User %s provided incorrect changes when editing their account"%(request.user.username))
             return HttpResponseRedirect(reverse(error_redirect))
     else:
+        logger.info("User %s does not have permission to edit their profile "%(request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))
 
 # Reject Access Requests
@@ -851,8 +896,10 @@ def rejectAccessRequests(request):
     page_to_view = request.POST['page_to_view']
     access_request = accessRequests.objects.filter(externalUserId=user.id, internalUserId=internal_id, pageToView=page_to_view).first()
     if not access_request or access_request.externalUserId != user.id:
+        logger.info("Failed to reject access request by internal user %s for %s's %s page "%(str(internal_id), request.user.username, page_to_view))
         return HttpResponseRedirect(reverse(error_redirect))
     access_request.delete()
+    logger.info("User %s granted access to internal user %s to view %s "%(request.user.username, str(internal_id), str(page_to_view)))
     return HttpResponseRedirect(reverse(success_redirect))
 
 # Reject Transaction Requests
@@ -865,10 +912,7 @@ def reject_approvals(request):
     transaction_id = int(string_transaction_id)
     transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id)
     transaction.delete()
-    checkingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Checking").filter(
-        clientAccountNum=user.individualcustomer.checking_account_id)
-    savingRequests = MerchantPaymentRequest.objects.all().filter(accountType="Saving").filter(
-        clientAccountNum=user.individualcustomer.savings_account_id)
+    logger.info("User %s rejected payment on behalf transction %s "%(request.user.username, str(transaction_id)))
     return HttpResponseRedirect(reverse('external:showPaymentRequests'))
 
 # Redirect to Request Payment Email page
@@ -900,6 +944,7 @@ def transfer_checking_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:checking_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for transfer from their checking account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type, success_redirect=success_redirect, error_redirect=error_redirect)
@@ -915,6 +960,7 @@ def transfer_savings_validate(request):
     error_redirect = 'external:error'
     success_redirect = 'external:savings_account'
     if is_pki_needed(request=request, account_type=account_type, type_of_transaction=type_of_transaction):
+        logger.info("User %s is attempting to perform a critical transaction using pki for transfer from their savings account "%(request.user.username))
         return HttpResponseRedirect(reverse("external:critical_challenge_response", kwargs={'account_type': account_type, 'type_of_transaction': type_of_transaction}))
     else:
         return transfer_validate(request=request, type_of_transaction=type_of_transaction, account_type=account_type,success_redirect=success_redirect, error_redirect=error_redirect)
@@ -940,8 +986,9 @@ def update_approvals(request):
     string_transaction_id = str(request.POST['id'])
     transaction_id = int(string_transaction_id)
     transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id).first()
-    transaction = MerchantPaymentRequest.objects.all().filter(id=transaction_id).first()
     if not payment_merchant_request_validate(request=request, merchant_request=transaction):
+        logger.info("Payment on behalf transaction %s for user %s was not valid"%(str(transaction_id), request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))
     transaction.delete()
+    logger.info("User %s approved payment on behalf transction %s "%(request.user.username, str(transaction_id)))
     return HttpResponseRedirect(reverse(success_redirect))

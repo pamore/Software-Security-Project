@@ -42,8 +42,13 @@
             <a class="nav-link" href="{% url 'login:signout' %}">Sign-out</a>
           </li>
            <li class="nav-item">
-              Welcome {{first_name}} {{last_name}}
-               {{user_type}}
+             {% if request.user.regularemployee %}
+             Welcome {{request.user.regularemployee.first_name}} {{request.user.regularemployee.last_name}} Regular Employee
+             {% elif request.user.systemmanager %}
+             Welcome {{request.user.systemmanager.first_name}} {{request.user.systemmanager.last_name}} System Manager
+             {% elif request.user.administrator %}
+             Welcome {{request.user.administrator.first_name}} {{request.user.administrator.last_name}} Administrator
+             {% endif %}
           </li>
 
         </ul>
@@ -85,6 +90,10 @@
                 <li>
                    <font color="#FF7F50"> Access Internal User Page</font>
                               <a href="{% url 'internal:internal_user_access_request' %}"> &nbsp &nbsp &nbsp View Internal User Page </a>
+                </li>
+                <li>
+                   <font color="#FF7F50"> Clear Log Page</font>
+                              <a href="{% url 'internal:clear_log' %}"> &nbsp &nbsp &nbsp Select Log to Clear </a>
                 </li>
                 <li>
                    <font color="#FF7F50"> View Log Page</font>

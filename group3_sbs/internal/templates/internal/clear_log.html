@@ -1,0 +1,65 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<!-- Add stylesheets or javascript here !-->
+{% endblock %}
+
+
+{% block navigation %}
+<!-- Navigation here !-->
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1>Are you sure you want to clear all contents from a log?</h1>
+  </div>
+</div>
+<br />
+<div class="row">
+  <div class="col-md-2">
+    <form action="{% url 'internal:validate_clear_create_log' %}" method="post">
+    {% csrf_token %}
+      <label for="submit">Clear contents for create log?</label>
+      <input type="submit" class="btn btn-danger" value="Clear Create Log" />
+    </form>
+  </div>
+  <div class="col-md-2">
+    <form action="{% url 'internal:validate_clear_external_log' %}" method="post">
+    {% csrf_token %}
+      <label for="submit">Clear contents for external log?</label>
+      <input type="submit" class="btn btn-danger" value="Clear External Log" />
+    </form>
+  </div>
+  <div class="col-md-2">
+    <form action="{% url 'internal:validate_clear_internal_log' %}" method="post">
+    {% csrf_token %}
+      <label for="submit">Clear contents for internal log?</label>
+      <input type="submit" class="btn btn-danger" value="Clear Internal Log" />
+    </form>
+  </div>
+  <div class="col-md-2">
+    <form action="{% url 'internal:validate_clear_login_log' %}" method="post">
+    {% csrf_token %}
+      <label for="submit">Clear contents for login log?</label>
+      <input type="submit" class="btn btn-danger" value="Clear Login Log" />
+    </form>
+  </div>
+  <div class="col-md-2">
+    <form action="{% url 'internal:validate_clear_reset_log' %}" method="post">
+    {% csrf_token %}
+      <label for="submit">Clear contents for reset log?</label>
+      <input type="submit" class="btn btn-danger" value="Clear Reset Log" />
+    </form>
+  </div>
+  <div class="col-md-2">
+    <form action="{% url 'internal:validate_clear_server_log' %}" method="post">
+    {% csrf_token %}
+      <label for="submit">Clear contents for server log?</label>
+      <input type="submit" class="btn btn-danger" value="Clear Server Log" />
+    </form>
+  </div>
+</div>
+{% endblock %}

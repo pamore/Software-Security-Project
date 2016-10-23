@@ -28,6 +28,7 @@
   <table class="table">
     <thead>
       <tr>
+        <td>ID</th>
         <th>Type</th>
         <th>Initiator</th>
         <th>Description</th>
@@ -41,6 +42,7 @@
     <tbody>
       {% for transaction in transactions %}
       <tr>
+        <td>{{transaction.id}}</td>
         <td>{{transaction.type_of_transaction}}</td>
         <td>{{transaction.initiator.username}}</td>
         <td>{{transaction.description}}</td>

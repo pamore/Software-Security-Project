@@ -43,8 +43,8 @@
 <br />
 <form action="{% url 'external:payment_checking_validate' %}" method="post">
 {% csrf_token %}
-<p>Send by Specifying Email Address </p>
-<input type="number" class="form-controlamount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<label for="amount">Specify the amount to pay which must be less than or equal to {{ammount_limit}}</label>
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
@@ -80,7 +80,7 @@
 <br />
 <form action="{% url 'external:payment_savings_validate' %}" method="post">
 {% csrf_token %}
-<p>Send by Specifying Email Address </p>
+<label for="amount">Specify the amount to pay which must be less than or equal to {{ammount_limit}}</label>
 <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>

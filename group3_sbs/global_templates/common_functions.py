@@ -14,7 +14,10 @@ from global_templates.transaction_descriptions import *
 from global_templates.constants import *
 from M2Crypto import RSA, EVP
 from templated_email import send_templated_mail
-import M2Crypto, random, re, string, time, thread
+import logging, M2Crypto, random, re, string, time, thread
+
+external_logger = logging.getLogger('external')
+internal_logger = logging.getLogger('internal')
 
 def add_activate_deactivate_external_user_permission(user, external_user, page_to_view):
     if is_regular_employee(user):
@@ -597,6 +600,7 @@ def credit_card_credit_or_debit_validate(request, type_of_transaction, success_r
     user = request.user
     amount = float(request.POST['amount'])
     if not credit_card_validate_amount(amount) :
+        external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user):
         account =  user.individualcustomer.credit_card
@@ -605,6 +609,7 @@ def credit_card_credit_or_debit_validate(request, type_of_transaction, success_r
         account =  user.merchantorganization.credit_card
         user_type = MERCHANT_ORGANIZATION
     else:
+        external_logger.info("Transaction " + type_of_transaction + " was not made by an external employee")
         return HttpResponseRedirect(reverse(error_redirect))
     if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_CREDIT:
         starting_balance = float(account.charge_limit)
@@ -616,6 +621,7 @@ def credit_card_credit_or_debit_validate(request, type_of_transaction, success_r
             account.save()
             create_credit_card_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, creditcard_number= creditcard_number, amount=amount, starting_balance=starting_balance)
         else:
+            external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " has an invalidate final amount of " + str(check) + " to pay")
             return HttpResponseRedirect(reverse(error_redirect))
     elif type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_DEBIT:
         starting_balance = float(account.charge_limit)
@@ -627,15 +633,19 @@ def credit_card_credit_or_debit_validate(request, type_of_transaction, success_r
             account.save()
             create_credit_card_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, creditcard_number= creditcard_number, amount=amount, starting_balance=starting_balance)
         else:
+            external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " has an invalidate final amount of " + str(check) + " to charge")
             return HttpResponseRedirect(reverse(error_redirect))
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " is not a valid pay or charge transaction")
         return HttpResponseRedirect(reverse(error_redirect))
+    external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + "  for " + str(amount) + " on their credit card was successfully created")
     return HttpResponseRedirect(reverse(success_redirect))
 
 def credit_card_pay_late_fee_validate(request, type_of_transaction, success_redirect, error_redirect):
     user = request.user
     amount = float(request.POST['amount'])
-    if not credit_card_validate_amount(amount) :
+    if not credit_card_validate_amount(amount):
+        external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user):
         account =  user.individualcustomer.credit_card
@@ -644,6 +654,7 @@ def credit_card_pay_late_fee_validate(request, type_of_transaction, success_redi
         account =  user.merchantorganization.credit_card
         user_type = MERCHANT_ORGANIZATION
     else:
+        external_logger.info("Transaction " + type_of_transaction + " was not made by an external user")
         return HttpResponseRedirect(reverse(error_redirect))
     if type_of_transaction == CREDIT_CARD_TRANSACTION_TYPE_PAY_LATE_FEE:
         starting_balance = float(account.late_fee)
@@ -653,9 +664,12 @@ def credit_card_pay_late_fee_validate(request, type_of_transaction, success_redi
         if credit_card_validate_amount(check):
             create_credit_card_pay_late_fee_transaction(user=user, type_of_transaction=type_of_transaction, creditcard_number= creditcard_number, amount=amount, starting_balance=starting_balance)
         else:
+            external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " has an invalidate final amount of " + str(check) + " to pay a late fee")
             return HttpResponseRedirect(reverse(error_redirect))
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " is not a valid pay late fee transaction")
         return HttpResponseRedirect(reverse(error_redirect))
+    external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for " + str(amount) + " for their credit card was successfully created")
     return HttpResponseRedirect(reverse(success_redirect))
 
 def credit_or_debit_validate(request, type_of_transaction, account_type, success_redirect, error_redirect):
@@ -665,6 +679,7 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
     if type_of_transaction == TRANSACTION_TYPE_DEBIT:
         amount = float(request.POST['amount'])
     if not validate_amount(amount):
+        external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for  " + str(account_type) + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user) and account_type == ACCOUNT_TYPE_CHECKING:
         account =  user.individualcustomer.checking_account
@@ -679,6 +694,7 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
         account =  user.merchantorganization.savings_account
         user_type = MERCHANT_ORGANIZATION
     else:
+        external_logger.info("Transaction " + type_of_transaction + " for " + str(account_type) + " was not made by an external user")
         return HttpResponseRedirect(reverse(error_redirect))
     if type_of_transaction == TRANSACTION_TYPE_CREDIT:
         starting_balance = account.active_balance
@@ -689,6 +705,7 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
             account.save()
             create_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, userType=user_type, accountType=account_type, accountID=account.id, routingID=account.routing_number, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
         else:
+            external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for " + str(account_type) + " has an invalidate amount of " + str(amount) + " for credit")
             return HttpResponseRedirect(reverse(error_redirect))
     elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
         starting_balance = account.active_balance
@@ -699,9 +716,12 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
             account.save()
             create_debit_or_credit_transaction(user=user, type_of_transaction=type_of_transaction, userType=user_type, accountType=account_type, accountID=account.id, routingID=account.routing_number, amount=amount, starting_balance=starting_balance, ending_balance=new_balance)
         else:
+            external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for " + str(account_type) + " has an invalidate amount of " + str(amount) + " for debit")
             return HttpResponseRedirect(reverse(error_redirect))
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for " + str(account_type) + " has an invalidate amount of " + str(amount) + " is not a valid credit or debit transaction")
         return HttpResponseRedirect(reverse(error_redirect))
+    external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for " + str(account_type) + " of amount " + str(amount) + " was successfully committed")
     return HttpResponseRedirect(reverse(success_redirect))
 
 def critical_challenge_response_redirect_page(account_type, type_of_transaction):
@@ -1563,25 +1583,31 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     elif type_of_transaction == TRANSACTION_TYPE_TRANSFER:
         amount = float(request.POST['amount'])
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
     if request.POST.get('email_address'):
         email_address = request.POST['email_address']
         receiver = get_external_user(email=email_address)
         if receiver is None:
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid receiver")
             return HttpResponseRedirect(reverse(error_redirect))
         receiver_account = get_external_user_account(user=receiver, account_type=receiver_account_type)
         if receiver_account is None:
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid receiver account")
             return HttpResponseRedirect(reverse(error_redirect))
     else:
         receiver_account_ID = request.POST['account_number']
         receiver_routing_ID = request.POST['route_number']
         if not validate_account_number(account_number=receiver_account_ID) or not validate_routing_number(routing_number=receiver_routing_ID):
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid receiver account number or routing number")
             return HttpResponseRedirect(reverse(error_redirect))
         receiver = get_external_user(account_ID=receiver_account_ID, routing_ID=receiver_routing_ID, account_type=receiver_account_type)
         if receiver is None:
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid receiver")
             return HttpResponseRedirect(reverse(error_redirect))
         receiver_account = get_external_user_account(user=receiver, account_type=receiver_account_type)
         if receiver_account is None:
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid receiver account")
             return HttpResponseRedirect(reverse(error_redirect))
     if receiver_account_type == ACCOUNT_TYPE_CHECKING or receiver_account_type == ACCOUNT_TYPE_SAVINGS:
         if is_individual_customer(receiver):
@@ -1589,13 +1615,16 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
         elif is_merchant_organization(receiver):
             receiver_user_type = MERCHANT_ORGANIZATION
         else:
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has a receiver that is not an external user")
             return HttpResponseRedirect(reverse(error_redirect))
         receiver_check = max(float(receiver_account.active_balance), float(receiver_account.current_balance)) + amount
         receiver_starting_balance = receiver_account.active_balance
         receiver_new_balance = float(receiver_starting_balance) + amount
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid receiver account type of " + str(reciever_account_type))
         return HttpResponseRedirect(reverse(error_redirect))
     if not validate_amount(amount):
+        external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has an invalid amount")
         return HttpResponseRedirect(reverse(error_redirect))
     if is_individual_customer(user) and sender_account_type == ACCOUNT_TYPE_CHECKING:
         user_account = user.individualcustomer.checking_account
@@ -1610,6 +1639,7 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
         user_account = user.merchantorganization.savings_account
         sender_user_type = MERCHANT_ORGANIZATION
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " has a sender that is not an external user")
         return HttpResponseRedirect(reverse(error_redirect))
     sender_check = min(float(user_account.active_balance), float(user_account.current_balance)) - amount
     sender_starting_balance = user_account.active_balance
@@ -1628,9 +1658,12 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
             receiver_account.active_balance = receiver_starting_balance
             user_account.save()
             receiver_account.save()
+            external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " is not a valid transfer or payment")
             return HttpResponseRedirect(reverse(error_redirect))
     else:
+        external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " had an invalid final sender amount of " + str(sender_new_balance) + " or an invalid final receiver amount of " + str(receiver_new_balance) + " or the receiver " + str(receiver.username) + " and the sender " + str(request.user.username) + " were the same user")
         return HttpResponseRedirect(reverse(error_redirect))
+    external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " for " + str(amount) + " with new balance of "  + str(sender_new_balance) + " was sent to receiver " + str(receiver.username) + " in their " + str(receiver_account_type) + " was successfully committed")
     return HttpResponseRedirect(reverse(success_redirect))
 
 def save_transaction(transaction, user):
