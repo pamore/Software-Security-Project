@@ -510,7 +510,7 @@ def add_certificate(request):
     else:
         profile.certificate = str(certificate)
     profile.save()
-    return HttpResponseRedirect(reverse('external:certificate'))
+    return HttpResponseRedirect(reverse('external:profile'))
 
 # Add requested payment to DB
 @never_cache
