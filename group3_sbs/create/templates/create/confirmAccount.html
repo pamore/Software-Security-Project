@@ -86,7 +86,7 @@ $(document).ready(function() {
                         message: 'The Email is required'
                     },
                     regexp: {
-                      regexp : /^[a-zA-Z0-9]+@[a-zA-Z]+\.[a-z]{2,3}$/,
+                    regexp: /^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/,
                       message : 'The email format is incorrect'
                     },
                       stringLength: {
@@ -170,8 +170,8 @@ $(document).ready(function() {
                         message: 'The lastname is required'
                     },
                     regexp: {
-                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
-                      message : 'The last name can contain alphabets and single space as seperator.'
+                      regexp : /^[a-zA-Z]+$/,
+                      message : 'The last name can contain only alphabets.'
                     },
                       stringLength: {
                       max: 30,
@@ -186,7 +186,7 @@ $(document).ready(function() {
                         message: 'The firstname is required'
                     },
                     regexp: {
-                      regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
+                      regexp : /^[a-zA-Z]+$/,
                       message : 'The first name can contain alphabets and single space as seperator.'
                     },
                     stringLength: {
@@ -321,7 +321,7 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 
 <div class="form-group"> 
     <label class="control-label">Email</label>
-     <input type="email" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" title="Length must be between 3 to 100; Should follow the correct email format " required />
+     <input type="text" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" title="Length must be between 3 to 100; Should follow the correct email format " required />
      <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 
@@ -343,12 +343,12 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 </div>
 <!-- <input type="password" class="form-control" name="confirmPassword" value="" required /> -->
 <div class="form-group"> <label class="control-label">First Name or Business Name</label>
-<input type="text" id="keyboard6" class="form-control" name="firstname" value="" placeholder="First Name" title="length between 1 and 30. upper OR lowercase OR combination of both; Should not start or end with space ; only one space allowerd between characters " required />
+<input type="text" id="keyboard6" class="form-control" name="firstname" value="" placeholder="First Name" title="length between 1 and 30. upper OR lowercase OR combination of both;" required />
       <img id="icon6" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="firstname" value="" required /> -->
 <div class="form-group"> <label class="control-label">Last Name or Company Type (e.g. LLC, inc, corp, etc.)</label>
-<input type="text" id="keyboard7" class="form-control" name="lastname" value="" placeholder="Last Name" title="length between 1 and 30. upper OR lowercase Or combination of all ; Should not start or end with space ; only one space allowed between characters." required />
+<input type="text" id="keyboard7" class="form-control" name="lastname" value="" placeholder="Last Name" title="length between 1 and 30. upper OR lowercase Or combination of both" required />
       <img id="icon7" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="lastname" value="" required /> -->
