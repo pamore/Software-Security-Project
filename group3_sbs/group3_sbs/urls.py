@@ -15,6 +15,7 @@ Including another URLconf
 """
 from django.conf.urls import include, url
 from django.contrib import admin
+import global_templates.views
 
 urlpatterns = [
     #url(r'^admin/', admin.site.urls),
@@ -24,5 +25,6 @@ urlpatterns = [
     url(r'^external/', include('external.urls', namespace='external')),
     url(r'^reset/', include('reset.urls', namespace='reset')),
     url(r'^create/', include('create.urls', namespace='create')),
+    url(r'^favicon.ico', global_templates.views.stop_favicon),
     url(r'^.*', include('login.urls', namespace='login')),
 ]
