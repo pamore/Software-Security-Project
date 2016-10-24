@@ -636,7 +636,7 @@ def approveAccessRequests(request):
     if not internal_user:
         logger.info("User %s to to approve an access request, but user id %s does not belong to an internal user" % (request.user.username, str(internal_id)))
         return HttpResponseRedirect(reverse(error_redirect))
-    transaction = get_internal_access_transaction(user=internal_user, page_to_view=page_to_view)
+    transaction = get_internal_access_transaction(user=internal_user, external_user=user, page_to_view=page_to_view)
     if commit_transaction(transaction=transaction, user=internal_user):
         access_request.delete()
         logger.info("User %s granted access to view page %s for internal user %s" % (request.user.username, page_to_view, internal_user.username))

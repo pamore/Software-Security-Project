@@ -864,9 +864,11 @@ def validate_external_user_access_request(request):
         logger.info("User %s has access to %s's %s" % (request.user.username, str(external_user.username), str(page_to_view)))
         return HttpResponseRedirect(reverse(success_redirect, kwargs={'external_user_id': external_user.id}))
     elif is_regular_employee(user) and not access_granted:
-        accessRequestObject = accessRequests.objects.create(internalUserId=user.id, externalUserId=external_user_id , pageToView=page_to_view)
-        accessRequestObject.save()
-        logger.info("User %s is requesting approval to access %s's %s" % (request.user.username, str(external_user.username), str(page_to_view)))
+        check_exist = accessRequests.objects.filter(internalUserId=user.id, externalUserId=external_user_id , pageToView=page_to_view)
+        if not check_exist.exists():
+            accessRequestObject = accessRequests.objects.create(internalUserId=user.id, externalUserId=external_user_id , pageToView=page_to_view)
+            accessRequestObject.save()
+            logger.info("User %s is requesting approval to access %s's %s" % (request.user.username, str(external_user.username), str(page_to_view)))
         return HttpResponseRedirect(reverse(pending_approval_redirect))
     else:
         logger.info("User %s has no access to %s's %s" % (request.user.username, str(external_user.username), str(page_to_view)))
