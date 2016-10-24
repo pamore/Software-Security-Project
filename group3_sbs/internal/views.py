@@ -186,37 +186,27 @@ def internal_user_access_request(request):
 @user_passes_test(is_internal_user)
 def noncritical_transactions(request):
     user = request.user
-    list = get_user_det(user)
     if is_administrator(user):
         return render(request, 'internal/index.html')
     elif is_regular_employee(user) or is_system_manager(user):
-        #can_request = False
+        can_resolve = True
         can_request = True
         transactions = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created')
-        top_critical_transaction = ExternalCriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-        top_noncritical_transaction = ExternalNoncriticalTransaction.objects.filter().exclude(status=TRANSACTION_STATUS_RESOLVED).order_by('time_created').first()
-        already_exists = InternalNoncriticalTransaction.objects.filter(initiator_id=user.id, status=TRANSACTION_STATUS_UNRESOLVED)
-        if not already_exists.exists():
-            #can_request = True
-            can_request = True
-        if top_noncritical_transaction is None:
-            return render(request, 'internal/noncritical_transactions.html', {'user_type': list[2], 'first_name': list[0],'last_name':list[1],'transactions': transactions})
-        elif top_critical_transaction is None:
-            can_resolve = True
-        elif top_critical_transaction.time_created < top_noncritical_transaction.time_created:
-            #can_resolve = False
-            can_resolve = True
-        else:
-            can_resolve = True
         if is_system_manager(user):
             access_to_resolve = True
             can_request = False
+            permission_id_list = None
         else:
             access_to_resolve = False
-            permission_codename = 'internal.can_resolve_external_noncritical_transaction_' + str(top_noncritical_transaction.id)
-            if user.has_perm(permission_codename):
-                access_to_resolve = True
-        return render(request, 'internal/noncritical_transactions.html', {'user_type': list[2],'first_name':list[0],'last_name':list[1],'transactions': transactions, 'can_resolve': can_resolve, 'access_to_resolve': access_to_resolve, 'can_request': can_request})
+            can_request = True
+            permissions = Permission.objects.filter(user=user)
+            permission_id_list = []
+            for permission in permissions:
+                if re.search('^can_resolve_external_noncritical_transaction_[1-9][0-9]*$', str(permission.codename)):
+                    x = str(permission.codename)
+                    result = [int(s) for s in x.split('_') if s.isdigit()]
+                    permission_id_list.append(result[0])
+        return render(request, 'internal/noncritical_transactions.html', {'transactions': transactions, 'can_resolve': can_resolve, 'access_to_resolve': access_to_resolve, 'can_request': can_request, 'permission_id_list': permission_id_list,})
     else:
         logger.info("User %s tried to access noncritical transaction page without being an internal employee" % (request.user.username))
         return HttpResponseRedirect(reverse('internal:error'))
@@ -349,7 +339,7 @@ def view_external_user_savings_account(request, external_user_id):
             return HttpResponseRedirect(reverse(error_redirect))
         savings_account = get_external_user_account(user=external_user, account_type=ACCOUNT_TYPE_SAVINGS)
         logger.info("User %s is viewing external user %s's savings account" % (request.user.username, str(external_user.username)))
-        return render(request, success_page, {"user": external_user, "savings account": savings_account})
+        return render(request, success_page, {"user": external_user, "savings_account": savings_account})
     else:
         logger.info("User %s has no permission to view external user %s's savings account" % (request.user.username, str(external_user_id)))
         return HttpResponseRedirect(reverse(error_redirect))

@@ -599,6 +599,8 @@ def credit_card_validate_amount(amount):
 def credit_card_credit_or_debit_validate(request, type_of_transaction, success_redirect, error_redirect):
     user = request.user
     amount = float(request.POST['amount'])
+    if amount == 0.0:
+        return HttpResponseRedirect(reverse(success_redirect))
     if not credit_card_validate_amount(amount) :
         external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
@@ -676,8 +678,12 @@ def credit_or_debit_validate(request, type_of_transaction, account_type, success
     user = request.user
     if type_of_transaction == TRANSACTION_TYPE_CREDIT:
         amount = float(request.POST['amount'])
-    if type_of_transaction == TRANSACTION_TYPE_DEBIT:
+    elif type_of_transaction == TRANSACTION_TYPE_DEBIT:
         amount = float(request.POST['amount'])
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
+    if amount == 0.00:
+        return HttpResponseRedirect(reverse(success_redirect))
     if not validate_amount(amount):
         external_logger.info("Transaction " + type_of_transaction + " by user " + request.user.username + " for  " + str(account_type) + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
@@ -1465,8 +1471,8 @@ def payment_merchant_request_validate(request, merchant_request):
     sender_account_ID = merchant_request.clientAccountNum
     sender_routing_ID = merchant_request.clientRoutingNum
     amount = float(merchant_request.requestAmount)
-    if not validate_account_number(account_number=sender_account_ID) or not validate_account_number(account_number=receiver_account_ID) or not validate_routing_number(routing_number=sender_routing_ID) :
-        return False
+    if amount == 0.0:
+        return True
     sender1 = get_external_user(account_ID=sender_account_ID, account_type=sender_account_type)
     if sender1 is None or sender1 != sender:
         return False
@@ -1585,6 +1591,8 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     else:
         external_logger.info("Transaction " + type_of_transaction + " by sender " + request.user.username + " from  " + str(account_type) + " has an invalidate amount of " + str(amount))
         return HttpResponseRedirect(reverse(error_redirect))
+    if amount == 0.0:
+        return HttpResponseRedirect(reverse(success_redirect))
     if request.POST.get('email_address'):
         email_address = request.POST['email_address']
         receiver = get_external_user(email=email_address)
@@ -1644,7 +1652,7 @@ def payment_or_transfer_validate(request, type_of_transaction, account_type, suc
     sender_check = min(float(user_account.active_balance), float(user_account.current_balance)) - amount
     sender_starting_balance = user_account.active_balance
     sender_new_balance = float(sender_starting_balance) - amount
-    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance) and not user.id == receiver.id:
+    if validate_amount(sender_new_balance) and validate_amount(receiver_new_balance) and ((user.id != receiver.id) or (user.id == receiver.id and sender_account_type != receiver_account_type)):
         user_account.active_balance = sender_new_balance
         receiver_account.active_balance = receiver_new_balance
         user_account.save()

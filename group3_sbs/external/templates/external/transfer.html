@@ -46,7 +46,7 @@
 {% csrf_token %}
 <p>Send by Specifying Account and Routing Number</p>
 <label for="amount">Please enter an amount less than or equal to ${{amount_limit}} to transfer from your checking account</label>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" step="0.01" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
@@ -87,13 +87,13 @@
 {% csrf_token %}
 <p>Send by Specifying Account and Routing Number</p>
 <label for="amount">Please enter an amount less than or equal to ${{amount_limit}} to transfer from your savings account</label>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" step="0.01" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
 <label for="account_number">Please enter recipient account number</label>
 <input type="number" class="form-control" name="account_number" value="1" min="1" step="1" required />
-<label for="route_amount">Please enter recipient route number</label>
+<label for="route_number">Please enter recipient route number</label>
 <input type="number" class="form-control" name="route_number" value="1" min="1" step="1" required />
 <input type="submit" class="btn btn-default" value="Submit" />
 </form>

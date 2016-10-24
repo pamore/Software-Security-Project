@@ -62,7 +62,7 @@
         <td>Unresolved</td>
         <td>Unresolved</td>
         {% endif %}
-        {% if access_to_resolve and can_resolve and forloop.first %}
+        {% if request.user.systemmanager or transaction.id in permission_id_list %}
         <td>
           <form action="{% url 'internal:validate_noncritical_transaction_approval' transaction_id=transaction.id %}" method="post">
             {% csrf_token %}<input type="submit" class="btn btn-primary" value="Approve" />
@@ -79,7 +79,7 @@
         {% elif not access_to_resolve and can_resolve and can_request %}
         <td>
           <form action="{% url 'internal:validate_internal_noncritical_transaction_request' transaction_id=transaction.id %}" method="post">
-            {% csrf_token %}<input type="submit" class="btn btn-warning" value="Request to Resolve" />
+            {% csrf_token %}<input type="submit" class="btn btn-info" value="Request to Resolve" />
           </form>
         </td>
         {% else %}

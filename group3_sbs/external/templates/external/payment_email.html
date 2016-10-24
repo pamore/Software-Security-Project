@@ -1,4 +1,4 @@
-{% extends "global_templates/external_sbs.html" %}
+ step="0.01"{% extends "global_templates/external_sbs.html" %}
 
 {% load static %}
 
@@ -44,7 +44,7 @@
 <form action="{% url 'external:payment_checking_validate' %}" method="post">
 {% csrf_token %}
 <label for="amount">Specify the amount to pay which must be less than or equal to {{ammount_limit}}</label>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" step="0.01" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
@@ -81,7 +81,7 @@
 <form action="{% url 'external:payment_savings_validate' %}" method="post">
 {% csrf_token %}
 <label for="amount">Specify the amount to pay which must be less than or equal to {{ammount_limit}}</label>
-<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" required />
+<input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" step="0.01" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
 <br />
