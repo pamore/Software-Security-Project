@@ -222,7 +222,7 @@ def send_device_verify_otp(request, profile):
         fail_silently=False,
         )
         if DEBUG: print("Check is %d\n"%(check))
-        print(profile.otp_pass)
+        #print(profile.otp_pass)
         while(check == 0):
             check = send_mail(
             'Group 3 SBS Trusted Device OTP',
@@ -243,7 +243,7 @@ def send_device_verify_otp(request, profile):
         profile.otp_timestamp = int(time.time())
         profile.save()
         if DEBUG: print("OTP pass and timestamp set and saved\n")
-        print(profile.otp_pass)
+        #print(profile.otp_pass)
         check = send_mail(
         'Group 3 SBS Trusted Device OTP',
         TRUSTED_DEVICE_MESSAGE%(profile.otp_pass),
