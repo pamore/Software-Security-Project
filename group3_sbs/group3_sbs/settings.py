@@ -18,19 +18,19 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #with open('/home/cse545/git/sbs_config.json') as data_file:
 #with open('/var/sbs_config.json') as data_file:
-with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
+with open('/home/ubuntu/Documents/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.10/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'm54o^3a8-&f45s(fvwa6_9-m8e5i)!#70)@t2*cbx=x12jl3di'
+SECRET_KEY = CONFIG['production_secret']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['www.group3sbs.mobicloud.asu.edu']
 
 
 # Application definition
@@ -282,7 +282,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'group3sbs@gmail.com'
-EMAIL_HOST_PASSWORD = 'asussgroup3'
+EMAIL_HOST_PASSWORD = CONFIG['email_password']
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 TEMPLATED_EMAIL_BACKEND = 'templated_email.backends.vanilla_django.TemplateBackend'
@@ -292,3 +292,8 @@ LOGIN_URL = "/login/"
 
 # X Frames
 X_FRAME_OPTIONS = 'DENY'
+
+# CSRF Secure
+CSRF_COOKIE_SECURE = True
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
