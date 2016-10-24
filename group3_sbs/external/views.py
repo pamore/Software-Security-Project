@@ -529,7 +529,7 @@ def add_certificate(request):
     user = request.user
     certificate = request.POST['certificate']
     profile = get_any_user_profile(username=user.username)
-    if not validate_certificate(certificate) or not validate_certificate(profile.certificate):
+    if not validate_certificate(certificate):
         profile.certificate = None
     else:
         profile.certificate = str(certificate)
