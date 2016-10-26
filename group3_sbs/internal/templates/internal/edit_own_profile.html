@@ -140,11 +140,8 @@ $("#city").tooltip({
 </div>
 <div class="row">
   <div class="col-md-12">
-    <form action="{% url 'internal:validate_internal_profile_edit' internal_user_id=internal_user.id %}" method="post" id="profileInternalEditForm">
+    <form action="{% url 'internal:validate_own_profile_edit' %}" method="post" id="profileInternalEditForm">
     {% csrf_token %}
-
-    <input type="hidden" class="form-control" name="username" value="{{internal_user.username}}" id="" readonly>
-
     <div class="form-group">
       <label class="control-label">First Name</label>
       <input type="text" class="form-control" name="first_name" value="{{profile.first_name}}" title="length between 1 and 30. uppercase/lowercase/combination of both;" data-placement="right" id="first_name" required />

@@ -104,6 +104,18 @@ def edit_internal_user_profile(request, internal_user_id):
     logger.info("User %s is editing interal user %s's profile " % (request.user.username, internal_user.username))
     return render(request, success_page, {"internal_user": internal_user, "profile": profile, 'STATES': STATES})
 
+# Edit Internal User Profile Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def edit_own_profile(request):
+    user = request.user
+    success_page = "internal/edit_own_profile.html"
+    error_redirect = "internal:index"
+    profile = get_any_user_profile(username=user.username)
+    logger.info("Internal user %s is editing their own user profile " % (request.user.username))
+    return render(request, success_page, {"profile": profile, 'STATES': STATES})
+
 # # Edit Noncritical Transaction
 # @never_cache
 # @login_required
@@ -405,6 +417,17 @@ def view_internal_user_profile(request, internal_user_id):
     profile = get_any_user_profile(username=internal_user.username)
     logger.info("User %s is viewing internal user %s's profile" % (request.user.username, str(internal_user.username)))
     return render(request, success_page, {"user": internal_user, "profile": profile})
+
+# Edit Internal User Profile Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def view_own_profile(request):
+    user = request.user
+    success_page = "internal/view_own_profile.html"
+    error_redirect = "internal:index"
+    profile = get_any_user_profile(username=user.username)
+    return render(request, success_page, {"profile": profile})
 
 # Reset Log Page
 @never_cache
@@ -1031,11 +1054,14 @@ def validate_internal_profile_edit(request, internal_user_id):
         return HttpResponseRedirect(reverse(error_redirect))
     first_name = request.POST['first_name']
     last_name = request.POST['last_name']
+    email = request.POST['email']
     street_address = request.POST['street_address']
     city = request.POST['city']
     state = request.POST['state']
     zipcode = request.POST['zipcode']
-    if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+    if (email == profile.email or validate_new_email(email)) and validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+        profile.email = email
+        profile.save()
         logger.info("User %s successfully edited internal user %s's profile"%(request.user.username, str(internal_user_id)))
         return HttpResponseRedirect(reverse(success_redirect))
     else:
@@ -1131,6 +1157,7 @@ def validate_profile_edit(request, external_user_id):
         return HttpResponseRedirect(reverse(error_redirect))
     first_name = request.POST['first_name']
     last_name = request.POST['last_name']
+    email = request.POST['email']
     """ This preserves PII privilege of editing profile
     street_address = request.POST['street_address']
     city = request.POST['city']
@@ -1141,8 +1168,10 @@ def validate_profile_edit(request, external_user_id):
         """ This preserves PII privilege of editing profile
         if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
         """
-        if validate_first_name_save(profile=profile, first_name=first_name) and validate_last_name_save(profile=profile, last_name=last_name):
+        if (email == profile.email or validate_new_email(email)) and validate_first_name_save(profile=profile, first_name=first_name) and validate_last_name_save(profile=profile, last_name=last_name):
             logger.info("System manager %s edited external user %s's profile"%(request.user.username, username))
+            profile.email = email
+            profile.save()
             return HttpResponseRedirect(reverse(success_redirect))
         else:
             logger.info("System manager %s provided invalid values for modification of external user %s's profile"%(request.user.username, username))
@@ -1159,7 +1188,9 @@ def validate_profile_edit(request, external_user_id):
             """ This preserves PII privilege of editing profile
             if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
             """
-            if validate_first_name_save(profile=profile, first_name=first_name) and validate_last_name_save(profile=profile, last_name=last_name):
+            if (email == profile.email or validate_new_email(email)) and validate_first_name_save(profile=profile, first_name=first_name) and validate_last_name_save(profile=profile, last_name=last_name):
+                profile.email = email
+                profile.save()
                 user.user_permissions.remove(permission)
                 user.save()
                 logger.info("Regular Employee %s edited external user %s's profile"%(request.user.username, username))
@@ -1172,4 +1203,29 @@ def validate_profile_edit(request, external_user_id):
             return HttpResponseRedirect(reverse(error_redirect))
     else:
         logger.info("User %s has no permission to edit external user %s's profile"%(request.user.username, username))
+        return HttpResponseRedirect(reverse(error_redirect))
+
+# Validate Internal Profile Edit Page
+@never_cache
+@login_required
+@user_passes_test(is_internal_user)
+def validate_own_profile_edit(request):
+    user = request.user
+    success_redirect = 'internal:index'
+    error_redirect = 'internal:error'
+    profile = get_any_user_profile(username=user.username)
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    email = request.POST['email']
+    street_address = request.POST['street_address']
+    city = request.POST['city']
+    state = request.POST['state']
+    zipcode = request.POST['zipcode']
+    if (email == profile.email or validate_new_email(email)) and validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+        profile.email = email
+        profile.save()
+        logger.info("Internal User %s successfully edited their own profile"%(request.user.username))
+        return HttpResponseRedirect(reverse(success_redirect))
+    else:
+        logger.info("Internal User %s used incorrect field values when editing their own profile"%(request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))

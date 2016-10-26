@@ -30,7 +30,7 @@ $("#last_name").tooltip({
                     },
                     regexp: {
                       regexp : /^[a-zA-Z]+$/,
-                      message : 'The last name can contain only alphabets'
+                      message : 'The last name can contain only alphabetic letters'
                     },
                       stringLength: {
                       max: 30,
@@ -38,7 +38,7 @@ $("#last_name").tooltip({
                       message: 'The length must be between 1 and 30'
                     }
                 }
-            },   
+            },
           first_name:   {
                 validators: {
                     notEmpty: {
@@ -46,7 +46,7 @@ $("#last_name").tooltip({
                     },
                     regexp: {
                       regexp : /^[a-zA-Z]+$/,
-                      message : 'The first name can contain only alphabets'
+                      message : 'The first name can contain only alphabetic letters'
                     },
                     stringLength: {
                       max: 30,
@@ -54,8 +54,24 @@ $("#last_name").tooltip({
                       message: 'The length must be between 1 and 30'
                     }
                 }
-            }, 
-         
+            },
+            email:   {
+                validators: {
+                    notEmpty: {
+                        message: 'The Email is required'
+                    },
+                    regexp: {
+                      regexp: /^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/,
+                      message : 'The email format is incorrect'
+                    },
+                      stringLength: {
+                      max: 100,
+                      min: 3,
+                      message: 'The length must be between 3 and 100'
+                    }
+                }
+            }
+
         }
     });
 });
@@ -88,7 +104,13 @@ $("#last_name").tooltip({
     <div class="form-group">
       <label for="control-label">Last Name</label>
       <input type="text" class="form-control" name="last_name" value="{{profile.last_name}}" title="length between 1 and 30. uppercase/lowercase/combination of both;" id="last_name" required />
-    </div>  
+    </div>
+
+    <div class="form-group">
+      <label class="control-label">Email</label>
+      <input type="text" class="form-control" name="email" value="{{profile.email}}" title="length between 3 and 100. standard email format;" id="email" required />
+    </div>
+
     <!--
     <label for="street_address">Street Address</label>
     <input type="text" class="form-control" name="street_address" value="{{profile.street_address}}" required />

@@ -25,7 +25,7 @@ $(document).ready(function() {
                 position : {my : "left+15 center", at : "right center"}
               });
      }
-     ('#createUserForm').bootstrapValidator({
+     $('#createUserForm').bootstrapValidator({
          message: 'This value is not valid',
          feedbackIcons: {
              valid: 'glyphicon glyphicon-ok',
@@ -65,18 +65,18 @@ $(document).ready(function() {
                      }
                  }
              },
-             confirmPassword : {
+             confirm_password : {
                validators : {
                  notEmpty : {
                    message: 'The confirm password is required'
                  },
                  identical : {
-                   field : 'newPassword',
+                   field : 'new_password',
                    message : 'The confirm password must be same as password'
                  }
                }
              },
-             newPassword: {
+             new_password: {
                  validators: {
                      notEmpty: {
                          message: 'The password is required'
@@ -133,7 +133,7 @@ $(document).ready(function() {
                      }
                  }
              },
-            lastname:   {
+            last_name:   {
                  validators: {
                      notEmpty: {
                          message: 'The lastname is required'
@@ -149,7 +149,7 @@ $(document).ready(function() {
                      }
                  }
              },
-           firstname:   {
+           first_name:   {
                  validators: {
                      notEmpty: {
                          message: 'The firstname is required'
@@ -165,7 +165,7 @@ $(document).ready(function() {
                      }
                  }
              },
-           address :  {
+           street_address :  {
                  validators: {
                      notEmpty: {
                          message: 'The address is required'
@@ -177,7 +177,7 @@ $(document).ready(function() {
                      stringLength: {
                        max: 30,
                        min: 4,
-                       message: 'The length must be between 1 and 30'
+                       message: 'The length must be between 4 and 30'
                      }
                  }
              },
@@ -207,19 +207,7 @@ $(document).ready(function() {
                        message : 'The zip code should contain only 5 digits'
                      }
                  }
-             },
-             personalcode : {
-                validators: {
-                     notEmpty: {
-                         message: 'The SSN/Business code is required'
-                     },
-                     regexp: {
-                       regexp : /^\d{9}$/,
-                       message : 'The SSN/Business code should contain only 9 digits'
-                     }
-                 }
-             },
-
+             }
          }
      });
 });
@@ -235,7 +223,7 @@ $(document).ready(function() {
 <div class="container">
 <div class="col-md-12 col-md-offset-0">
 
-<form id="createForm" action="{% url 'internal:validate_create_internal_user' %}" method="post" class="form-horizontal">
+<form id="createUserForm" action="{% url 'internal:validate_create_internal_user' %}" method="post" class="form-horizontal">
 {% csrf_token %}
 
 <div class="form-group">
