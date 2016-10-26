@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from global_templates.common_functions import get_any_user_profile, otpGenerator, get_new_routing_number, get_new_credit_card_number, validate_account_info, validate_certificate, validate_email, validate_password, validate_username
+from global_templates.common_functions import *
 from global_templates.constants import INDIVIDUAL_CUSTOMER, MERCHANT_ORGANIZATION, OTP_LENGTH, STATES
 from external.models import SavingsAccount, CheckingAccount, CreditCard, IndividualCustomer, MerchantOrganization
 import logging
@@ -42,7 +42,7 @@ def createUser(request):
     try:
         username = request.POST['username']
         email = request.POST['email']
-        if not validate_email(email=email) or not validate_username(username=username):
+        if not validate_new_email(email=email) or not validate_new_username(username=username):
             return render(request, 'create/create.html', {'error_message': "Username is unavailable.",})
         existing_user = get_any_user_profile(username, email)
         init_user = User.objects.filter(username=username)
@@ -203,7 +203,7 @@ def confirmAccount(request):
                                             creditcard_number=get_new_credit_card_number(),
                                             charge_limit=1000.00,
                                             remaining_credit=1000.00,
-                                            late_fee=15.00,
+                                            late_fee=0.00,
                                             days_late=0)
                         creditcard.save()
                         if DEBUG: print("Create and save credit card\n")

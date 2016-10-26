@@ -134,6 +134,100 @@ def add_view_external_user_permission(user, external_user, page_to_view):
     else:
         return False
 
+def add_checking_account(routing_number=None):
+    checkingaccount = None
+    try:
+        if routing_number is None or validate_routing_number(routing_number):
+            routing_number = get_new_routing_number()
+        checkingaccount = CheckingAccount.objects.create(
+                            interest_rate=0.03,
+                            routing_number=routing_number,
+                            current_balance=0.00,
+                            active_balance=0.00)
+        checkingaccount.save()
+    except:
+        pass
+    return checkingaccount
+
+def add_savings_account(routing_number=None):
+    savingsaccount = None
+    try:
+        if routing_number is None or validate_routing_number(routing_number):
+            routing_number = get_new_routing_number()
+        savingsaccount = SavingsAccount.objects.create(
+                            interest_rate=0.03,
+                            routing_number=routing_number,
+                            current_balance=0.00,
+                            active_balance=0.00)
+        savingsaccount.save()
+    except:
+        pass
+    return savingsaccount
+
+def add_credit_card(credit_card_number=None):
+    creditcard = None
+    try:
+        if credit_card_number is None or not validate_credit_card_number(credit_card_number):
+            credit_card_number=get_new_credit_card_number()
+        creditcard = CreditCard.objects.create(
+                            interest_rate=0.03,
+                            creditcard_number=credit_card_number,
+                            charge_limit=1000.00,
+                            remaining_credit=1000.00,
+                            late_fee=0.00,
+                            days_late=0)
+        creditcard.save()
+    except:
+        pass
+    return creditcard
+
+def add_external_user(user_type, username, password, first_name, last_name, email, street_address, city, state, ssn, zipcode):
+    user = None
+    if validate_new_username(username) and validate_password(password) and validate_name(first_name) and validate_name(last_name) and validate_new_email(email) and validate_street_address(street_address) and validate_city(city) and validate_state(state) and validate_zipcode(zipcode):
+        if user_type == INDIVIDUAL_CUSTOMER and validate_ssn(ssn):
+            user = add_user(username=username, password=password)
+            routing_number = get_new_routing_number()
+            checkingaccount = add_checking_account(routing_number)
+            savingsaccount = add_savings_account(routing_number)
+            creditcard = add_credit_card()
+            individualcustomer = IndividualCustomer.objects.create(first_name=first_name, last_name=last_name, email=email, street_address=street_address, city=city, state=state, zipcode=zipcode, session_key="None", ssn=ssn, checking_account_id=checkingaccount.id, savings_account_id=savingsaccount.id, credit_card_id=creditcard.id, user_id=user.id)
+            individualcustomer.save()
+        elif user_type == MERCHANT_ORGANIZATION and validate_business_code(ssn):
+            user = add_user(username=username, password=password)
+            routing_number = get_new_routing_number()
+            checkingaccount = add_checking_account(routing_number)
+            savingsaccount = add_savings_account(routing_number)
+            creditcard = add_credit_card()
+            merchantorganization = MerchantOrganization.objects.create(first_name=first_name, last_name=last_name, email=email, street_address=street_address, city=city, state=state, zipcode=zipcode, session_key="None", business_code=ssn, checking_account_id=checkingaccount.id, savings_account_id=savingsaccount.id, credit_card_id=creditcard.id, user_id=user.id)
+            merchantorganization.save()
+    return user
+
+def add_internal_user(user_type, username, password, first_name, last_name, email, street_address, city, state, zipcode):
+    user = None
+    if validate_new_username(username) and validate_password(password) and validate_name(first_name) and validate_name(last_name) and validate_new_email(email) and validate_street_address(street_address) and validate_city(city) and validate_state(state) and validate_zipcode(zipcode):
+        if user_type == REGULAR_EMPLOYEE:
+            user = add_user(username=username, password=password)
+            regularemployee = RegularEmployee.objects.create(first_name=first_name, last_name=last_name, email=email, street_address=street_address, city=city, state=state, zipcode=zipcode, session_key="None", user_id=user.id)
+            regularemployee.save()
+        elif user_type == SYSTEM_MANAGER:
+            user = add_user(username=username, password=password)
+            systemmanager = SystemManager.objects.create(first_name=first_name, last_name=last_name, email=email, street_address=street_address, city=city, state=state, zipcode=zipcode, session_key="None", user_id=user.id)
+            systemmanager.save()
+        elif user_type == ADMINISTRATOR:
+            user = add_user(username=username, password=password)
+            administrator = Administrator.objects.create(first_name=first_name, last_name=last_name, email=email, street_address=street_address, city=city, state=state, zipcode=zipcode, session_key="None", user_id=user.id)
+            administrator.save()
+    return user
+
+def add_user(username, password):
+    user = None
+    try:
+        if validate_new_username(username=username) and validate_password(password=password):
+            user = User.objects.create_user(username=username, password=password)
+    except:
+        pass
+    return user
+
 def can_activate_deactivate_external_user(user, external_user_id, page_to_view):
     verify = False
     if is_regular_employee(user):
@@ -254,7 +348,7 @@ def commit_transaction(transaction, user):
                 from_email='group3sbs@gmail.com',
                 recipient_list=recipients,
                 context={
-                    'username':"user_name",
+                    "transaction": transaction
                 },
                 # Optional:
                 # cc=['cc@example.com'],
@@ -1795,6 +1889,33 @@ def validate_name(name):
     if len(name) <= NAME_LENGTH_MAX and len(name) >= NAME_LENGTH_MIN:
         if re.search('^[a-zA-Z]+$', name):
             validated = True
+    return validated
+
+def validate_new_email(email):
+    validated = False
+    if len(email) <= EMAIL_LENGTH_MAX and len(email) >= EMAIL_LENGTH_MIN:
+        parts = email.strip('\r').strip('\n').split('@')
+        if len(parts) == 2:
+            local = parts[0]
+            domain = parts[1]
+            if re.search("^([a-zA-Z0-9]|!|#|\$|%|&|'|\*|\+|-|\/|=|\?|\^\_|`|{|\||}|~|\.|,)+$", local):
+                if re.search("^([a-zA-Z0-9]|\.|-|\[|\])+$", domain):
+                    individual_customers = IndividualCustomer.objects.filter(email=email)
+                    merchant_organizations = MerchantOrganization.objects.filter(email=email)
+                    regular_employees = RegularEmployee.objects.filter(email=email)
+                    system_managers = SystemManager.objects.filter(email=email)
+                    administrators = Administrator.objects.filter(email=email)
+                    if not administrators.exists() and not individual_customers.exists() and not merchant_organizations.exists() and not regular_employees.exists() and not system_managers.exists():
+                        validated = True
+    return validated
+
+def validate_new_username(username):
+    validated = False
+    if len(username) <= USERNAME_ADDRESS_LENGTH_MAX and len(username) >= USERNAME_ADDRESS_LENGTH_MIN:
+        if re.search('^([a-zA-Z0-9]|_|@|\+|-|\.)+$', username):
+            users = User.objects.filter(username=username)
+            if not users.exists():
+                validated = True
     return validated
 
 def validate_first_name_save(profile, first_name):

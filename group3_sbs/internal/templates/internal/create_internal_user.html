@@ -1,0 +1,314 @@
+{% extends "global_templates/internal_sbs.html" %}
+
+{% load static %}
+
+{% block stylesheets %}
+<link rel="stylesheet" type="text/css" href="{% static 'create/style.css' %}" />
+
+<script type="text/javascript">
+$(document).ready(function() {
+    $("#username").tooltip({
+    	position : {my : "left+15 center", at : "right center"}
+    });
+
+    var i;
+    for (i = 1; i <= 9; i++)
+     { var keyboard = "keyboard"+i;
+    $("#"+keyboard).tooltip({
+                position : {my : "left+15 center", at : "right center"}
+              });
+     }
+
+    for (i = 11; i <= 12; i++)
+     { var keyboard = "keyboard"+i;
+    $("#"+keyboard).tooltip({
+                position : {my : "left+15 center", at : "right center"}
+              });
+     }
+     ('#createUserForm').bootstrapValidator({
+         message: 'This value is not valid',
+         feedbackIcons: {
+             valid: 'glyphicon glyphicon-ok',
+             invalid: 'glyphicon glyphicon-remove',
+             validating: 'glyphicon glyphicon-refresh'
+         },
+         fields: {
+             username: {
+                 validators: {
+                     notEmpty: {
+                         message: 'The username is required'
+                     },
+                    regexp: {
+                       regexp : /^[A-Za-z0-9]+[_@+.\-]{0,1}[A-Za-z0-9]+$/,
+                       message : 'The user name should contain letters/digits/combination , followed by ONE optional characters _@+.\- , followed by letters/digits/combination'
+                     },
+                     stringLength: {
+                       max: 150,
+                       min: 6,
+                       message: 'The length must be between 6 and 150'
+                     }
+                 }
+             },
+             email:   {
+                 validators: {
+                     notEmpty: {
+                         message: 'The Email is required'
+                     },
+                     regexp: {
+                     regexp: /^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/,
+                       message : 'The email format is incorrect'
+                     },
+                       stringLength: {
+                       max: 100,
+                       min: 3,
+                       message: 'The length must be between 3 and 100'
+                     }
+                 }
+             },
+             confirmPassword : {
+               validators : {
+                 notEmpty : {
+                   message: 'The confirm password is required'
+                 },
+                 identical : {
+                   field : 'newPassword',
+                   message : 'The confirm password must be same as password'
+                 }
+               }
+             },
+             newPassword: {
+                 validators: {
+                     notEmpty: {
+                         message: 'The password is required'
+                     },
+                     identical : {
+                         field : 'confirmPassword',
+                         message : 'The confirm password must be same as password'
+                     },
+                      stringLength: {
+                       max: 256,
+                       min: 8,
+                       message: 'The length must be between 8 and 256'
+                     },
+                     callback: {
+                        message: 'The password is not valid',
+                         callback: function(value, password, $field){
+                             if(value===''){
+                                 return true;
+                              }
+
+                             if (value.search(/[0-9]/) < 0) {
+                                 return {
+                                     valid: false,
+                                     message: 'Password must contain atleast 1 digit'
+                                 }
+                             }
+
+                         if (value.search(/[\~\`\!\@\#\$\%\^\&\*\(\)\_\-\+\=\{\}\[\]\|\\\;\:\'\"\,\<\.\>\?]/) < 0)
+                              {//~`!@#$%^&*()_-+={}[]|;:‘”,<.>?
+                                 return {
+                                     valid: false,
+                                     message: 'password must contain atleast one of these ~`!@#$%^&*()_-+={}[]|;:‘”,<.>?'
+                                 }
+                              }
+
+
+                             if (value === value.toLowerCase()) {
+                                 return {
+                                     valid: false,
+                                     message: 'Password must contain at least one upper case character'
+                                 }
+                             }
+
+                               if (value === value.toUpperCase()) {
+                                 return {
+                                     valid: false,
+                                     message: 'Password must contain at least one lower case character'
+                                 }
+                             }
+
+                             return true;
+                       }
+
+                     }
+                 }
+             },
+            lastname:   {
+                 validators: {
+                     notEmpty: {
+                         message: 'The lastname is required'
+                     },
+                     regexp: {
+                       regexp : /^[a-zA-Z]+$/,
+                       message : 'The last name can contain only alphabets.'
+                     },
+                       stringLength: {
+                       max: 30,
+                       min: 1,
+                       message: 'The length must be between 1 and 30'
+                     }
+                 }
+             },
+           firstname:   {
+                 validators: {
+                     notEmpty: {
+                         message: 'The firstname is required'
+                     },
+                     regexp: {
+                       regexp : /^[a-zA-Z]+$/,
+                       message : 'The first name can contain alphabets and single space as seperator.'
+                     },
+                     stringLength: {
+                       max: 30,
+                       min: 1,
+                       message: 'The length must be between 1 and 30'
+                     }
+                 }
+             },
+           address :  {
+                 validators: {
+                     notEmpty: {
+                         message: 'The address is required'
+                     },
+                     regexp: {
+                       regexp : /^[a-zA-Z0-9]+(\s?[a-zA-Z0-9]+)*$/,
+                       message : 'The address should contain only alphabets and single space as seperator'
+                     },
+                     stringLength: {
+                       max: 30,
+                       min: 4,
+                       message: 'The length must be between 1 and 30'
+                     }
+                 }
+             },
+             city :  {
+                 validators: {
+                     notEmpty: {
+                         message: 'The city is required'
+                     },
+                     regexp: {
+                       regexp : /^[a-zA-Z]+(\s?[a-zA-Z]+)*$/,
+                       message : 'The city should contain only alphabets and single space as seperator'
+                     },
+                     stringLength: {
+                       max: 30,
+                       min: 4,
+                       message : 'The length must be between 4 and 30'
+                     }
+                 }
+             },
+             zipcode : {
+                 validators: {
+                     notEmpty: {
+                         message: 'The zip code is required'
+                     },
+                     regexp: {
+                       regexp : /^\d{5}$/,
+                       message : 'The zip code should contain only 5 digits'
+                     }
+                 }
+             },
+             personalcode : {
+                validators: {
+                     notEmpty: {
+                         message: 'The SSN/Business code is required'
+                     },
+                     regexp: {
+                       regexp : /^\d{9}$/,
+                       message : 'The SSN/Business code should contain only 9 digits'
+                     }
+                 }
+             },
+
+         }
+     });
+});
+</script>
+{% endblock %}
+
+{% block navigation %}
+{% endblock %}
+{% block content %}
+<h1>Create New Internal User</h1>
+{% if error_message %}<p><strong>{{ error_message }}</strong></p>{% endif %}
+
+<div class="container">
+<div class="col-md-12 col-md-offset-0">
+
+<form id="createForm" action="{% url 'internal:validate_create_internal_user' %}" method="post" class="form-horizontal">
+{% csrf_token %}
+
+<div class="form-group">
+    <label class="control-label">Username</label>
+      <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" title="Length must be between 6 to 150 ; consist of alphabet/digits/combination , followed by one optional character in the set _@+.- , followed by alphabet/digits/combination" required />
+      <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="username" value="" required /> -->
+
+<div class="form-group">
+    <label class="control-label">Email</label>
+     <input type="text" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" title="Length must be between 3 to 100; Should follow the correct email format " required />
+     <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+
+<!-- <input type="password" class="form-control" name="otpPassword" value="" required /> -->
+<div class="form-group"> <label class="control-label">Set New Password</label>
+<input type="password" id="keyboard4" class="form-control" name="new_password" value="" placeholder="New Password" title="Length must be between 8 and 256; Should have atleast One uppercase, AND atleast one lowecase AND atleast one digit and atleast one character in this set ~`!@#$%^&*()_-+={}[]|;:‘”,<.>? " required />
+      <img id="icon4" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="password" class="form-control" name="newPassword" value="" required /> -->
+<div class="form-group"> <label class="control-label">Confirm New Password</label>
+<input type="password" id="keyboard5" class="form-control" name="confirm_password" value="" placeholder="Confirm Password" title="Must match the new Password field" required />
+      <img id="icon5" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="password" class="form-control" name="confirmPassword" value="" required /> -->
+<div class="form-group"> <label class="control-label">First Name</label>
+<input type="text" id="keyboard6" class="form-control" name="first_name" value="" placeholder="First Name" title="length between 1 and 30. upper OR lowercase OR combination of both;" required />
+      <img id="icon6" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="firstname" value="" required /> -->
+<div class="form-group"> <label class="control-label">Last Name</label>
+<input type="text" id="keyboard7" class="form-control" name="last_name" value="" placeholder="Last Name" title="length between 1 and 30. upper OR lowercase Or combination of both" required />
+      <img id="icon7" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="lastname" value="" required /> -->
+<div class="form-group"> <label class="control-label">Street Address</label>
+<input type="text" id="keyboard8" class="form-control" name="street_address" value="" placeholder="Street Address" title="between 4 and 30. upper OR lowercase OR digit OR combination of all ; should not start or end with space; only one space allowed between characters. " required />
+      <img id="icon8" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="address" value="" required /> -->
+<div class="form-group"> <label class="control-label">City</label>
+ <input type="text" id="keyboard9" class="form-control" name="city" value="" placeholder="City" title="length between 4 and 30. upper OR lowercase OR combination of both; should not start or end with space ;  only one space allowed between characters." required />
+      <img id="icon9" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<!-- <input type="text" class="form-control" name="city" value="" required /> -->
+<div class="form-group">
+      <label class="control-label">State</label>
+      <select class="form-control" name="state">
+        {% for state in STATES %}
+        <option value="{{state}}">{{state}}</option>
+        {% endfor %}
+      </select>
+</div>
+<!-- <input type="text" class="form-control" name="state" value="" required /> -->
+<div class="form-group"> <label class="control-label">Zip Code</label>
+ <input type="text" id="keyboard11" class="form-control" name="zipcode" value="" placeholder="Zip Code" title="Only 5 digits are allowed" required />
+      <img id="icon11" src="{% static 'global_templates/images/keyboard.png' %}"/>
+</div>
+<div class="form-group">
+      <label class="control-label">Select User Type</label>
+      <br />
+      <label class="radio-inline"><input type="radio" name="user_type" value="Regular Employee" checked="checked" required >Regular Employee</label>
+      <label class="radio-inline"><input type="radio" name="user_type" value="System Manager" required >System Manager</label>
+      <label class="radio-inline"><input type="radio" name="user_type" value="Administrator" required >Administrator</label>
+</div>
+
+
+<div class="form-group">
+	<input type="submit" class="btn btn-default form-control" value="Submit" />
+</div>
+
+</form>
+</div>
+</div>
+{% endblock %}

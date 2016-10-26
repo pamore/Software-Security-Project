@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Permission
 from django.contrib.contenttypes.models import ContentType
+from django.core.mail import EmailMessage
 from django.db import models
 from django.db.models import Q
 from django.http import HttpResponse, Http404, HttpResponseRedirect
@@ -35,6 +36,13 @@ def bineeta_cron_job_late_charge(request):
 @user_passes_test(is_administrator)
 def clear_log(request):
     return render(request, 'internal/clear_log.html')
+
+# Validate Creating Internal User
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def create_internal_user(request):
+    return render(request, 'internal/create_internal_user.html', {"STATES": STATES})
 
 # View Critical Transactions
 @never_cache
@@ -450,11 +458,22 @@ def bineeta_cron_job_late_charge_validate(request):
             logger.info("User %s tried to charge late charges, but the card were already charged this month" % (request.user.username))
             return render(request, 'internal/monthly_cron.html', {'message': "Unsuccessfully charged any late cards. Can only update charges once on a month."})
         late_credit_card = CreditCard.objects.filter(remaining_credit__lt = 1000)
+        email_list = []
         for card in late_credit_card:
             card.days_late = card.days_late + 1
             fee = CREDIT_CARD_INTEREST_RATE * card.days_late
             card.late_fee = min(1000.00, fee)
             card.save()
+            if hasattr(card, 'individualcustomer'):
+                email_list.append(str(card.individualcustomer.email))
+            elif hasattr(card, 'merchantorganization'):
+                email_list.append(str(card.merchantorganization.email))
+        email = EmailMessage(
+            subject='Group 3 SBS Credit Card Was Charged',
+            body="Your credit card was charged a late fee because it had unpaid charges on the first of the month",
+            from_email='group3sbs@gmail.com',
+            bcc=email_list)
+        email.send(fail_silently=True)
         logger.info("User %s successfully charged any late cards this month" % (request.user.username))
         return render(request, 'internal/monthly_cron.html', {'message': "Successfully charged any late cards this month."})
     else:
@@ -479,15 +498,37 @@ def bineeta_cron_job_daily_late_charge_validate(request):
             logger.info("User %s tried to update late charges, but charges were already updated today" % (request.user.username))
             return render(request, 'internal/monthly_cron.html', {'message': "Did not update late charges. Can only update charges once on a day."})
         late_credit_card = CreditCard.objects.filter(Q(late_fee__gt=0) | Q(days_late__gt=0))
-        no_longer_late = CreditCard.objects.filter(Q(late_fee=0) | Q(days_late__gt=0))
+        no_longer_late_list = CreditCard.objects.filter(Q(late_fee=0) | Q(days_late__gt=0))
+        late_email_list = []
         for card in late_credit_card:
             card.days_late = card.days_late + 1
             fee = CREDIT_CARD_INTEREST_RATE * card.days_late
             card.late_fee = min(1000.00, fee)
             card.save()
-        for card in no_longer_late:
+            if hasattr(card, 'individualcustomer'):
+                late_email_list.append(str(card.individualcustomer.email))
+            elif hasattr(card, 'merchantorganization'):
+                late_email_list.append(str(card.merchantorganization.email))
+        no_longer_late_email_list = []
+        for card in no_longer_late_list:
             card.days_late = 0
             card.save()
+            if hasattr(card, 'individualcustomer'):
+                no_longer_late_email_list.append(str(card.individualcustomer.email))
+            elif hasattr(card, 'merchantorganization'):
+                no_longer_late_email_list.append(str(card.merchantorganization.email))
+        email = EmailMessage(
+            subject='Group 3 SBS Credit Card Was Charged',
+            body="Your credit card was charged a late fee because it had an unpaid late at 23:00PM and is still considered late",
+            from_email='group3sbs@gmail.com',
+            bcc=late_email_list)
+        email.send(fail_silently=True)
+        email = EmailMessage(
+            subject='Group 3 SBS Credit Card Is No Longer Late',
+            body="Your late fees are paid so no more charges for you for this month :)",
+            from_email='group3sbs@gmail.com',
+            bcc=no_longer_late_email_list)
+        email.send(fail_silently=True)
         logger.info("User %s successfully updated late charges" % (request.user.username))
         return render(request, 'internal/monthly_cron.html', {'message': "Updated late charges today."})
     else:
@@ -583,6 +624,32 @@ def validate_clear_server_log(request):
     f.write('')
     f.close()
     return HttpResponseRedirect(reverse(success_redirect))
+
+# Validate Creating Internal User
+@never_cache
+@login_required
+@user_passes_test(is_administrator)
+def validate_create_internal_user(request):
+    user_type = request.POST['user_type']
+    username = request.POST['username']
+    new_password = request.POST['new_password']
+    confirm_password = request.POST['confirm_password']
+    first_name = request.POST['first_name']
+    last_name = request.POST['last_name']
+    email = request.POST['email']
+    street_address = request.POST['street_address']
+    city = request.POST['city']
+    state = request.POST['state']
+    zipcode = request.POST['zipcode']
+    success_redirect = "internal:index"
+    error_redirect = "internal:error"
+    if validate_password(new_password) and validate_password(confirm_password) and new_password == confirm_password:
+        if add_internal_user(user_type=user_type, username=username, password=new_password, first_name=first_name, last_name=last_name, email=email, street_address=street_address, city=city, state=state, zipcode=zipcode):
+            return HttpResponseRedirect(reverse(success_redirect))
+        else:
+            return HttpResponseRedirect(reverse(error_redirect))
+    else:
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # Approve Criticial Transactions
 @never_cache

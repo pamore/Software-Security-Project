@@ -1,3 +1,26 @@
+{% block subject %}CSE 545 SBS Transaction Denied{% endblock %}
 {% block html %}
-  <p>Transaction Denial Email</p>
+<h1>Transaction Denied</h1>
+<table>
+  <tr>
+    <th>ID</th>
+    <th>Type</th>
+    <th>Initiator</th>
+    <th>Description</th>
+    <th>Time Created</th>
+    <th>Status</th>
+    <th>Time Resolved</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>{{transaction.id}}</td>
+    <td>{{transaction.type_of_transaction}}</td>
+    <td>{{transaction.initiator.username}}</td>
+    <td>{{transaction.description}}</td>
+    <td>{{transaction.time_created}}</td>
+    <td>{{transaction.status}}</td>
+    <td>{{transaction.time_resolved}}</td>
+  </tbody>
+</table>
 {% endblock %}
