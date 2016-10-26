@@ -831,6 +831,44 @@ def validate_delete_critical_transaction(request, transaction_id):
         logger.info("Error occurred when critical transaction %s was trying to be deleted by internal user %s " % (str(transaction_id), request.user.username))
         return HttpResponseRedirect(reverse('internal:error'))
 
+# Validate delete internal critical transaction
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def validate_delete_internal_critical_transaction(request, transaction_id):
+    user = request.user
+    try:
+        transaction = InternalCriticalTransaction.objects.get(id=int(transaction_id))
+        if deny_transaction(transaction, user):
+            transaction.delete()
+            logger.info("Internal critical transaction %s of type %s and description %s was deleted by internal user %s " % (str(transaction.id), str(transaction.type_of_transaction), str(transaction.description), request.user.username))
+            return HttpResponseRedirect(reverse('internal:internal_critical_transactions'))
+        else:
+            logger.info("Internal critical transaction %s of type %s and description %s failed to be deleted by user %s " % (str(transaction.id), str(transaction.type_of_transaction), str(transaction.description), request.user.username))
+            return HttpResponseRedirect(reverse('internal:error'))
+    except:
+        logger.info("Error occurred when internal critical transaction %s was trying to be deleted by internal user %s " % (str(transaction_id), request.user.username))
+        return HttpResponseRedirect(reverse('internal:error'))
+
+# Validate delete internal noncritical transaction
+@never_cache
+@login_required
+@user_passes_test(can_resolve_internal_transaction)
+def validate_delete_internal_noncritical_transaction(request, transaction_id):
+    user = request.user
+    try:
+        transaction = InternalNoncriticalTransaction.objects.get(id=int(transaction_id))
+        if deny_transaction(transaction, user):
+            transaction.delete()
+            logger.info("Internal noncritical transaction %s of type %s and description %s was deleted by internal user %s " % (str(transaction.id), str(transaction.type_of_transaction), str(transaction.description), request.user.username))
+            return HttpResponseRedirect(reverse('internal:internal_noncritical_transactions'))
+        else:
+            logger.info("Internal noncritical transaction %s of type %s and description %s failed to be deleted by user %s " % (str(transaction.id), str(transaction.type_of_transaction), str(transaction.description), request.user.username))
+            return HttpResponseRedirect(reverse('internal:error'))
+    except:
+        logger.info("Error occurred when internal noncritical transaction %s was trying to be deleted by internal user %s " % (str(transaction_id), request.user.username))
+        return HttpResponseRedirect(reverse('internal:error'))
+
 # Validate delete noncritical transaction
 @never_cache
 @login_required
