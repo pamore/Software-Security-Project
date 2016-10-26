@@ -858,6 +858,7 @@ def profile_edit_validate(request):
     success_redirect = 'external:profile'
     error_redirect = 'external:profile_edit'
     profile = get_any_user_profile(username=user.username)
+    email= request.POST['email']
     first_name = request.POST['first_name']
     last_name = request.POST['last_name']
     street_address = request.POST['street_address']
@@ -872,7 +873,9 @@ def profile_edit_validate(request):
         logger.info("There was database permission error when user %s tried to edit their profile"%(request.user.username))
         return HttpResponseRedirect(reverse(error_redirect))
     if user.has_perm(permission_codename):
-        if validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+        if (email == profile.email or validate_new_email(email)) and validate_profile_change(profile=profile, first_name=first_name, last_name=last_name, street_address=street_address, city=city, state=state, zipcode=zipcode):
+            profile.email = email
+            profile.save()
             user.user_permissions.remove(permission)
             user.save()
             logger.info("User %s successfully edited their account"%(request.user.username))

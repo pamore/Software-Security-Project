@@ -20,7 +20,7 @@ $("#city").tooltip({
             });
  $("#zipcode").tooltip({
               position : {my : "right center+15", at : "right center"}
-            });           
+            });
 
   $('#profileEditForm').bootstrapValidator({
         message: 'This value is not valid',
@@ -45,7 +45,23 @@ $("#city").tooltip({
                       message: 'The length must be between 1 and 30'
                     }
                 }
-            },   
+            },
+            email:   {
+                validators: {
+                    notEmpty: {
+                        message: 'The Email is required'
+                    },
+                    regexp: {
+                    regexp: /^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/,
+                      message : 'The email format is incorrect'
+                    },
+                      stringLength: {
+                      max: 100,
+                      min: 3,
+                      message: 'The length must be between 3 and 100'
+                    }
+                }
+            },
           first_name:   {
                 validators: {
                     notEmpty: {
@@ -61,7 +77,7 @@ $("#city").tooltip({
                       message: 'The length must be between 1 and 30'
                     }
                 }
-            }, 
+            },
           street_address :  {
                 validators: {
                     notEmpty: {
@@ -128,29 +144,33 @@ $("#city").tooltip({
   <div class="col-md-12">
     <form action="{% url 'external:profile_edit_validate' %}" method="post" id="profileEditForm">
     {% csrf_token %}
- 
+
 
           <div class="form-group">
               <label class="control-label">First Name</label>
               <input type="text" class="form-control" name="first_name" id="first_name" value="{{profile.first_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both;" required />
           </div>
 
-          <div class="form-group">    
+          <div class="form-group">
               <label class="control-label">Last Name</label>
               <input type="text" class="form-control" name="last_name" id="last_name" value="{{profile.last_name}}" title="length between 1 and 30. upper OR lowercase OR combination of both;" required />
           </div>
-
-          <div class="form-group">    
+          <div class="form-group">
+              <label class="control-label">Email</label>
+               <input type="text" id="keyboard2" class="form-control" name="email" value="{{profile.email}}" placeholder="Email" title="Length must be between 3 to 100; Should follow the correct email format " required />
+               <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
+          </div>
+          <div class="form-group">
               <label class="control-label">Street Address</label>
               <input type="text" class="form-control" name="street_address" id="street_address" value="{{profile.street_address}}" title="between 4 and 30. upper OR lowercase OR digit OR combination of all ; should not start or end with space; only one space allowed between characters. " required />
           </div>
 
-          <div class="form-group">    
+          <div class="form-group">
               <label class="control-label">City</label>
               <input type="text" class="form-control" name="city" id="city" value="{{profile.city}}"  title="length between 4 and 30. upper OR lowercase OR combination of both; should not start or end with space ;  only one space allowed between characters." required />
           </div>
 
-          <div class="form-group">    
+          <div class="form-group">
               <label class="control-label">State</label>
               <select class="form-control" name="state">
                 {% for state in STATES %}
@@ -159,7 +179,7 @@ $("#city").tooltip({
               </select>
           </div>
 
-          <div class="form-group">    
+          <div class="form-group">
               <label class="control-label">Zipcode</label>
               <input type="text" class="form-control" name="zipcode" id="zipcode" value="{{profile.zipcode}}" maxlength="5" title="Only 5 digits are allowed" required />
           </div>

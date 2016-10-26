@@ -16,9 +16,8 @@ import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-#with open('/home/cse545/git/sbs_config.json') as data_file:
-#with open('/var/sbs_config.json') as data_file:
-with open('/home/ubuntu/Documents/sbs_config.json') as data_file:
+#with open('/home/ubuntu/Documents/sbs_config.json') as data_file:
+with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
 
 # Quick-start development settings - unsuitable for production
@@ -28,9 +27,9 @@ with open('/home/ubuntu/Documents/sbs_config.json') as data_file:
 SECRET_KEY = CONFIG['production_secret']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['www.group3sbs.mobicloud.asu.edu']
+ALLOWED_HOSTS = []#['www.group3sbs.mobicloud.asu.edu']
 
 
 # Application definition
@@ -294,8 +293,8 @@ LOGIN_URL = "/login/"
 X_FRAME_OPTIONS = 'DENY'
 
 # Production Security Settings
-CSRF_COOKIE_SECURE = True
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+# CSRF_COOKIE_SECURE = True
+# SECURE_SSL_REDIRECT = True
+# SESSION_COOKIE_SECURE = True
+# SECURE_HSTS_SECONDS = 31536000
+# SECURE_HSTS_INCLUDE_SUBDOMAINS = True
