@@ -56,13 +56,13 @@ creditcard2.save()
 merchantorganization = MerchantOrganization.objects.create(first_name="Garrett", last_name="Gutierrez", email="gdgutier@beatles.com", street_address="I don't care", city="Tempe", state="AZ", zipcode="85122", business_code="987654321",  session_key="None", checking_account_id=checkingaccount2.id, savings_account_id=savingsaccount2.id, credit_card_id=creditcard2.id, user_id=user2.id, certificate=certificate)
 merchantorganization.save()
 
-regularemployee = RegularEmployee.objects.create(first_name="Paul", last_name="McCartney", email="paulmccartney@beatles.com", street_address="Heart of the Country", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user3.id)
+regularemployee = RegularEmployee.objects.create(first_name="Paul", last_name="McCartney", email="cse545grouchomarx@gmail.com", street_address="Heart of the Country", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user3.id)
 regularemployee.save()
 
-systemmanager = SystemManager.objects.create(first_name="Ringo", last_name="Starr", email="ringostarr@beatles.com", street_address="Liverpool8 Factory", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user4.id)
+systemmanager = SystemManager.objects.create(first_name="Ringo", last_name="Starr", email="cse545chicomarx@gmail.com", street_address="Liverpool8 Factory", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user4.id)
 systemmanager.save()
 
-administrator = Administrator.objects.create(first_name="George", last_name="Harrison", email="georgeharrison@beatles.com", street_address="Dark Horse Way", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user5.id)
+administrator = Administrator.objects.create(first_name="George", last_name="Harrison", email="cse545harpomarx@gmail.com", street_address="Dark Horse Way", city="Liverpool", state="UK", zipcode="12345", session_key="None", user_id=user5.id)
 administrator.save()
 
 user1 = User.objects.get(username=user1.username)
