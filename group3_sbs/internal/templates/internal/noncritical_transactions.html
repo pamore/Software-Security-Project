@@ -70,11 +70,9 @@
           <form action="{% url 'internal:validate_noncritical_transaction_denial' transaction_id=transaction.id %}" method="post">
             {% csrf_token %}<input type="submit" class="btn btn-warning" value="Deny" />
           </form>
-          {% if request.user.systemmanager %}
           <form action="{% url 'internal:validate_delete_noncritical_transaction' transaction_id=transaction.id %}" method="post">
             {% csrf_token %}<input type="submit" class="btn btn-danger" value="Delete" />
           </form>
-          {% endif %}
         </td>
         {% elif not access_to_resolve and can_resolve and can_request %}
         <td>

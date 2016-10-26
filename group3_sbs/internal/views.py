@@ -872,21 +872,26 @@ def validate_delete_internal_noncritical_transaction(request, transaction_id):
 # Validate delete noncritical transaction
 @never_cache
 @login_required
-@user_passes_test(is_system_manager)
+@user_passes_test(can_view_noncritical_transaction)
 def validate_delete_noncritical_transaction(request, transaction_id):
     user = request.user
+    success_redirect = 'internal:noncritical_transactions'
+    error_redirect = 'internal:error'
     try:
         transaction = ExternalNoncriticalTransaction.objects.get(id=int(transaction_id))
-        if deny_transaction(transaction, user):
+        if not can_resolve_noncritical_transaction(user, transaction_id):
+            logger.info("Noncritical transaction %s of type %s and description %s cannot be approved by internal user %s " % (str(top_noncritical_transaction.id), str(top_noncritical_transaction.type_of_transaction), str(top_noncritical_transaction.description), request.user.username))
+            return HttpResponseRedirect(reverse(error_redirect))
+        elif deny_transaction(transaction, user):
             transaction.delete()
             logger.info("Noncritical transaction %s of type %s and description %s was deleted by internal user %s " % (str(transaction.id), str(transaction.type_of_transaction), str(transaction.description), request.user.username))
-            return HttpResponseRedirect(reverse('internal:noncritical_transactions'))
+            return HttpResponseRedirect(reverse(success_redirect))
         else:
             logger.info("Noncritical transaction %s of type %s and description %s failed to be deleted by user %s " % (str(transaction.id), str(transaction.type_of_transaction), str(transaction.description), request.user.username))
-            return HttpResponseRedirect(reverse('internal:error'))
+            return HttpResponseRedirect(reverse(error_redirect))
     except:
         logger.info("Error occurred when noncritical transaction %s was trying to be deleted by internal user %s " % (str(transaction_id), request.user.username))
-        return HttpResponseRedirect(reverse('internal:error'))
+        return HttpResponseRedirect(reverse(error_redirect))
 
 # Edit External Noncritical Transaction
 # @never_cache
