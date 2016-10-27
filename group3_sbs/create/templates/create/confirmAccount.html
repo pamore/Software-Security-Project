@@ -21,20 +21,20 @@ $(document).ready(function() {
    { var keyboard = "keyboard"+i;
   $("#"+keyboard).tooltip({
               position : {my : "left+15 center", at : "right center"}
-            });   
+            });
    }
 
   for (i = 11; i <= 12; i++)
    { var keyboard = "keyboard"+i;
   $("#"+keyboard).tooltip({
               position : {my : "left+15 center", at : "right center"}
-            });   
+            });
    }
   /*
   $("#keyboard1").tooltip({
               position : {my : "left+15 center", at : "right center"}
             });
-         
+
   $("#keyboard2").tooltip({
               position : {my : "left+15 center", at : "right center"}
             });
@@ -131,19 +131,19 @@ $(document).ready(function() {
                             if (value.search(/[0-9]/) < 0) {
                                 return {
                                     valid: false,
-                                    message: 'Password must contain atleast 1 digit'
+                                    message: 'Password must contain at least 1 digit'
                                 }
                             }
-                      
+
                         if (value.search(/[\~\`\!\@\#\$\%\^\&\*\(\)\_\-\+\=\{\}\[\]\|\\\;\:\'\"\,\<\.\>\?]/) < 0)
                              {//~`!@#$%^&*()_-+={}[]|;:‘”,<.>?
                                 return {
                                     valid: false,
-                                    message: 'password must contain atleast one of these ~`!@#$%^&*()_-+={}[]|;:‘”,<.>?'
+                                    message: 'password must contain at least one of these ~`!@#$%^&*()_-+={}[]|;:‘”,<.>?'
                                 }
                              }
-                             
-                        
+
+
                             if (value === value.toLowerCase()) {
                                 return {
                                     valid: false,
@@ -159,7 +159,7 @@ $(document).ready(function() {
                             }
 
                             return true;
-                      } 
+                      }
 
                     }
                 }
@@ -179,7 +179,7 @@ $(document).ready(function() {
                       message: 'The length must be between 1 and 30'
                     }
                 }
-            },   
+            },
           firstname:   {
                 validators: {
                     notEmpty: {
@@ -195,7 +195,7 @@ $(document).ready(function() {
                       message: 'The length must be between 1 and 30'
                     }
                 }
-            }, 
+            },
           address :  {
                 validators: {
                     notEmpty: {
@@ -208,7 +208,7 @@ $(document).ready(function() {
                     stringLength: {
                       max: 30,
                       min: 4,
-                      message: 'The length must be between 1 and 30'
+                      message: 'The length must be between 4 and 30'
                     }
                 }
             },
@@ -250,7 +250,7 @@ $(document).ready(function() {
                     }
                 }
             },
-      
+
         }
     });
 });
@@ -259,18 +259,18 @@ $(document).ready(function() {
 <script type="text/javascript">
 $( document ).ready(function() {
 
-$('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard4').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard5').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard6').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard7').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard8').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard9').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard10').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard11').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard12').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard1').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard2').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard3').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard4').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard5').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard6').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard7').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard8').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard9').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard10').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard11').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard12').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
 
 // Open keyboard by clicking on icon
 $('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
@@ -312,21 +312,21 @@ $('#icon12').click(function () { $('#keyboard12').getkeyboard().reveal(); });
 {% csrf_token %}
 
 
-<div class="form-group"> 
+<div class="form-group">
     <label class="control-label">Username</label>
       <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username" title="Length must be between 6 to 150 ; consist of alphabet/digits/combination , followed by one optional character in the set _@+.- , followed by alphabet/digits/combination" required />
       <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="username" value="" required /> -->
 
-<div class="form-group"> 
+<div class="form-group">
     <label class="control-label">Email</label>
      <input type="text" id="keyboard2" class="form-control" name="email" value="" placeholder="Email" title="Length must be between 3 to 100; Should follow the correct email format " required />
      <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 
 <!-- <input type="email" class="form-control" name="email" value="" required /> -->
-<div class="form-group"> 
+<div class="form-group">
 <label class="control-label">Confirmation Code (OTP)</label>
  <input type="password" id="keyboard3" class="form-control" name="otpPassword" value="" placeholder="OTP Password" required />
       <img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/>

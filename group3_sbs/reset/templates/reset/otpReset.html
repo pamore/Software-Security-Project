@@ -18,7 +18,7 @@ for (i = 4; i <= 5; i++)
    { var keyboard = "keyboard"+i;
   $("#"+keyboard).tooltip({
               position : {my : "left+15 center", at : "right center"}
-            });   
+            });
    }
 
  $('#otpUserResetForm').bootstrapValidator({
@@ -166,7 +166,7 @@ for (i = 4; i <= 5; i++)
                                     message: 'Password must contain atleast 1 digit'
                                 }
                             }
-                      
+
                         if (value.search(/[\~\`\!\@\#\$\%\^\&\*\(\)\_\-\+\=\{\}\[\]\|\\\;\:\'\"\,\<\.\>\?]/) < 0)
                              {//~`!@#$%^&*()_-+={}[]|;:‘”,<.>?
                                 return {
@@ -174,8 +174,8 @@ for (i = 4; i <= 5; i++)
                                     message: 'password must contain atleast one of these ~`!@#$%^&*()_-+={}[]|;:‘”,<.>?'
                                 }
                              }
-                             
-                        
+
+
                             if (value === value.toLowerCase()) {
                                 return {
                                     valid: false,
@@ -191,26 +191,22 @@ for (i = 4; i <= 5; i++)
                             }
 
                             return true;
-                      } 
+                      }
 
                     }
                 }
             },
-      
-          
-         
+
+
+
 
         }
     });
-
-
-
-$('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard4').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard5').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-
+$('#keyboard1').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard2').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard3').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard4').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+$('#keyboard5').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
 // Open keyboard by clicking on icon
 $('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
 $('#icon2').click(function () { $('#keyboard2').getkeyboard().reveal(); });
@@ -243,31 +239,31 @@ $('#icon5').click(function () { $('#keyboard5').getkeyboard().reveal(); });
 </ul>
 <form action="{% url 'reset:otpUserReset' %}" method="post" id="otpUserResetForm">
 {% csrf_token %}
-<div class="form-group"> 
+<div class="form-group">
   <label class="control-label">Username</label>
    <input type="text" id="keyboard1" class="form-control" name="username" value="" placeholder="Username"  />
 	 <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="text" class="form-control" name="username" value="" required /> -->
-<div class="form-group"> 
+<div class="form-group">
   <label class="control-label">Email</label>
   <input type="text" id="keyboard2" class="form-control" name="email" value="" placeholder="Email"  />
 	<img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="email" class="form-control" name="email" value="" required /> -->
-<div class="form-group"> 
+<div class="form-group">
   <label class="control-label">Confirmation Code (OTP)</label>
   <input type="password" id="keyboard3" class="form-control" name="otpPassword" value="" placeholder="OTP Password"  />
 	<img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="password" class="form-control" name="otpPassword" value="" required /> -->
-<div class="form-group"> 
+<div class="form-group">
   <label class="control-label">New Password</label>
   <div class="form-group"> <input type="password" id="keyboard4" class="form-control" name="newPassword" value="" placeholder="New Password" title="Length must be between 8 and 256; Should have atleast One uppercase, AND atleast one lowecase AND atleast one digit and atleast one character in this set ~`!@#$%^&*()_-+={}[]|;:‘”,<.>? "  />
 	<img id="icon4" src="{% static 'global_templates/images/keyboard.png' %}"/>
 </div>
 <!-- <input type="password" class="form-control" name="newPassword" value="" required /> -->
-<div class="form-group"> 
+<div class="form-group">
   <label class="control-label">Confirm Password</label>
   <div class="form-group"> <input type="password" id="keyboard5" class="form-control" name="confirmPassword" value="" placeholder="Confirm Password" title = "Must match the new password field"  />
 	<img id="icon5" src="{% static 'global_templates/images/keyboard.png' %}"/>

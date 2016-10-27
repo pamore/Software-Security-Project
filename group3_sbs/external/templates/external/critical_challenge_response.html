@@ -14,14 +14,111 @@
 
 <script type="text/javascript">
 $( document ).ready(function() {
-  $('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-  $('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-  $('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard1').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard2').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard3').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
 
   // Open keyboard by clicking on icon
   $('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
   $('#icon2').click(function () { $('#keyboard2').getkeyboard().reveal(); });
   $('#icon3').click(function () { $('#keyboard3').getkeyboard().reveal(); });
+
+
+ $('#challengeForm').bootstrapValidator({
+        message: 'This value is not valid',
+        feedbackIcons: {
+            valid: 'glyphicon glyphicon-ok',
+            invalid: 'glyphicon glyphicon-remove',
+            validating: 'glyphicon glyphicon-refresh'
+        },
+        fields: {
+            username: {
+                validators: {
+                     callback: {
+                        callback: function(value, username, $field){
+                            if (value == "") {
+                              return {
+                                valid: false,
+                                message: 'The user name cannot be empty'
+                              }
+                            }
+
+                            if (value.search(/^[A-Za-z0-9]+[_@+.\-]{0,1}[A-Za-z0-9]+$/) < 0) {
+                                return {
+                                    valid: false,
+                                    message: 'The user name is invalid'
+                                }
+                            }
+                            if (value.length < 6 && value.length > 150 ) {
+                                return {
+                                  valid: false,
+                                  message: 'The user name is invalid'
+                                }
+
+                            }
+
+                            return true;
+
+                           }
+
+                    }
+                }
+            },
+            email:   {
+                validators: {
+                    callback: {
+                              callback: function(value, email, $field){
+                                  if (value == "")
+                                  {
+                                    return {
+                                      valid: false,
+                                      message: 'The email cannot be empty'
+                                    }
+
+                                  }
+                                  if (value.search(/^[a-zA-Z0-9\!\#\$\%\&\'\*\+\-\/\=\?\^\_\`\{\|\}\~\,\.]+@[a-zA-Z0-9\-\[]+(\.[a-zA-Z0-9\-\]]+)+$/) < 0)
+                                  {
+                                    return {
+                                      valid: false,
+                                      message: 'Invalid email format'
+                                    }
+                                  }
+
+                                  if ((value.length < 3) && (value.length>100) ) {
+                                    return {
+                                  valid: false,
+                                  message: 'Invalid email format'
+                                     }
+
+                                  }
+
+                                  return true;
+
+                                  }
+
+                    }
+                }
+            },
+            otpPassword: {
+               validators: {
+                    callback: {
+                        callback: function(value, otpPassword, $field){
+                            if (value == "") {
+                              return {
+                                valid: false,
+                                message: 'OTP cannot be empty'
+                              }
+                            }
+                            return true;
+
+                           }
+
+                    }
+                }
+            },
+        }
+    });
+
 });
 </script>
 
@@ -38,17 +135,25 @@ $( document ).ready(function() {
     <h1>Grant Permission to Perform Critical Transaction</h1>
     <h2>Please decrypt the OTP with your private key</h2>
     <p style="color: red;"><strong>Note: If you are successful, you will be redirected to your account page. Then, you will be allowed to make one critical transaction before reauthenticating.</strong></p>
-    <form action="{% url 'external:critical_challenge_response_validate' account_type=account_type type_of_transaction=type_of_transaction %}" method="post">
+    <form action="{% url 'external:critical_challenge_response_validate' account_type=account_type type_of_transaction=type_of_transaction %}" method="post" id="challengeForm">
     {% csrf_token %}
-    <label for="username">Username</label>
-    <input type="text" class="form-control" id="keyboard1" name="username" value="" required />
+    <div class="form-group">
+      <label for="control-label">Username</label>
+      <input type="text" class="form-control" id="keyboard1" name="username" value="" required />
       <img id="icon1" src="{% static 'global_templates/images/keyboard.png' %}"/><br />
-    <label for="email">Email</label>
-    <input type="email" class="form-control" id="keyboard2" name="email" value="" required />
+    </div>
+
+    <div class="form-group">
+      <label for="control-label">Email</label>
+      <input type="email" class="form-control" id="keyboard2" name="email" value="" required />
       <img id="icon2" src="{% static 'global_templates/images/keyboard.png' %}"/><br />
-    <label for="opt">Decrypted OTP</label>
-    <input type="password" class="form-control" id="keyboard3" name="otp" value="" required />
+    </div>
+
+    <div class="form-group">
+      <label for="control-label">Decrypted OTP</label>
+      <input type="password" class="form-control" id="keyboard3" name="otp" value="" required />
       <img id="icon3" src="{% static 'global_templates/images/keyboard.png' %}"/><br />
+    </div>
     <input type="submit" class="btn btn-primary" value="Submit" />
     </form>
   </div>

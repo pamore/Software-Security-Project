@@ -45,7 +45,11 @@
 <form action="{% url 'external:transfer_checking_validate' %}" method="post">
 {% csrf_token %}
 <p>Send by Specifying Account and Routing Number</p>
-<label for="amount">Please enter an amount less than or equal to ${{amount_limit}} to transfer from your checking account</label>
+{% if amount_limit > 0.0 %}
+<label name="amount">Please enter an amount less than or equal to ${{amount_limit}} to transfer from your checking account</label>
+{% else %}
+<label name="amount">Cannot make payment the account as the balance is only ${{amount_limit}}</label>
+{% endif %}
 <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" step="0.01" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>
@@ -86,7 +90,11 @@
 <form action="{% url 'external:transfer_savings_validate' %}" method="post">
 {% csrf_token %}
 <p>Send by Specifying Account and Routing Number</p>
-<label for="amount">Please enter an amount less than or equal to ${{amount_limit}} to transfer from your savings account</label>
+{% if amount_limit > 0.0 %}
+<label name="amount">Please enter an amount less than or equal to ${{amount_limit}} to transfer from your savings account</label>
+{% else %}
+<label name="amount">Cannot make payment the account as the balance is only ${{amount_limit}}</label>
+{% endif %}
 <input type="number" class="form-control" name="amount" value="0.00" min="0.00" max="{{amount_limit}}" step="0.01" required />
 <label class="radio-inline"><input type="radio" name="account_type" value="Checking" checked="checked" required />Checking</label>
 <label class="radio-inline"><input type="radio" name="account_type" value="Savings" required />Savings</label>

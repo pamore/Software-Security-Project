@@ -123,9 +123,9 @@ $( document ).ready(function() {
             },
         }
     });
-$('#keyboard1').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard2').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
-$('#keyboard3').keyboard({ caretToEnd: false, openOn: ''}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard1').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard2').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
+  $('#keyboard3').keyboard({ caretToEnd: false, openOn: '',preventPaste : true}).addTyping({ showTyping: true, delay: 50 });
 
 // Open keyboard by clicking on icon
 $('#icon1').click(function () { $('#keyboard1').getkeyboard().reveal(); });
