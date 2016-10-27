@@ -16,7 +16,8 @@ import json
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-with open('/home/ubuntu/Documents/sbs_config.json') as data_file:
+CONFIG_PATH = os.path.join(BASE_DIR, '../../sbs_config.json')
+with open(CONFIG_PATH) as data_file:
 #with open('/home/garrett/Documents/GitHub/sbs_config.json') as data_file:
     CONFIG = json.load(data_file)
 
